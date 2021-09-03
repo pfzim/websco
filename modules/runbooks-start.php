@@ -34,7 +34,7 @@ EOT;
 
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, ORCHESTRATOR_URL);
+		curl_setopt($ch, CURLOPT_URL, ORCHESTRATOR_URL.'/Jobs');
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
 		curl_setopt($ch, CURLOPT_USERPWD, LDAP_USER.':'.LDAP_PASSWD);

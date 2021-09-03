@@ -13,7 +13,7 @@
 				<tbody id="table-data">
 					<?php $i = 0; foreach($runbooks as &$row) { $i++; ?>
 						<tr>
-							<td><?php eh($row['id']); ?></td>
+							<td><a href="<?php eh($self.'?action=show_runbook&id='.$row['id']); ?>"><?php eh($row['id']); ?></a></td>
 							<td><?php eh($row['name']); ?></td>
 						</tr>
 					<?php } ?>

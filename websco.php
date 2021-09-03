@@ -226,7 +226,7 @@ require_once(ROOT_DIR.'inc.config.php');
 		{
 			include(MODULES_DIR.'runbooks-start.php');
 
-			runbook_start($_GET['id'], $_GET['param']);
+			runbook_start($_GET['guid'], $_GET['param']);
 		}
 		exit;
 
@@ -238,6 +238,21 @@ require_once(ROOT_DIR.'inc.config.php');
 			}
 
 			include(TEMPLATES_DIR.'tpl.list-runbooks.php');
+		}
+		exit;
+
+		case 'show_runbook':
+		{
+			if(!$db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`id` = # LIMIT 1", $id)))
+			{
+				exit;
+			}
+			
+			$runbook = $runbook[0];
+
+			$db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = # ORDER BY p.`name`", $id));
+
+			include(TEMPLATES_DIR.'tpl.show-runbook.php');
 		}
 		exit;
 	}
