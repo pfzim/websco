@@ -132,25 +132,27 @@ require_once(ROOT_DIR.'inc.config.php');
 		}
 		exit;
 
-		case 'load_runbooks_to_db':
+		case 'sync':
 		{
+			include(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'runbooks-folders.php');
 			include(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'runbooks-list.php');
 
 			header('Content-Type: text/plain; charset=utf-8');
-			$runbooks = runbooks_get_list();
+			$folders = runbooks_get_folders();
 
-			foreach($runbooks as &$runbook)
+			foreach($folders as &$folder)
 			{
+				//echo $folder['guid']."\r\n";
 				$folder_id = 0;
-				if(!$db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks_folders AS r WHERE r.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+				if(!$db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $folder['guid'])))
 				{
 					if($db->put(rpv("
-							INSERT INTO @runbooks_folders (`pid`, `guid`, `name`, `flags`)
-							VALUES (#, !, !, #)
+							INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
+							VALUES (!, !, !, #)
 						",
-						0,
-						$runbook['folder_id'],
-						$runbook['path'],
+						$folder['guid'],
+						$folder['pid'],
+						$folder['name'],
 						0x0000
 					)))
 					{
@@ -159,24 +161,65 @@ require_once(ROOT_DIR.'inc.config.php');
 				}
 				else
 				{
+					$db->put(rpv("
+							UPDATE
+								@runbooks_folders
+							SET
+								`pid` = !,
+								`name` = !
+							WHERE
+								`guid` = !
+							LIMIT 1
+						",
+						$folder['pid'],
+						$folder['name'],
+						$res[0][0]
+					));
+
+					$folder_id = $res[0][0];
+				}
+			}
+
+			$runbooks = runbooks_get_list();
+
+			foreach($runbooks as &$runbook)
+			{
+				$folder_id = '00000000-0000-0000-0000-000000000000';
+				if(!$db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks_folders AS r WHERE r.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+				{
+					if($db->put(rpv("
+							INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
+							VALUES (!, !, !, #)
+						",
+						$runbook['folder_id'],
+						'00000000-0000-0000-0000-000000000000',
+						$runbook['path'],
+						0x0000
+					)))
+					{
+						$folder_id = $runbook['folder_id'];
+					}
+				}
+				else
+				{
 					$folder_id = $res[0][0];
 				}
 
 				$runbook_id = 0;
-				if(!$db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $runbook['id'])))
+				if(!$db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $runbook['guid'])))
 				{
 					if($db->put(rpv("
-							INSERT INTO @runbooks (`pid`, `guid`, `name`, `description`, `flags`)
-							VALUES (#, !, !, !, #)
+							INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `flags`)
+							VALUES (!, !, !, !, #)
 						",
+						$runbook['guid'],
 						$folder_id,
-						$runbook['id'],
 						$runbook['name'],
 						$runbook['description'],
 						0x0000
 					)))
 					{
-						$runbook_id = $db->last_id();
+						$runbook_id = $runbook['guid'];
 					}
 				}
 				else
@@ -185,11 +228,11 @@ require_once(ROOT_DIR.'inc.config.php');
 							UPDATE
 								@runbooks
 							SET
-								`pid` = #,
+								`folder_id` = !,
 								`name` = !,
 								`description` = !
 							WHERE
-								`id` = #
+								`guid` = !
 							LIMIT 1
 						",
 						$folder_id,
@@ -203,16 +246,16 @@ require_once(ROOT_DIR.'inc.config.php');
 
 				if($runbook_id)
 				{
-					$db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = #", $runbook_id));
+					$db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = !", $runbook_id));
 
 					foreach($runbook['params'] as &$params)
 					{
 						$db->put(rpv("
 								INSERT INTO @runbooks_params (`pid`, `guid`, `name`, `flags`)
-								VALUES (#, !, !, #)
+								VALUES (!, !, !, #)
 							",
 							$runbook_id,
-							$params['id'],
+							$params['guid'],
 							$params['name'],
 							0x0000
 						));
@@ -232,7 +275,7 @@ require_once(ROOT_DIR.'inc.config.php');
 
 		case 'list_runbooks':
 		{
-			if(!$db->select_assoc_ex($runbooks, rpv("SELECT r.`id`, r.`name` FROM @runbooks AS r")))
+			if(!$db->select_assoc_ex($runbooks, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r")))
 			{
 				exit;
 			}
@@ -243,14 +286,14 @@ require_once(ROOT_DIR.'inc.config.php');
 
 		case 'show_runbook':
 		{
-			if(!$db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`id` = # LIMIT 1", $id)))
+			if(!$db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
 			{
 				exit;
 			}
 			
-			$runbook = $runbook[0];
+			$runbook = &$runbook[0];
 
-			$db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = # ORDER BY p.`name`", $id));
+			$db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
 
 			include(TEMPLATES_DIR.'tpl.show-runbook.php');
 		}

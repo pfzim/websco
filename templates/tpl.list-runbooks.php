@@ -6,15 +6,15 @@
 			<table id="table" class="main-table">
 				<thead>
 					<tr>
-						<th width="5%">ID</th>
+						<th width="5%">№</th>
 						<th width="60%">Name</th>
 					</tr>
 				</thead>
 				<tbody id="table-data">
 					<?php $i = 0; foreach($runbooks as &$row) { $i++; ?>
 						<tr>
-							<td><a href="<?php eh($self.'?action=show_runbook&id='.$row['id']); ?>"><?php eh($row['id']); ?></a></td>
-							<td><?php eh($row['name']); ?></td>
+							<td><?php eh($i); ?></td>
+							<td><a href="<?php eh($self.'?action=show_runbook&guid='.$row['guid']); ?>"><?php eh($row['name']); ?></a></td>
 						</tr>
 					<?php } ?>
 				</tbody>
