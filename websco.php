@@ -47,11 +47,24 @@ require_once(ROOT_DIR.'inc.config.php');
 		$ip = @$_SERVER['REMOTE_ADDR'];
 	}
 
+	require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
 	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.'ru.php');
-	require_once(ROOT_DIR.'inc.db.php');
-	require_once(ROOT_DIR.'inc.ldap.php');
-	require_once(ROOT_DIR.'inc.user.php');
+	//require_once(ROOT_DIR.'inc.db.php');
+	//require_once(ROOT_DIR.'inc.ldap.php');
+	//require_once(ROOT_DIR.'inc.user.php');
 	require_once(ROOT_DIR.'inc.utils.php');
+
+function assert_permission_ajax($section_id, $allow_bit)
+{
+	global $uid;
+	global $user_perm;
+
+	if(!$user_perm->check_permission($section_id, $allow_bit))
+	{
+		echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$uid.'!"}';
+		exit;
+	}
+}
 
 	$action = '';
 	if(isset($_GET['action']))
@@ -78,28 +91,29 @@ require_once(ROOT_DIR.'inc.config.php');
 		exit;
 	}
 
-	$db = new MySQLDB(DB_RW_HOST, NULL, DB_USER, DB_PASSWD, DB_NAME, DB_CPAGE, TRUE);
-
-	$ldap = new LDAP(LDAP_URI, LDAP_USER, LDAP_PASSWD, FALSE);
-	$user = new UserAuth($db, $ldap);
-
-	if(!$user->get_id())
+	$core = new Core(TRUE);
+	$core->load_ex('db', 'MySQLDB');
+	$core->load('LDAP');
+	$core->load('UserAuth');
+	$core->load('Runbooks');
+	
+	if(!$core->UserAuth->get_id())
 	{
 		header('Content-Type: text/html; charset=utf-8');
 		switch($action)
 		{
 			case 'logon':
 			{
-				if(!$user->logon(@$_POST['login'], @$_POST['passwd']))
+				if(!$core->UserAuth->logon(@$_POST['login'], @$_POST['passwd']))
 				{
 					$error_msg = 'Неверное имя пользователя или пароль!';
 					include(TEMPLATES_DIR.'tpl.login.php');
 					exit;
 				}
 
-				if(!$user->is_member(LDAP_ADMIN_GROUP_DN))
+				if(!$core->UserAuth->is_member(LDAP_ADMIN_GROUP_DN))
 				{
-					$user->logoff();
+					$core->UserAuth->logoff();
 					$error_msg = 'Access denied!';
 					include(TEMPLATES_DIR.'tpl.login.php');
 					exit;
@@ -117,7 +131,7 @@ require_once(ROOT_DIR.'inc.config.php');
 		}
 	}
 
-	if(!$user->get_id())
+	if(!$core->UserAuth->get_id())
 	{
 		include(TEMPLATES_DIR.'tpl.login.php');
 		exit;
@@ -127,175 +141,216 @@ require_once(ROOT_DIR.'inc.config.php');
 	{
 		case 'logoff':
 		{
-			$user->logoff();
+			$core->UserAuth->logoff();
 			include(TEMPLATES_DIR.'tpl.login.php');
+		}
+		exit;
+
+		case 'get_permission':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			//assert_permission_ajax(0, LPD_ACCESS_READ);
+
+			if(!$core->db->select_assoc_ex($permission, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed get permissions"}';
+				exit;
+			}
+
+			$permission[0]['pid'] = &$permission[0]['oid'];
+			
+			for($i = 0; $i < 2; $i++)
+			{
+				$permission[0]['allow_bit_'.($i+1)] = ((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)?1:0;
+			}
+			
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'data' => $permission[0]
+			);
+
+			echo json_encode($result_json);
+		}
+		exit;
+
+		case 'save_permission':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'errors' => array()
+			);
+
+			$v_id = intval(@$_POST['id']);
+			$v_pid = intval(@$_POST['pid']);
+			$v_dn = trim(@$_POST['dn']);
+			$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+
+			if(intval(@$_POST['allow_bit_1']))
+			{
+				set_permission_bit($v_allow, LPD_ACCESS_READ);
+			}
+
+			if(intval(@$_POST['allow_bit_2']))
+			{
+				set_permission_bit($v_allow, LPD_ACCESS_WRITE);
+			}
+
+			//assert_permission_ajax(0, LPD_ACCESS_WRITE);	// level 0 having Write access mean admin
+
+			if(empty($v_dn))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'dn', 'msg' => 'Fill DN!');
+			}
+
+			if($result_json['code'])
+			{
+				$result_json['message'] = 'Not all required field filled!';
+				echo json_encode($result_json);
+				exit;
+			}
+
+			if(!$v_id)
+			{
+				if($core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)",
+					$v_pid,
+					$v_dn,
+					$v_allow
+				)))
+				{
+					$id = $db->last_id();
+					echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+					exit;
+				}
+			}
+			else
+			{
+				if($core->db->put(rpv("UPDATE `@access` SET `dn` = !, `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1",
+					$v_dn,
+					$v_allow,
+					$v_id,
+					$v_pid
+				)))
+				{
+					echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+					exit;
+				}
+			}
+
+			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
+		}
+		exit;
+
+		case 'permissions':
+		{
+			header("Content-Type: text/html; charset=utf-8");
+
+			/*
+			if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
+			{
+				$error_msg = "Access denied to section 0 for user ".$uid."!";
+				include('templ/tpl.message.php');
+				exit;
+			}
+			*/
+
+			$pid = '00000000-0000-0000-0000-000000000000';
+			
+			$core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = ! ORDER BY f.`name`', $pid));
+			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $id));
+
+			include(TEMPLATES_DIR.'tpl.admin-permissions.php');
 		}
 		exit;
 
 		case 'sync':
 		{
-			include(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'runbooks-folders.php');
-			include(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'runbooks-list.php');
-
 			header('Content-Type: text/plain; charset=utf-8');
-			$folders = runbooks_get_folders();
 
-			foreach($folders as &$folder)
-			{
-				//echo $folder['guid']."\r\n";
-				$folder_id = 0;
-				if(!$db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $folder['guid'])))
-				{
-					if($db->put(rpv("
-							INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
-							VALUES (!, !, !, #)
-						",
-						$folder['guid'],
-						$folder['pid'],
-						$folder['name'],
-						0x0000
-					)))
-					{
-						$folder_id = $db->last_id();
-					}
-				}
-				else
-				{
-					$db->put(rpv("
-							UPDATE
-								@runbooks_folders
-							SET
-								`pid` = !,
-								`name` = !
-							WHERE
-								`guid` = !
-							LIMIT 1
-						",
-						$folder['pid'],
-						$folder['name'],
-						$res[0][0]
-					));
-
-					$folder_id = $res[0][0];
-				}
-			}
-
-			$runbooks = runbooks_get_list();
-
-			foreach($runbooks as &$runbook)
-			{
-				$folder_id = '00000000-0000-0000-0000-000000000000';
-				if(!$db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks_folders AS r WHERE r.`guid` = ! LIMIT 1", $runbook['folder_id'])))
-				{
-					if($db->put(rpv("
-							INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
-							VALUES (!, !, !, #)
-						",
-						$runbook['folder_id'],
-						'00000000-0000-0000-0000-000000000000',
-						$runbook['path'],
-						0x0000
-					)))
-					{
-						$folder_id = $runbook['folder_id'];
-					}
-				}
-				else
-				{
-					$folder_id = $res[0][0];
-				}
-
-				$runbook_id = 0;
-				if(!$db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $runbook['guid'])))
-				{
-					if($db->put(rpv("
-							INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `flags`)
-							VALUES (!, !, !, !, #)
-						",
-						$runbook['guid'],
-						$folder_id,
-						$runbook['name'],
-						$runbook['description'],
-						0x0000
-					)))
-					{
-						$runbook_id = $runbook['guid'];
-					}
-				}
-				else
-				{
-					$db->put(rpv("
-							UPDATE
-								@runbooks
-							SET
-								`folder_id` = !,
-								`name` = !,
-								`description` = !
-							WHERE
-								`guid` = !
-							LIMIT 1
-						",
-						$folder_id,
-						$runbook['name'],
-						$runbook['description'],
-						$res[0][0]
-					));
-
-					$runbook_id = $res[0][0];
-				}
-
-				if($runbook_id)
-				{
-					$db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = !", $runbook_id));
-
-					foreach($runbook['params'] as &$params)
-					{
-						$db->put(rpv("
-								INSERT INTO @runbooks_params (`pid`, `guid`, `name`, `flags`)
-								VALUES (!, !, !, #)
-							",
-							$runbook_id,
-							$params['guid'],
-							$params['name'],
-							0x0000
-						));
-					}
-				}
-			}
+			$core->Runbooks->sync();
 		}
 		exit;
 
 		case 'start_runbook':
 		{
-			include(MODULES_DIR.'runbooks-start.php');
+			header("Content-Type: text/plain; charset=utf-8");
 
-			runbook_start($_GET['guid'], $_GET['param']);
-		}
-		exit;
-
-		case 'list_runbooks':
-		{
-			if(!$db->select_assoc_ex($runbooks, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r")))
+			if($core->Runbooks->start_runbook($_GET['guid'], $_GET['param']))
 			{
-				exit;
+				echo '{"code": 0, "message": "OK"}';
 			}
-
-			include(TEMPLATES_DIR.'tpl.list-runbooks.php');
+			else
+			{
+				echo '{"code": 1, "message": "Failed: Runbook not started"}';
+			}
 		}
 		exit;
 
 		case 'show_runbook':
 		{
-			if(!$db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
+			if(!$core->db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
 			{
 				exit;
 			}
 			
 			$runbook = &$runbook[0];
 
-			$db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
+			$core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
 
 			include(TEMPLATES_DIR.'tpl.show-runbook.php');
+		}
+		exit;
+
+		case 'get_runbook':
+		{
+			if(!$core->db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
+			{
+				exit;
+			}
+			
+			$runbook = &$runbook[0];
+
+			$core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
+
+			ob_start();
+			include(TEMPLATES_DIR.'tpl.form-runbook.php');
+			$html = ob_get_clean();
+			echo '{"code": 0, "html": "'.json_escape($html).'"}';
+		}
+		exit;
+
+		case 'list_folder':
+		{
+			if(empty($_GET['guid']))
+			{
+				$pid = '00000000-0000-0000-0000-000000000000';
+			}
+			else
+			{
+				$pid = $_GET['guid'];
+			}
+
+			$current_folder_name = 'Root';
+			$parent_folder_id = '';
+			
+			if($core->db->select_assoc_ex($current_folder, rpv('SELECT f.`pid`, f.`name` FROM @runbooks_folders AS f WHERE f.`guid` = !', $pid)))
+			{
+				if(!empty($current_folder[0]['name']))
+				{
+					$current_folder_name = $current_folder[0]['name'];
+					$parent_folder_id = $current_folder[0]['pid'];
+				}
+			}
+			
+			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = ! ORDER BY f.`name`', $pid));
+			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = ! ORDER BY r.`name`', $pid));
+
+			include(TEMPLATES_DIR.'tpl.list-folders.php');
 		}
 		exit;
 	}

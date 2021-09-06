@@ -24,10 +24,13 @@
 			</table>
 
 		<?php } ?>
-			<input type="submit" />
+			<div class="f-right">
+				<button class="button-accept" type="submit" onclick="return f_save('document');">Запустить</button>
+				&nbsp;
+				<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.style.display='none'">Отмена</button>
+			</div>
 		</form>
 
 		<br />
 
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>
-
