@@ -223,7 +223,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 					$v_allow
 				)))
 				{
-					$id = $db->last_id();
+					$id = $core->db->last_id();
 					echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
 					exit;
 				}
@@ -242,7 +242,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 				}
 			}
 
-			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($db->get_last_error()).'"}';
+			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($core->get_last_error()).'"}';
 		}
 		exit;
 
