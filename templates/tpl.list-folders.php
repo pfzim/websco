@@ -35,6 +35,12 @@
 		<br />
 
 		<div id="runbook-container" class="modal-container" style="display: none">
+			<span class="close white" onclick="this.parentNode.style.display='none'">&times;</span>
+			<div class="modal-content">
+				<span class="close" onclick="this.parentNode.parentNode.style.display='none'">&times;</span>
+				<form id="runbook">
+				</form>
+			</div>
 		</div>
 
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

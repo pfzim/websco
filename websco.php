@@ -285,7 +285,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 		{
 			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
 
-			if(!$db->put(rpv("DELETE FROM `@access` WHERE `id` = # LIMIT 1", $id)))
+			if(!$core->db->put(rpv("DELETE FROM `@access` WHERE `id` = # LIMIT 1", $id)))
 			{
 				echo '{"code": 1, "message": "Failed delete"}';
 				exit;
@@ -325,7 +325,9 @@ function assert_permission_ajax($section_id, $allow_bit)
 		{
 			header('Content-Type: text/plain; charset=utf-8');
 
-			$core->Runbooks->sync();
+			$total = $core->Runbooks->sync();
+
+			echo '{"code": 0, "message": "'.json_escape('Runbooks loaded: '.$total).'"}';
 		}
 		exit;
 
@@ -360,6 +362,18 @@ function assert_permission_ajax($section_id, $allow_bit)
 		exit;
 
 		case 'get_runbook':
+		{
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'fields' => $core->Runbooks->get_runbook_form($_GET['guid'])
+			);
+
+			echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		}
+		exit;
+
+		case 'get_runbook_old':
 		{
 			if(!$core->db->select_assoc_ex($runbook, rpv("
 				SELECT r.`guid`, r.`name`, f.`id`

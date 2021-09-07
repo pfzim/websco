@@ -120,7 +120,7 @@ function f_start_runbook(form_id)
 			{
 				err.style.display='none';
 			}
-			
+
 			if(el.elements[i].type == 'checkbox')
 			{
 				if(el.elements[i].checked)
@@ -175,8 +175,30 @@ function f_start_runbook(form_id)
 		},
 		form_id
 	);
-	
+
 	return false;
+}
+
+function f_show_runbook2(id, form_id)
+{
+	gi('loading').style.display = 'block';
+	f_http("websco.php?" + json2url({'action': 'get_runbook_old', 'guid': id }),
+		function(data, params)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				var el = gi(params + '-container');
+				el.innerHTML = data.html;
+				gi(params+'-container').style.display='block';
+			}
+		},
+		form_id
+	);
 }
 
 function f_show_runbook(id, form_id)
@@ -188,12 +210,82 @@ function f_show_runbook(id, form_id)
 			gi('loading').style.display = 'none';
 			if(data.code)
 			{
-				f_notify(data.message, "error");
+				f_notify(data.message, 'error');
 			}
 			else
 			{
-				var el = gi(params + '-container');
-				el.innerHTML = data.html;
+				var el = gi(params);
+				el.innerHTML = '';
+				html = '';
+				for(i = 0; i < data.fields.length; i++)
+				{
+					if(data.fields[i].type == 'header')
+					{
+						html = '<h3>' + escapeHtml(data.fields[i].title) + '</h3>';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+					else if(data.fields[i].type == 'hidden')
+					{
+						html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+					else if(data.fields[i].type == 'list' && data.fields[i].list)
+					{
+						html = '<div class="form-title"><label for="param['+ escapeHtml(data.fields[i].guid) + ']">'+ escapeHtml(data.fields[i].name) + ':</label></div>'
+								+ '<select class="form-field" name="param['+ escapeHtml(data.fields[i].guid) + ']">'
+								+ '<option value=""></option>';
+						for(j = 0; j < data.fields[i].list.length; j++)
+						{
+							html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '">' + escapeHtml(data.fields[i].list[j]) + '</option>';
+						}
+						html += '</select>';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+					else if(data.fields[i].type == 'date')
+					{
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = '<div class="form-title"><label for="param['+ escapeHtml(data.fields[i].guid) + ']">' + escapeHtml(data.fields[i].name) + ':</label></div>'
+								+ '<input class="form-field" id="param['+ escapeHtml(data.fields[i].guid) + ']" name="param['+ escapeHtml(data.fields[i].guid) + ']" type="edit" value=""/>'
+								+ '<div id="param['+ escapeHtml(data.fields[i].guid) + ']-error" class="form-error"></div>';
+						el.appendChild(wrapper);
+
+						var picker = new Pikaday({
+							field: document.getElementById('param['+ escapeHtml(data.fields[i].guid) + ']'),
+							format: 'DD.MM.YYYY'
+						});
+					}
+					else
+					{
+						html = '<div class="form-title"><label for="param['+ escapeHtml(data.fields[i].guid) + ']">' + escapeHtml(data.fields[i].name) + ':</label></div>'
+						+ '<input class="form-field" id="param['+ escapeHtml(data.fields[i].guid) + ']" name="param['+ escapeHtml(data.fields[i].guid) + ']" type="edit" value=""/>'
+						+ '<div id="param['+ escapeHtml(data.fields[i].guid) + ']-error" class="form-error"></div>';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+
+				}
+
+				html = '<div class="f-right">'
+					+ '<button class="button-accept" type="submit" onclick="return f_start_runbook(\'runbook\');">Запустить</button>'
+					+ '&nbsp;'
+					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
+					+ '</div>';
+
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper.firstChild);
+
 				gi(params+'-container').style.display='block';
 			}
 		},
@@ -232,9 +324,46 @@ function f_notify(text, type)
 	);
 }
 
+function f_delete(ev, action)
+{
+	gi('loading').style.display = 'block';
+	var el_src = ev.target || ev.srcElement;
+	var id = el_src.parentNode.parentNode.getAttribute('data-id');
+	f_http(
+		"websco.php?"+json2url({'action': action, 'id': id }),
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				var row = el.parentNode.parentNode;
+				row.parentNode.removeChild(row);
+			}
+		},
+		el_src
+	);
+}
+
 function f_delete_perm(ev)
 {
 	f_delete(ev, 'delete_permission');
+}
+
+function f_async(a)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		a.href,
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+		},
+		null
+	);
+	
+	return false;
 }
 
 function f_save(form_id)
@@ -250,7 +379,7 @@ function f_save(form_id)
 			{
 				err.style.display='none';
 			}
-			
+
 			if(el.elements[i].type == 'checkbox')
 			{
 				if(el.elements[i].checked)
@@ -305,7 +434,7 @@ function f_save(form_id)
 		'application/x-www-form-urlencoded',
 		json2url(form_data)
 	);
-	
+
 	return false;
 }
 
@@ -331,7 +460,7 @@ function f_edit(ev, form_id)
 				{
 					err.style.display='none';
 				}
-				
+
 				if(el.elements[i].name == 'id')
 				{
 					el.elements[i].value = id;
@@ -392,11 +521,6 @@ function f_edit(ev, form_id)
 			form_id
 		);
 	}
-}
-
-function f_delete_perm(ev)
-{
-	f_delete(ev, 'delete_permission');
 }
 
 function f_expand(self, _pid)

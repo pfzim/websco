@@ -16,7 +16,7 @@
 			<li><a href="<?php eh($self); ?>"><?php eh($lang["headerHome"]) ?></a></li>
 			<?php if($core->UserAuth->get_id()) { ?>
 				<li><a href="<?php eh($self.'?action=list_folder'); ?>">Runbooks</a></li>
-				<li><a href="<?php eh($self.'?action=sync'); ?>">Sync</a></li>
+				<li><a href="<?php eh($self.'?action=sync'); ?>" onclick="return f_async(this);">Sync</a></li>
 				<li><a href="<?php eh($self.'?action=permissions'); ?>">Permissions</a></li>
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
