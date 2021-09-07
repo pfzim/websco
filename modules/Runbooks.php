@@ -255,8 +255,8 @@ EOT;
 
 		foreach($runbooks as &$runbook)
 		{
-			$folder_id = '00000000-0000-0000-0000-000000000000';
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks_folders AS r WHERE r.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+			$folder_id = 0;
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $runbook['folder_id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -268,7 +268,7 @@ EOT;
 					0x0000
 				)))
 				{
-					$folder_id = $runbook['folder_id'];
+					$folder_id = $core->db->last_id();
 				}
 			}
 			else
@@ -281,7 +281,7 @@ EOT;
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `flags`)
-						VALUES (!, !, !, !, #)
+						VALUES (!, #, !, !, #)
 					",
 					$runbook['guid'],
 					$folder_id,
@@ -299,7 +299,7 @@ EOT;
 						UPDATE
 							@runbooks
 						SET
-							`folder_id` = !,
+							`folder_id` = #,
 							`name` = !,
 							`description` = !
 						WHERE
@@ -339,35 +339,22 @@ EOT;
 		return $total;
 	}
 	
-	public function get_runbook_form($guid)
+	public function get_runbook($guid)
 	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`folder_id`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
 		{
 			$core->error('Runbook '.$guid.' not found!');
 			return FALSE;
 		}
-
-		$runbook = &$runbook[0];
-
+		
+		return $runbook[0];
+	}
+	
+	public function get_runbook_params($guid)
+	{
 		$this->core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
 		
-		$form_fields = array(
-			array(
-				'type' => 'header',
-				'title' => $runbook['name']
-			),
-			array(
-				'type' => 'hidden',
-				'name' => 'action',
-				'value' => 'start_runbook'
-			),
-			array(
-				'type' => 'hidden',
-				'name' => 'guid',
-				'value' => $runbook['guid']
-			)
-		);
-		
+		$form_fields = array();		
 		
 		$i = 0;
 		foreach($runbook_params as &$row)

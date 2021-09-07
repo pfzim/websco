@@ -115,6 +115,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 					exit;
 				}
 
+				/*
 				if(!$core->UserAuth->is_member(LDAP_ADMIN_GROUP_DN))
 				{
 					$core->UserAuth->logoff();
@@ -122,6 +123,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 					include(TEMPLATES_DIR.'tpl.login.php');
 					exit;
 				}
+				*/
 
 				header('Location: '.$self);
 			}
@@ -154,7 +156,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
-			//assert_permission_ajax(0, LPD_ACCESS_READ);
+			//assert_permission_ajax(0, RB_ACCESS_EXECUTE);
 
 			if(!$core->db->select_assoc_ex($permission, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
 			{
@@ -199,7 +201,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 				set_permission_bit($v_allow, RB_ACCESS_EXECUTE);
 			}
 
-			//assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having Write access mean admin
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having access mean admin
 
 			if(empty($v_dn))
 			{
@@ -325,6 +327,8 @@ function assert_permission_ajax($section_id, $allow_bit)
 		{
 			header('Content-Type: text/plain; charset=utf-8');
 
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having Write access mean admin
+
 			$total = $core->Runbooks->sync();
 
 			echo '{"code": 0, "message": "'.json_escape('Runbooks loaded: '.$total).'"}';
@@ -334,6 +338,9 @@ function assert_permission_ajax($section_id, $allow_bit)
 		case 'start_runbook':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
+			
+			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
+			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
 
 			if($core->Runbooks->start_runbook($_GET['guid'], $_GET['param']))
 			{
@@ -346,56 +353,36 @@ function assert_permission_ajax($section_id, $allow_bit)
 		}
 		exit;
 
-		case 'show_runbook':
-		{
-			if(!$core->db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
-			{
-				exit;
-			}
-
-			$runbook = &$runbook[0];
-
-			$core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
-
-			include(TEMPLATES_DIR.'tpl.show-runbook.php');
-		}
-		exit;
-
 		case 'get_runbook':
 		{
+			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
+			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
+
 			$result_json = array(
 				'code' => 0,
 				'message' => '',
-				'fields' => $core->Runbooks->get_runbook_form($_GET['guid'])
+				'fields' => array_merge(
+					array(
+						array(
+							'type' => 'header',
+							'title' => $runbook['name']
+						),
+						array(
+							'type' => 'hidden',
+							'name' => 'action',
+							'value' => 'start_runbook'
+						),
+						array(
+							'type' => 'hidden',
+							'name' => 'guid',
+							'value' => $runbook['guid']
+						)
+					),
+					$core->Runbooks->get_runbook_params($_GET['guid'])
+				)
 			);
 
 			echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-		}
-		exit;
-
-		case 'get_runbook_old':
-		{
-			if(!$core->db->select_assoc_ex($runbook, rpv("
-				SELECT r.`guid`, r.`name`, f.`id`
-				FROM @runbooks AS r
-				LEFT JOIN @runbooks_folders AS f ON f.`guid` = r.`folder_id`
-				WHERE r.`guid` = !
-				LIMIT 1
-			", $_GET['guid'])))
-			{
-				exit;
-			}
-
-			$runbook = &$runbook[0];
-
-			//assert_permission_ajax($runbook['id'], RB_ACCESS_EXECUTE);
-
-			$core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
-
-			ob_start();
-			include(TEMPLATES_DIR.'tpl.form-runbook.php');
-			$html = ob_get_clean();
-			echo '{"code": 0, "html": "'.json_escape($html).'"}';
 		}
 		exit;
 
@@ -413,7 +400,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 			$current_folder_name = 'Root';
 			$parent_folder_id = '';
 
-			if($core->db->select_assoc_ex($current_folder, rpv('SELECT f.`pid`, f.`name` FROM @runbooks_folders AS f WHERE f.`guid` = !', $pid)))
+			if($core->db->select_assoc_ex($current_folder, rpv('SELECT f.`id`, f.`pid`, f.`name` FROM @runbooks_folders AS f WHERE f.`guid` = !', $pid)))
 			{
 				if(!empty($current_folder[0]['name']))
 				{
@@ -423,7 +410,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 			}
 
 			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = ! ORDER BY f.`name`', $pid));
-			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = ! ORDER BY r.`name`', $pid));
+			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
 
 			include(TEMPLATES_DIR.'tpl.list-folders.php');
 		}

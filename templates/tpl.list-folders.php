@@ -25,7 +25,7 @@
 				<?php foreach($runbooks as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
-						<td><a href="#" onclick="f_show_runbook('<?php eh($row['guid']); ?>', 'runbook');"><?php eh($row['name']); ?></a></td>
+						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$row['guid']); ?>" onclick="return f_show_runbook(this, 'runbook');"><?php eh($row['name']); ?></a></td>
 					</tr>
 				<?php } ?>
 			</tbody>

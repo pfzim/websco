@@ -179,32 +179,11 @@ function f_start_runbook(form_id)
 	return false;
 }
 
-function f_show_runbook2(id, form_id)
+function f_show_runbook(a, form_id)
 {
 	gi('loading').style.display = 'block';
-	f_http("websco.php?" + json2url({'action': 'get_runbook_old', 'guid': id }),
-		function(data, params)
-		{
-			gi('loading').style.display = 'none';
-			if(data.code)
-			{
-				f_notify(data.message, 'error');
-			}
-			else
-			{
-				var el = gi(params + '-container');
-				el.innerHTML = data.html;
-				gi(params+'-container').style.display='block';
-			}
-		},
-		form_id
-	);
-}
-
-function f_show_runbook(id, form_id)
-{
-	gi('loading').style.display = 'block';
-	f_http("websco.php?" + json2url({'action': 'get_runbook', 'guid': id }),
+	f_http(
+		a.href,
 		function(data, params)
 		{
 			gi('loading').style.display = 'none';
@@ -291,6 +270,8 @@ function f_show_runbook(id, form_id)
 		},
 		form_id
 	);
+	
+	return false;
 }
 
 function f_notify(text, type)
