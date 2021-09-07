@@ -2,14 +2,18 @@
 <script type="text/javascript">
 	g_pid = <?php eh($id); ?>;
 </script>
-		<h3 align="center">Access rights management</h3>
+		<h3 align="center">Access rights management: <?php eh($current_folder['name']);?></h3>
 <div>
 	<div class="left-menu">
 		<ul>
 		<li<?php if($id == 0) { echo ' class="active"'; } ?>><a href="?action=permissions&amp;id=0">Top level</a></li>
+		<li>
+			<ul>
 		<?php $i = 0; foreach($folders as &$row) { $i++; ?>
-		<li<?php if($id == $row['id']) { echo ' class="active"'; } ?>><a href="?action=permissions&amp;id=<?php eh($row['id']); ?>"><?php eh($row['name']); ?></a></li>
+		<li<?php if($id == $row['id']) { echo ' class="active"'; } ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="?action=permissions&amp;id=<?php eh($row['id']); ?>"><?php eh($row['name']); ?></a></li>
 		<?php } ?>
+			</ul>
+		</li>
 		</ul>
 	</div>
 	<div class="content-box">
@@ -24,16 +28,26 @@
 			</tr>
 			</thead>
 			<tbody id="table-data">
-		<?php $i = 0; foreach($permissions as &$row) { $i++; ?>
-			<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
-				<td><?php eh($row['id']); ?></td>
-				<td><?php eh($row['dn']); ?></td>
-				<td class="mono"><?php eh(permissions_to_string($row['allow_bits'])); ?></td>
-				<td>
-					<span class="command" onclick="f_edit(<?php eh($row['id']);?>, 'permission');">Edit</span>
-					<span class="command" onclick="f_delete_perm(event);">Delete</span>
-				</td>
-			</tr>
+			<?php
+				$i = 0;
+				foreach($permissions as &$row)
+				{
+					$i++;
+					$group_name = &$row['dn'];
+					if(preg_match('/^..=([^,]+),/i', $group_name, $matches))
+					{
+						$group_name = &$matches[1];
+					}
+					?>
+						<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
+							<td><?php eh($row['id']); ?></td>
+							<td><?php eh($group_name); ?></td>
+							<td class="mono"><?php eh($core->UserAuth->permissions_to_string($row['allow_bits'])); ?></td>
+							<td>
+								<span class="command" onclick="f_edit(<?php eh($row['id']);?>, 'permission');">Edit</span>
+								<span class="command" onclick="f_delete_perm(event);">Delete</span>
+							</td>
+						</tr>
 		<?php } ?>
 			</tbody>
 		</table>
@@ -53,8 +67,7 @@
 				<input class="form-field" id="dn" name="dn" type="edit" value=""/>
 				<div id="dn-error" class="form-error"></div>
 				<div class="form-title">Allow rights:</div>
-				<span><input id="allow_bit_1" name="allow_bit_1" type="checkbox" value="1"/><label for="allow_bit_1">Read</label></span>
-				<span><input id="allow_bit_2" name="allow_bit_2" type="checkbox" value="1"/><label for="allow_bit_2">Write</label></span>
+				<span><input id="allow_bit_1" name="allow_bit_1" type="checkbox" value="1"/><label for="allow_bit_1">Execute</label></span>
 				<div id="allow_bit_1-error" class="form-error"></div>
 				</form>
 				<div class="f-right">

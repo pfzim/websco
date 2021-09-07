@@ -17,7 +17,7 @@
 							$type = 'string';
 							
 							$i++;
-							if(preg_match('/_([isdla]+)$/i', $row['name'], $matches))
+							if(preg_match('#[/_]([isdla]+)$#i', $row['name'], $matches))
 							{
 								$suffix = $matches[1];
 								
@@ -48,7 +48,7 @@
 								}
 							}
 
-							$name = preg_replace('/\s*_[isdla]+$/i', '', $row['name']);
+							$name = preg_replace('#\s*[/_][isdla]+$#i', '', $row['name']);
 							
 							if(preg_match('/\*\s*:\s*?$/i', $row['name']))
 							{
@@ -101,6 +101,7 @@
 						} 
 					?>
 
+					<br />
 					<div class="f-right">
 						<button class="button-accept" type="submit" onclick="return f_start_runbook('runbook');">Запустить</button>
 						&nbsp;

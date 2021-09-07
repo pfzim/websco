@@ -393,3 +393,72 @@ function f_edit(ev, form_id)
 		);
 	}
 }
+
+function f_delete_perm(ev)
+{
+	f_delete(ev, 'delete_permission');
+}
+
+function f_expand(self, _pid)
+{
+	var pid = _pid;
+	var el = gi('expand'+pid);
+	if(el)
+	{
+		el.parentNode.removeChild(el);
+		self.innerText = '+';
+	}
+	else
+	{
+		var xhr = f_xhr();
+		if(xhr)
+		{
+			xhr.open("get", "websco.php?action=expand&guid="+pid, true);
+			xhr.onreadystatechange = function()
+			{
+				if(xhr.readyState == 4)
+				{
+					var result;
+					if(xhr.status == 200)
+					{
+						try
+						{
+							result = JSON.parse(xhr.responseText);
+						}
+						catch(e)
+						{
+							result = {code: 1, status: "Response: "+xhr.responseText};
+						}
+					}
+					else
+					{
+						result = {code: 1, status: "AJAX error code: "+xhr.status};
+					}
+					if(result.code)
+					{
+						f_notify(result.status, 'error');
+					}
+					else
+					{
+						var text = '<ul>';
+						for(var i = 0; i < result.list.length; i++)
+						{
+							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="?action=permissions&id=' + result.list[i].id + '">'+escapeHtml(result.list[i].name)+'</a></li>';
+						}
+						text += '</ul>';
+						var div = document.createElement('div');
+						div.id = 'expand' + pid;
+						//div.className = 'expand-list';
+						div.innerHTML = text;
+						//gi("row"+id).cells[0].appendChild(div);
+						self.parentNode.appendChild(div);
+						//self.parentNode.insertBefore(div, self.nextSibling);
+						self.innerText = '-';
+					}
+				}
+			};
+			xhr.send(null);
+		}
+	}
+	return false;
+}

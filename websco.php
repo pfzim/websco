@@ -26,6 +26,8 @@ if(!defined('ROOT_DIR'))
 
 if(!file_exists(ROOT_DIR.'inc.config.php'))
 {
+	header('Content-Type: text/plain; charset=utf-8');
+	echo 'Configuration file inc.config.php is not found!';
 	exit;
 }
 
@@ -56,12 +58,11 @@ require_once(ROOT_DIR.'inc.config.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
 {
-	global $uid;
-	global $user_perm;
+	global $core;
 
-	if(!$user_perm->check_permission($section_id, $allow_bit))
+	if(!$core->UserAuth->check_permission($section_id, $allow_bit))
 	{
-		echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$uid.'!"}';
+		echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$core->UserAuth->get_login().'!"}';
 		exit;
 	}
 }
@@ -96,7 +97,10 @@ function assert_permission_ajax($section_id, $allow_bit)
 	$core->load('LDAP');
 	$core->load('UserAuth');
 	$core->load('Runbooks');
-	
+
+	define('RB_ACCESS_EXECUTE', 1);
+	$core->UserAuth->set_bits_representation('x');
+
 	if(!$core->UserAuth->get_id())
 	{
 		header('Content-Type: text/html; charset=utf-8');
@@ -159,12 +163,12 @@ function assert_permission_ajax($section_id, $allow_bit)
 			}
 
 			$permission[0]['pid'] = &$permission[0]['oid'];
-			
+
 			for($i = 0; $i < 2; $i++)
 			{
 				$permission[0]['allow_bit_'.($i+1)] = ((ord($permission[0]['allow_bits'][(int) ($i / 8)]) >> ($i % 8)) & 0x01)?1:0;
 			}
-			
+
 			$result_json = array(
 				'code' => 0,
 				'message' => '',
@@ -192,15 +196,10 @@ function assert_permission_ajax($section_id, $allow_bit)
 
 			if(intval(@$_POST['allow_bit_1']))
 			{
-				set_permission_bit($v_allow, LPD_ACCESS_READ);
+				set_permission_bit($v_allow, RB_ACCESS_EXECUTE);
 			}
 
-			if(intval(@$_POST['allow_bit_2']))
-			{
-				set_permission_bit($v_allow, LPD_ACCESS_WRITE);
-			}
-
-			//assert_permission_ajax(0, LPD_ACCESS_WRITE);	// level 0 having Write access mean admin
+			//assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having Write access mean admin
 
 			if(empty($v_dn))
 			{
@@ -259,12 +258,66 @@ function assert_permission_ajax($section_id, $allow_bit)
 			}
 			*/
 
-			$pid = '00000000-0000-0000-0000-000000000000';
+			if(empty($_GET['id']) || intval($_GET['id']) == 0)
+			{
+				//$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
+				$current_folder = array(
+					'name' => 'Top level',
+					'id' => 0,
+					'pid' => '00000000-0000-0000-0000-000000000000',
+					'guid' => ''
+				);
+			}
+			else
+			{
+				$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
+				$current_folder = &$folder[0];
+			}
 			
-			$core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = ! ORDER BY f.`name`', $pid));
-			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $id));
+			$core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = ! ORDER BY f.`name`', $current_folder['pid']));
+			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $_GET['id']));
 
 			include(TEMPLATES_DIR.'tpl.admin-permissions.php');
+		}
+		exit;
+
+		case 'delete_permission':
+		{
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
+
+			if(!$db->put(rpv("DELETE FROM `@access` WHERE `id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed delete"}';
+				exit;
+			}
+
+			echo '{"code": 0, "id": '.$id.', "message": "Permission deleted"}';
+		}
+		exit;
+
+		case 'expand':
+		{
+			if(!isset($_GET['guid']))
+			{
+				echo '{"code": 1, "status": "id undefined"}';
+				exit;
+			}
+
+			$list = '';
+
+			if($core->db->select_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = ! ORDER BY f.`name`', $_GET['guid'])))
+			{
+				foreach($folders as &$row)
+				{
+					if(!empty($list))
+					{
+						$list .= ', ';
+					}
+					$list .= '{"id": '.$row[0].', "guid": "'.json_escape($row[1]).'" ,"name": "'.json_escape($row[2]).'"}';
+				}
+			}
+
+			echo '{"code": 0, "list": ['.$list.']}';
 		}
 		exit;
 
@@ -297,7 +350,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 			{
 				exit;
 			}
-			
+
 			$runbook = &$runbook[0];
 
 			$core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
@@ -308,12 +361,20 @@ function assert_permission_ajax($section_id, $allow_bit)
 
 		case 'get_runbook':
 		{
-			if(!$core->db->select_assoc_ex($runbook, rpv("SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $_GET['guid'])))
+			if(!$core->db->select_assoc_ex($runbook, rpv("
+				SELECT r.`guid`, r.`name`, f.`id`
+				FROM @runbooks AS r
+				LEFT JOIN @runbooks_folders AS f ON f.`guid` = r.`folder_id`
+				WHERE r.`guid` = !
+				LIMIT 1
+			", $_GET['guid'])))
 			{
 				exit;
 			}
-			
+
 			$runbook = &$runbook[0];
+
+			//assert_permission_ajax($runbook['id'], RB_ACCESS_EXECUTE);
 
 			$core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $_GET['guid']));
 
@@ -337,7 +398,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 
 			$current_folder_name = 'Root';
 			$parent_folder_id = '';
-			
+
 			if($core->db->select_assoc_ex($current_folder, rpv('SELECT f.`pid`, f.`name` FROM @runbooks_folders AS f WHERE f.`guid` = !', $pid)))
 			{
 				if(!empty($current_folder[0]['name']))
@@ -346,7 +407,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 					$parent_folder_id = $current_folder[0]['pid'];
 				}
 			}
-			
+
 			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = ! ORDER BY f.`name`', $pid));
 			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = ! ORDER BY r.`name`', $pid));
 

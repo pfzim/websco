@@ -12,6 +12,14 @@ class Core
 		$this->error_msg = '';
 		$this->rise_exception = $rise_exception;
 	}
+	
+    /*
+	public function __call($name, $arguments)
+	{
+		$this->load($name);
+        return call_user_func_array($this->$name, $arguments);
+	}
+	*/
 
 	public function load_ex($name, $module)
 	{

@@ -6,6 +6,7 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>WebSCO - System Center Orchestartor web interface</title>
 		<link type="text/css" href="templates/style.css" rel="stylesheet" />
+		<link type="text/css" href="templates/pikaday.css" rel="stylesheet" />
 		<script src="websco.js"></script>
 		<script src="moment.js"></script>
 		<script src="pikaday.js"></script>

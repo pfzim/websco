@@ -31,6 +31,7 @@ class UserAuth
 	
 	private $ldap = NULL;
 
+	private $bits_string_representation = '';  // like 'rwxd'
 	private $rights = array();           // $rights[$object_id] = $bit_flags_permissions
 
 	function __construct(&$core)
@@ -46,6 +47,7 @@ class UserAuth
 			$this->ldap = &$this->core->LDAP;
 		}
 
+		$this->bits_string_representation = '';
 		$this->rights = array();
 		$this->loaded = FALSE;
 
@@ -486,6 +488,30 @@ class UserAuth
 
 		$level--;
 		return ((ord($this->rights[$object_id][(int) ($level / 8)]) >> ($level % 8)) & 0x01);
+	}
+
+	public function set_bits_representation($representation)
+	{
+		$this->bits_string_representation = $representation;
+	}
+	
+	public function permissions_to_string($allow_bits)
+	{
+		$result = '';
+		$bits_count = strlen($this->bits_string_representation);
+		
+		for($i = 0; $i < $bits_count; $i++)
+		{
+			if((ord($allow_bits[(int) ($i / 8)]) >> ($i % 8)) & 0x01)
+			{
+				$result .= $this->bits_string_representation[$i];
+			}
+			else
+			{
+				$result .= '-';
+			}
+		}
+		return $result;
 	}
 
 	public function get_last_error()
