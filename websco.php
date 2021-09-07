@@ -67,6 +67,18 @@ function assert_permission_ajax($section_id, $allow_bit)
 	}
 }
 
+function log_db($operation, $params, $flags)
+{
+	global $core;
+
+	$core->db->put(rpv('INSERT INTO @logs (`date`, `uid`, `operation`, `params`, `flags`) VALUES (NOW(), #, !, !, #)',
+		$core->UserAuth->get_id(),
+		$operation,
+		$params,
+		$flags
+	));
+}
+
 	$action = '';
 	if(isset($_GET['action']))
 	{
@@ -224,8 +236,11 @@ function assert_permission_ajax($section_id, $allow_bit)
 					$v_allow
 				)))
 				{
-					$id = $core->db->last_id();
-					echo '{"code": 0, "id": '.$id.', "message": "Added (ID '.$id.')"}';
+					$v_id = $core->db->last_id();
+					
+					log_db('Added permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
+					
+					echo '{"code": 0, "id": '.$v_id.', "message": "Added (ID '.$id.')"}';
 					exit;
 				}
 			}
@@ -238,12 +253,14 @@ function assert_permission_ajax($section_id, $allow_bit)
 					$v_pid
 				)))
 				{
-					echo '{"code": 0, "id": '.$id.',"message": "Updated (ID '.$id.')"}';
+					log_db('Updated permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
+
+					echo '{"code": 0, "id": '.$v_id.',"message": "Updated (ID '.$v_id.')"}';
 					exit;
 				}
 			}
 
-			echo '{"code": 1, "id": '.$id.',"message": "Error: '.json_escape($core->get_last_error()).'"}';
+			echo '{"code": 1, "id": '.$v_id.',"message": "Error: '.json_escape($core->get_last_error()).'"}';
 		}
 		exit;
 
@@ -283,9 +300,56 @@ function assert_permission_ajax($section_id, $allow_bit)
 		}
 		exit;
 
+		case 'get_permissions':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			if(empty($_GET['id']) || intval($_GET['id']) == 0)
+			{
+				$current_section = array(
+					'name' => 'Top level',
+					'id' => 0
+				);
+			}
+			else
+			{
+				$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $_GET['id']));
+				$current_section = &$folder[0];
+			}
+			
+			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_section['id']));
+
+			$result_json = array(
+				'code' => 0,
+				'name' => $current_section['name'],
+				'id' => $current_section['id'],
+				'permissions' => array()
+			);
+			
+			foreach($permissions as &$row)
+			{
+				$group_name = &$row['dn'];
+				if(preg_match('/^..=([^,]+),/i', $group_name, $matches))
+				{
+					$group_name = &$matches[1];
+				}
+				
+				$result_json['permissions'][] = array(
+					'id' => &$row['id'],
+					'group' => $group_name,
+					'perms' => $core->UserAuth->permissions_to_string($row['allow_bits'])						
+				);
+			}
+			
+			echo json_encode($result_json);
+		}
+		exit;
+
 		case 'delete_permission':
 		{
 			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
+
+			log_db('Delete permission', 'id='.$v_id, 0);
 
 			if(!$core->db->put(rpv("DELETE FROM `@access` WHERE `id` = # LIMIT 1", $id)))
 			{
@@ -341,7 +405,9 @@ function assert_permission_ajax($section_id, $allow_bit)
 			
 			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
 			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
-
+			
+			log_db('Run: '.$runbook['name'], json_encode($_GET['param'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+			
 			if($core->Runbooks->start_runbook($_GET['guid'], $_GET['param']))
 			{
 				echo '{"code": 0, "message": "OK"}';

@@ -2,7 +2,7 @@
 <script type="text/javascript">
 	g_pid = <?php eh($id); ?>;
 </script>
-		<h3 align="center">Access rights management: <?php eh($current_folder['name']);?></h3>
+		<h3 align="center">Access rights management: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
 <div>
 	<div class="left-menu">
 		<ul>
@@ -10,7 +10,7 @@
 		<li>
 			<ul>
 		<?php $i = 0; foreach($folders as &$row) { $i++; ?>
-		<li<?php if($id == $row['id']) { echo ' class="active"'; } ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="?action=permissions&amp;id=<?php eh($row['id']); ?>"><?php eh($row['name']); ?></a></li>
+		<li<?php if($id == $row['id']) { echo ' class="active"'; } ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="?action=get_permissions&amp;id=<?php eh($row['id']); ?>" onclick="return f_get_perms(<?php eh($row['id']); ?>);"><?php eh($row['name']); ?></a></li>
 		<?php } ?>
 			</ul>
 		</li>

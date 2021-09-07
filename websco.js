@@ -395,8 +395,9 @@ function f_save(form_id)
 			{
 				gi(params+'-container').style.display='none';
 				//window.location = '?action=doc&id='+data.id;
-				window.location = window.location;
+				//window.location = window.location;
 				//f_update_doc(data.data);
+				f_get_perms();
 			}
 			else if(data.errors)
 			{
@@ -416,6 +417,49 @@ function f_save(form_id)
 		json2url(form_data)
 	);
 
+	return false;
+}
+
+function f_get_perms(id)
+{
+	gi('loading').style.display = 'block';
+	//a.parentNode.classList.add('active');
+
+	f_http(
+		"websco.php?" + json2url({'action': 'get_permissions', 'id': id }),
+		function(data, params)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				var el = gi('section_name');
+				el.innerText = data.name;
+				g_pid = data.id;
+				
+				el = gi(params);
+				el.innerHTML = '';
+				html = '';
+				for(i = 0; i < data.permissions.length; i++)
+				{
+					html = '<td>' + data.permissions[i].id + '</td><td>' + data.permissions[i].group + '</td><td>' + data.permissions[i].perms + '</td>'
+						+ '<td><span class="command" onclick="f_edit(' + data.permissions[i].id + ', \'permission\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
+
+					var tr = document.createElement('tr');
+					tr.setAttribute("data-id", data.permissions[i].id);
+					tr.innerHTML = html;
+					el.appendChild(tr);
+				}
+
+				//gi(params).style.display='block';
+			}
+		},
+		'table-data'
+	);
+	
 	return false;
 }
 
@@ -468,7 +512,8 @@ function f_edit(ev, form_id)
 	else
 	{
 		gi('loading').style.display = 'block';
-		f_http("websco.php?"+json2url({'action': 'get_' + form_id, 'id': id }),
+		f_http(
+			"websco.php?"+json2url({'action': 'get_' + form_id, 'id': id }),
 			function(data, params)
 			{
 				gi('loading').style.display = 'none';
@@ -548,7 +593,7 @@ function f_expand(self, _pid)
 						var text = '<ul>';
 						for(var i = 0; i < result.list.length; i++)
 						{
-							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="?action=permissions&id=' + result.list[i].id + '">'+escapeHtml(result.list[i].name)+'</a></li>';
+							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="?action=get_permissions&id=' + result.list[i].id + '" onclick="return f_get_perms(' + result.list[i].id + ');">'+escapeHtml(result.list[i].name)+'</a></li>';
 						}
 						text += '</ul>';
 						var div = document.createElement('div');
