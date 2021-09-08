@@ -23,9 +23,12 @@ class LDAP
 	private $ldap_uri = NULL;
 	private $ldap_user = NULL;
 	private $ldap_passwd = NULL;
+	private $core = NULL;
 
 	function __construct(&$core)
 	{
+		$this->core = &$core;
+
 		$this->ldap_uri = LDAP_URI;
 		$this->ldap_user = LDAP_USER;
 		$this->ldap_passwd = LDAP_PASSWD;

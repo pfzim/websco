@@ -79,6 +79,11 @@ function log_db($operation, $params, $flags)
 	));
 }
 
+function log_file($message)
+{
+	error_log(date('c').'  '.$message."\n", 3, '/var/www/html/websco/log/websco.log');
+}
+
 	$action = '';
 	if(isset($_GET['action']))
 	{
@@ -402,20 +407,55 @@ function log_db($operation, $params, $flags)
 		case 'start_runbook':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
-			
+
 			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
 			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
-			
+
 			log_db('Run: '.$runbook['name'], json_encode($_GET['param'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
-			
-			if($core->Runbooks->start_runbook($_GET['guid'], $_GET['param']))
+
+			$job_id = $core->Runbooks->start_runbook($_GET['guid'], $_GET['param']);
+
+			if($job_id !== FALSE)
 			{
-				echo '{"code": 0, "message": "OK"}';
+				$core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_id, $core->UserAuth->get_id()));
+				log_db('Job created: '.$runbook['name'], $job_id, 0);
+				echo '{"code": 0, "guid": "'.json_escape($job_id).'", "message": "Created job ID: '.json_escape($job_id).'"}';
 			}
 			else
 			{
 				echo '{"code": 1, "message": "Failed: Runbook not started"}';
 			}
+		}
+		exit;
+
+		case 'get_job':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			echo json_encode($core->Runbooks->get_job($_GET['guid']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+			
+		}
+		exit;
+
+		case 'list_jobs':
+		{
+			header("Content-Type: text/html; charset=utf-8");
+
+			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
+			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
+
+			$core->db->select_assoc_ex($jobs, rpv('
+				SELECT
+					DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
+					j.`guid`,
+					u.`login`
+				FROM @runbooks_jobs AS j
+				LEFT JOIN @users AS u ON u.`id` = j.`uid`
+				WHERE j.`pid` = #
+				ORDER BY j.`date` DESC
+			', $runbook['id']));
+
+			include(TEMPLATES_DIR.'tpl.list-jobs.php');
 		}
 		exit;
 

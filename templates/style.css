@@ -614,3 +614,21 @@ body {
     background-color: #555;
     color: white;
 }
+.h-center {
+	align: center;
+}
+
+.status-ok {
+	color: darkgreen;
+    font-weight: bold;
+}
+
+.status-warn {
+	color: orange;
+    font-weight: bold;
+}
+
+.status-err {
+	color: red;
+    font-weight: bold;
+}

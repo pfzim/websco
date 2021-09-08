@@ -3,7 +3,7 @@
 			<span class="close" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
 				<h3 id="message-text"></h3>
-				<button class="button-accept" type="button" onclick="this.parentNode.parentNode.style.display='none'">OK</button>
+				<button class="button-accept h-center" type="button" onclick="this.parentNode.parentNode.style.display='none'">OK</button>
 			</div>
 		</div>
 		<div id="loading" class="modal-container" style="display: none">

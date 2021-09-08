@@ -7,6 +7,7 @@
 				<tr>
 					<th width="5%">№</th>
 					<th width="60%">Name</th>
+					<th width="60%">Operations</th>
 				</tr>
 			</thead>
 			<tbody id="table-data">
@@ -26,6 +27,7 @@
 					<tr>
 						<td><?php eh($i); ?>.</td>
 						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$row['guid']); ?>" onclick="return f_show_runbook(this, 'runbook');"><?php eh($row['name']); ?></a></td>
+						<td><a href="<?php eh($self.'?action=list_jobs&guid='.$row['guid']); ?>">View jobs</a></td>
 					</tr>
 				<?php } ?>
 			</tbody>
@@ -43,4 +45,5 @@
 			</div>
 		</div>
 
+<?php include(TEMPLATES_DIR.'tpl.job-info.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

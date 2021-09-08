@@ -154,11 +154,12 @@ function f_start_runbook(form_id)
 			if(!data.code)
 			{
 				gi(params + '-container').style.display='none';
-				gi('message-text').innerText = 'Ранбук успешно запущен!';
-				gi('message').style.display='block';
+				//gi('message-text').innerText = 'Ранбук успешно запущен!';
+				//gi('message').style.display='block';
 				//window.location = '?action=doc&id='+data.id;
 				//window.location = window.location;
 				//f_update_doc(data.data);
+				f_get_job(data.guid);
 			}
 			else if(data.errors)
 			{
@@ -174,6 +175,96 @@ function f_start_runbook(form_id)
 			}
 		},
 		form_id
+	);
+
+	return false;
+}
+
+function f_get_job(guid)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		'websco.php?' + json2url({'action': 'get_job', 'guid': guid}),
+		function(data, guid)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				var el = gi('runbook_title');
+				el.innerText = data.name;
+				el = gi('job_guid');
+				el.innerText = data.guid;
+				el = gi('job_status');
+				el.innerText = data.status;
+				if(data.status == 'Completed')
+				{
+					el.className = 'status-ok';
+				}
+				else
+				{
+					el.className = 'status-warn';
+				}
+
+				el = gi('job_user');
+				el.innerText = data.user;
+				el = gi('job_update');
+				el.setAttribute('onclick', 'f_get_job(\'' + guid + '\');');
+				gi('job').style.display = 'block';
+				el = gi('job_table_data');
+				el.innerHTML = '';
+				html = '';
+				for(i = 0; i < data.instances.length; i++)
+				{
+					if(data.instances[i].status == 'success')
+					{
+						cl = 'status-ok';
+					}
+					else
+					{
+						cl = 'status-warn';
+					}
+
+					
+					html += '<tr><td>Instance ID:' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
+
+					html += '<tr><td colspan="2"><b>Input parameters</b></td></tr>';
+					for(j = 0; j < data.instances[i].params_in.length; j++)
+					{
+						html += '<tr><td>' + data.instances[i].params_in[j].name +'</td><td>' + data.instances[i].params_in[j].value +'</td></tr>';
+					}
+					html += '<tr><td colspan="2"><b>Output parameters</b></td></tr>';
+					for(j = 0; j < data.instances[i].params_out.length; j++)
+					{
+						html += '<tr><td>' + data.instances[i].params_out[j].name +'</td><td><pre>' + data.instances[i].params_out[j].value +'</pre></td></tr>';
+					}
+					html += '<tr><td colspan="2"><b>Activities</b></td></tr>';
+					for(j = 0; j < data.instances[i].activities.length; j++)
+					{
+						if(data.instances[i].activities[j].status == 'success')
+						{
+							cl = 'status-ok';
+						}
+						else if(data.instances[i].activities[j].status == 'warning')
+						{
+							cl = 'status-warn';
+						}
+						else
+						{
+							cl = 'status-err';
+						}
+
+						html += '<tr><td>- ' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
+					}
+				}
+
+				el.innerHTML = html;
+			}
+		},
+		guid
 	);
 
 	return false;
