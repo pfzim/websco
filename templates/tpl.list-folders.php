@@ -27,7 +27,9 @@
 					<tr>
 						<td><?php eh($i); ?>.</td>
 						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$row['guid']); ?>" onclick="return f_show_runbook(this, 'runbook');"><?php eh($row['name']); ?></a></td>
-						<td><a href="<?php eh($self.'?action=list_jobs&guid='.$row['guid']); ?>">View jobs</a></td>
+						<td><a href="<?php eh($self.'?action=list_jobs&guid='.$row['guid']); ?>">View jobs</a>
+						<a href="<?php eh($self.'?action=get_runbook2&guid='.$row['guid']); ?>" onclick="return f_show_form(this.href, 'uform');">Run</a>
+						</td>
 					</tr>
 				<?php } ?>
 			</tbody>
@@ -45,5 +47,6 @@
 			</div>
 		</div>
 
+<?php include(TEMPLATES_DIR.'tpl.form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.job-info.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

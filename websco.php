@@ -51,9 +51,6 @@ require_once(ROOT_DIR.'inc.config.php');
 
 	require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
 	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.'ru.php');
-	//require_once(ROOT_DIR.'inc.db.php');
-	//require_once(ROOT_DIR.'inc.ldap.php');
-	//require_once(ROOT_DIR.'inc.user.php');
 	require_once(ROOT_DIR.'inc.utils.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
@@ -404,9 +401,94 @@ function log_file($message)
 		}
 		exit;
 
+		case 'save_uform':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			$runbook = $core->Runbooks->get_runbook($_POST['guid']);
+			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
+
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'errors' => array()
+			);
+			
+			$params = array(
+			);
+
+			$runbook_params = $core->Runbooks->get_runbook_params($runbook['guid']);
+			
+			foreach($runbook_params as &$param)
+			{
+				$value = '';
+
+				if(isset($_POST['param'][$param['guid']]))
+				{
+					$value = trim($_POST['param'][$param['guid']]);
+				}
+				
+				if($param['required'] && $value == '')
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'This field is required');
+					continue;
+				}
+				elseif($param['type'] == 'date')
+				{
+					list($nd, $nm, $ny) = explode('.', $value, 3);
+					
+					if(!datecheck($nd, $nm, $ny))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'Incorrect date DD.MM.YYYY');
+						continue;
+					}
+				}
+				elseif($param['type'] == 'list')
+				{
+					if(!in_array($value, $param['list']))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'Value not from list ('.implode(', ', $param['list']).')');
+						continue;
+					}
+				}
+
+				$params[$param['guid']] = $value;
+			}
+
+			if($result_json['code'])
+			{
+				$result_json['message'] = 'Not all required fields are filled in correctly!';
+				echo json_encode($result_json);
+				exit;
+			}
+			
+			//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
+
+			log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+
+			$job_id = $core->Runbooks->start_runbook($runbook['guid'], $params);
+
+			if($job_id !== FALSE)
+			{
+				$core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_id, $core->UserAuth->get_id()));
+				log_db('Job created: '.$runbook['name'], $job_id, 0);
+				echo '{"code": 0, "guid": "'.json_escape($job_id).'", "message": "Created job ID: '.json_escape($job_id).'"}';
+			}
+			else
+			{
+				echo '{"code": 1, "message": "Failed: Runbook not started"}';
+			}
+		}
+		exit;
+		
 		case 'start_runbook':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
+
+			echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder. Remove this line later"}'; exit;
 
 			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
 			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
@@ -442,7 +524,13 @@ function log_file($message)
 			header("Content-Type: text/html; charset=utf-8");
 
 			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
-			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
+
+			if(!$core->UserAuth->check_permission($runbook['folder_id'], RB_ACCESS_EXECUTE))
+			{
+				$error_msg = "Access denied to section ".$runbook['folder_id']." for user ".$core->UserAuth->get_login()."!";
+				include(TEMPLATES_DIR.'tpl.message.php');
+				exit;
+			}
 
 			$core->db->select_assoc_ex($jobs, rpv('
 				SELECT
@@ -487,6 +575,52 @@ function log_file($message)
 					$core->Runbooks->get_runbook_params($_GET['guid'])
 				)
 			);
+
+			echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		}
+		exit;
+
+		case 'get_runbook2':
+		{
+			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
+			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
+
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'title' => $runbook['name'],
+				'fields' => array(
+					array(
+						'type' => 'hidden',
+						'name' => 'action',
+						'value' => 'save_uform'
+					),
+					array(
+						'type' => 'hidden',
+						'name' => 'guid',
+						'value' => $runbook['guid']
+					)
+				)
+			);
+
+			$params = $core->Runbooks->get_runbook_params($_GET['guid']);
+
+			foreach($params as &$param)
+			{
+				 $field = array(
+					'type' => $param['type'],
+					'name' => 'param['.$param['guid'].']',
+					'title' => $param['name'],
+					'value' => ''
+				);
+				
+				if($param['type'] == 'list')
+				{
+					$field['list'] = $param['list'];
+				}
+				
+				$result_json['fields'][] = $field;
+			}
 
 			echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 		}

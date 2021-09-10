@@ -70,6 +70,7 @@
 				<span><input id="allow_bit_1" name="allow_bit_1" type="checkbox" value="1"/><label for="allow_bit_1">Execute</label></span>
 				<div id="allow_bit_1-error" class="form-error"></div>
 				</form>
+				<br />
 				<div class="f-right">
 					<button class="button-accept" type="button" onclick="f_save('permission');">Сохранить</button>
 					&nbsp;

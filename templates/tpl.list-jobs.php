@@ -12,7 +12,7 @@
 				</tr>
 			</thead>
 			<tbody id="table-data">
-				<?php foreach($jobs as &$row) { $i++; ?>
+				<?php $i = 0; foreach($jobs as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
 						<td><?php eh($row['run_date']); ?></td>

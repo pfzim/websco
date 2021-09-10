@@ -229,7 +229,7 @@ function f_get_job(guid)
 					}
 
 					
-					html += '<tr><td>Instance ID:' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
+					html += '<tr><td>Instance ID: ' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
 
 					html += '<tr><td colspan="2"><b>Input parameters</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_in.length; j++)
@@ -363,6 +363,204 @@ function f_show_runbook(a, form_id)
 	);
 	
 	return false;
+}
+
+/*
+form_data = {
+	code = '0 - success, otherwise error',
+	message = 'error message',
+	title = 'form name',
+	fields = [
+		{
+			type = 'hidden, list, date, number, string',
+			name = 'post name',
+			title = 'human readable caption'
+			value = 'default value'
+			list = [
+				'select value 1',
+				'list values',
+				...
+			]
+		},
+		...
+	]
+}
+*/
+
+function f_show_form(url, form_id)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		url,
+		function(data, form_id)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				gi(form_id + '-title').innerText = data.title;
+				
+				var el = gi(form_id + '-fields');
+				el.innerHTML = '';
+				html = '';
+				for(i = 0; i < data.fields.length; i++)
+				{
+					if(data.fields[i].type == 'hidden')
+					{
+						html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+					else if(data.fields[i].type == 'list' && data.fields[i].list)
+					{
+						html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
+								+ '<select class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
+								+ '<option value=""></option>';
+						for(j = 0; j < data.fields[i].list.length; j++)
+						{
+							selected = ''
+							if(data.fields[i].list[j] == data.fields[i].value)
+							{
+								selected = ' selected="selected"'
+							}
+							html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '"' + selected + '>' + escapeHtml(data.fields[i].list[j]) + '</option>';
+						}
+						html += '</select>'
+							+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+					else if(data.fields[i].type == 'date')
+					{
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+								+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
+								+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+						el.appendChild(wrapper);
+
+						var picker = new Pikaday({
+							field: document.getElementById(form_id + data.fields[i].name),
+							format: 'DD.MM.YYYY'
+						});
+					}
+					else
+					{
+						html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+						+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + '"/>'
+						+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+				}
+
+				html = '<div class="f-right">'
+					+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + form_id + '\');">OK</button>'
+					+ '&nbsp;'
+					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
+					+ '</div>';
+
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper.firstChild);
+
+				gi(form_id +'-container').style.display='block';
+			}
+		},
+		form_id
+	);
+	
+	return false;
+}
+
+function f_send_form(form_id)
+{
+	var form_data = {};
+	var el = gi(form_id + '-fields');
+	for(i = 0; i < el.elements.length; i++)
+	{
+		if(el.elements[i].name)
+		{
+			var err = gi(form_id + el.elements[i].name + '-error');
+			if(err)
+			{
+				err.style.display='none';
+			}
+
+			if(el.elements[i].type == 'checkbox')
+			{
+				if(el.elements[i].checked)
+				{
+					form_data[el.elements[i].name] = el.elements[i].value;
+				}
+			}
+			else if(el.elements[i].type == 'select-one')
+			{
+				if(el.elements[i].selectedIndex != -1)
+				{
+					form_data[el.elements[i].name] = el.elements[i].value;
+				}
+			}
+			else
+			{
+				form_data[el.elements[i].name] = el.elements[i].value;
+			}
+		}
+	}
+
+	//alert(json2url(form_data));
+	//return;
+
+	gi('loading').style.display = 'block';
+	f_http("websco.php?action=save_" + form_id,
+		function(data, form_id)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				gi(form_id+'-container').style.display='none';
+				//window.location = '?action=doc&id='+data.id;
+				//window.location = window.location;
+				//f_update_doc(data.data);
+				//f_get_perms();
+				f_on_saved(form_id, data);
+			}
+			else if(data.errors)
+			{
+				for(i = 0; i < data.errors.length; i++)
+				{
+					var el = gi(form_id + data.errors[i].name + '-error');
+					if(el)
+					{
+						el.textContent = data.errors[i].msg;
+						el.style.display='block';
+					}
+				}
+			}
+		},
+		form_id,
+		'application/x-www-form-urlencoded',
+		json2url(form_data)
+	);
+
+	return false;
+}
+
+function f_on_saved(form_id, data)
+{
+	if(form_id = 'uform')
+	{
+		f_get_job(data.guid);
+	}
 }
 
 function f_notify(text, type)
