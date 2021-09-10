@@ -183,7 +183,7 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td>- ' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
+						html += '<tr><td>' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
 					}
 				}
 
@@ -273,9 +273,9 @@ function f_show_form(url, form_id)
 						html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
 						for(j = 0; j < data.fields[i].list.length; j++)
 						{
-							html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j + ']" name="' + escapeHtml(data.fields[i].name) + '[' + j + ']" type="checkbox" value="1"/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
+							html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
 						}
-						html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+						html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
 							
 						var wrapper = document.createElement('div');
 						wrapper.innerHTML = html;
@@ -306,15 +306,15 @@ function f_show_form(url, form_id)
 					}
 				}
 
-				html = '<div class="f-right">'
+				html = '<br /><div class="f-right">'
 					+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + form_id + '\');">OK</button>'
 					+ '&nbsp;'
-					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
+					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
 					+ '</div>';
 
 				var wrapper = document.createElement('div');
 				wrapper.innerHTML = html;
-				el.appendChild(wrapper.firstChild);
+				el.appendChild(wrapper);
 
 				gi(form_id +'-container').style.display='block';
 			}
@@ -438,6 +438,13 @@ function f_notify(text, type)
 	);
 }
 
+function f_msg(text)
+{
+	gi('message-text').innerText = text;
+	gi('message-box').style.display = 'block';
+	return false;
+}
+
 function f_delete(ev, action)
 {
 	gi('loading').style.display = 'block';
@@ -473,6 +480,7 @@ function f_async(a)
 		{
 			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
+			f_msg(data.message);
 		},
 		null
 	);

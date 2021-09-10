@@ -425,11 +425,11 @@ function log_file($message)
 			{
 				$value = '';
 
-				if(isset($_POST['param'][$param['guid']]))
+				if($param['type'] == 'flags')
 				{
-					if($param['type'] == 'flags')
+					$flags = 0;
+					if(isset($_POST['param'][$param['guid']]))
 					{
-						$flags = 0;
 						foreach($_POST['param'][$param['guid']] as $bit => $bit_value)
 						{
 							if(intval($bit_value))
@@ -437,18 +437,24 @@ function log_file($message)
 								$flags |= 0x01 << intval($bit);
 							}
 						}
-						
-						if($flags)
-						{
-							$value = strval($flags);
-						}
-
-						//log_file('Value: '.$value);
+					}
+					
+					if($param['required'] && ($flags == 0))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => 'At least one flag must be selected');
 					}
 					else
 					{
-						$value = trim($_POST['param'][$param['guid']]);
+						$params[$param['guid']] = strval($flags);
 					}
+
+					//log_file('Value: '.strval($flags));
+					continue;
+				}
+				elseif(isset($_POST['param'][$param['guid']]))
+				{
+					$value = trim($_POST['param'][$param['guid']]);
 				}
 				
 				if($param['required'] && $value == '')

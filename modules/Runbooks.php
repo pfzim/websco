@@ -335,6 +335,10 @@ EOT;
 
 	public function sync()
 	{
+		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | 0x0001)"));
+		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | 0x0001)"));
+		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | 0x0001)"));
+		
 		$total = 0;
 		$folders = $this->get_folders();
 
@@ -405,7 +409,8 @@ EOT;
 						UPDATE
 							@runbooks_activities
 						SET
-							`name` = !
+							`name` = !,
+							`flags` = (`flags` & ~0x0001)
 						WHERE
 							`id` = #
 						LIMIT 1
@@ -470,7 +475,8 @@ EOT;
 						SET
 							`folder_id` = #,
 							`name` = !,
-							`description` = !
+							`description` = !,
+							`flags` = (`flags` & ~0x0001)
 						WHERE
 							`guid` = !
 						LIMIT 1
@@ -587,7 +593,7 @@ EOT;
 			$type = 'string';
 			
 			$i++;
-			if(preg_match('#[/_]([isdla]+)$#i', $row['name'], $matches))
+			if(preg_match('#[/_]([isdlafr]+)$#i', $row['name'], $matches))
 			{
 				$suffix = $matches[1];
 				
@@ -624,7 +630,7 @@ EOT;
 				}
 			}
 
-			$name = preg_replace('#\s*[/_][isdla]+$#i', '', $row['name']);
+			$name = preg_replace('#\s*[/_][isdlafr]+$#i', '', $row['name']);
 			
 			if(preg_match('/\*\s*:?\s*$/i', $name))
 			{
