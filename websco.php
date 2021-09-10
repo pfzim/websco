@@ -419,13 +419,36 @@ function log_file($message)
 
 			$runbook_params = $core->Runbooks->get_runbook_params($runbook['guid']);
 			
+			//log_file(json_encode($_POST, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+			
 			foreach($runbook_params as &$param)
 			{
 				$value = '';
 
 				if(isset($_POST['param'][$param['guid']]))
 				{
-					$value = trim($_POST['param'][$param['guid']]);
+					if($param['type'] == 'flags')
+					{
+						$flags = 0;
+						foreach($_POST['param'][$param['guid']] as $bit => $bit_value)
+						{
+							if(intval($bit_value))
+							{
+								$flags |= 0x01 << intval($bit);
+							}
+						}
+						
+						if($flags)
+						{
+							$value = strval($flags);
+						}
+
+						//log_file('Value: '.$value);
+					}
+					else
+					{
+						$value = trim($_POST['param'][$param['guid']]);
+					}
 				}
 				
 				if($param['required'] && $value == '')
@@ -484,32 +507,6 @@ function log_file($message)
 		}
 		exit;
 		
-		case 'start_runbook':
-		{
-			header("Content-Type: text/plain; charset=utf-8");
-
-			echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder. Remove this line later"}'; exit;
-
-			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
-			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
-
-			log_db('Run: '.$runbook['name'], json_encode($_GET['param'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
-
-			$job_id = $core->Runbooks->start_runbook($_GET['guid'], $_GET['param']);
-
-			if($job_id !== FALSE)
-			{
-				$core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_id, $core->UserAuth->get_id()));
-				log_db('Job created: '.$runbook['name'], $job_id, 0);
-				echo '{"code": 0, "guid": "'.json_escape($job_id).'", "message": "Created job ID: '.json_escape($job_id).'"}';
-			}
-			else
-			{
-				echo '{"code": 1, "message": "Failed: Runbook not started"}';
-			}
-		}
-		exit;
-
 		case 'get_job':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -555,39 +552,6 @@ function log_file($message)
 			$result_json = array(
 				'code' => 0,
 				'message' => '',
-				'fields' => array_merge(
-					array(
-						array(
-							'type' => 'header',
-							'title' => $runbook['name']
-						),
-						array(
-							'type' => 'hidden',
-							'name' => 'action',
-							'value' => 'start_runbook'
-						),
-						array(
-							'type' => 'hidden',
-							'name' => 'guid',
-							'value' => $runbook['guid']
-						)
-					),
-					$core->Runbooks->get_runbook_params($_GET['guid'])
-				)
-			);
-
-			echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-		}
-		exit;
-
-		case 'get_runbook2':
-		{
-			$runbook = $core->Runbooks->get_runbook($_GET['guid']);
-			assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
-
-			$result_json = array(
-				'code' => 0,
-				'message' => '',
 				'title' => $runbook['name'],
 				'fields' => array(
 					array(
@@ -603,7 +567,7 @@ function log_file($message)
 				)
 			);
 
-			$params = $core->Runbooks->get_runbook_params($_GET['guid']);
+			$params = $core->Runbooks->get_runbook_params($runbook['guid']);
 
 			foreach($params as &$param)
 			{
@@ -614,7 +578,7 @@ function log_file($message)
 					'value' => ''
 				);
 				
-				if($param['type'] == 'list')
+				if(($param['type'] == 'list') || ($param['type'] == 'flags'))
 				{
 					$field['list'] = $param['list'];
 				}

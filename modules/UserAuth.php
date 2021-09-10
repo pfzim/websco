@@ -32,6 +32,8 @@ class UserAuth
 	private $ldap = NULL;
 
 	private $bits_string_representation = '';  // like 'rwxd'
+	private $max_bits = 0;
+	
 	private $rights = array();           // $rights[$object_id] = $bit_flags_permissions
 
 	function __construct(&$core)
@@ -48,6 +50,7 @@ class UserAuth
 		}
 
 		$this->bits_string_representation = '';
+		$this->max_bits = 0;
 		$this->rights = array();
 		$this->loaded = FALSE;
 
@@ -457,7 +460,7 @@ class UserAuth
 				*/
 				if($this->ldap->search($records, '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
 				{
-					for($i = 0; $i <= ((int) (LPD_ACCESS_LAST_BIT / 8)); $i++)
+					for($i = 0; $i <= ((int) ($this->max_bits / 8)); $i++)
 					{
 						$this->rights[$object_id][$i] = chr(ord($this->rights[$object_id][$i]) | ord($row[1][$i]));
 					}
@@ -493,6 +496,7 @@ class UserAuth
 	public function set_bits_representation($representation)
 	{
 		$this->bits_string_representation = $representation;
+		$this->max_bits = strlen($representation);
 	}
 	
 	public function permissions_to_string($allow_bits)

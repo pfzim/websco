@@ -106,80 +106,6 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 	return true;
 }
 
-
-function f_start_runbook(form_id)
-{
-	var form_data = {};
-	var el = gi(form_id);
-	for(i = 0; i < el.elements.length; i++)
-	{
-		if(el.elements[i].name)
-		{
-			var err = gi(el.elements[i].name + '-error');
-			if(err)
-			{
-				err.style.display='none';
-			}
-
-			if(el.elements[i].type == 'checkbox')
-			{
-				if(el.elements[i].checked)
-				{
-					form_data[el.elements[i].name] = el.elements[i].value;
-				}
-			}
-			else if(el.elements[i].type == 'select-one')
-			{
-				if(el.elements[i].selectedIndex != -1)
-				{
-					form_data[el.elements[i].name] = el.elements[i].value;
-				}
-			}
-			else
-			{
-				form_data[el.elements[i].name] = el.elements[i].value;
-			}
-		}
-	}
-
-	//alert(json2url(form_data));
-	//return;
-
-	gi('loading').style.display = 'block';
-	f_http("websco.php?" + json2url(form_data),
-		function(data, params)
-		{
-			gi('loading').style.display = 'none';
-			f_notify(data.message, data.code?"error":"success");
-			if(!data.code)
-			{
-				gi(params + '-container').style.display='none';
-				//gi('message-text').innerText = 'Ранбук успешно запущен!';
-				//gi('message').style.display='block';
-				//window.location = '?action=doc&id='+data.id;
-				//window.location = window.location;
-				//f_update_doc(data.data);
-				f_get_job(data.guid);
-			}
-			else if(data.errors)
-			{
-				for(i = 0; i < data.errors.length; i++)
-				{
-					var el = gi(data.errors[i].name + "-error");
-					if(el)
-					{
-						el.textContent = data.errors[i].msg;
-						el.style.display='block';
-					}
-				}
-			}
-		},
-		form_id
-	);
-
-	return false;
-}
-
 function f_get_job(guid)
 {
 	gi('loading').style.display = 'block';
@@ -270,101 +196,6 @@ function f_get_job(guid)
 	return false;
 }
 
-function f_show_runbook(a, form_id)
-{
-	gi('loading').style.display = 'block';
-	f_http(
-		a.href,
-		function(data, params)
-		{
-			gi('loading').style.display = 'none';
-			if(data.code)
-			{
-				f_notify(data.message, 'error');
-			}
-			else
-			{
-				var el = gi(params);
-				el.innerHTML = '';
-				html = '';
-				for(i = 0; i < data.fields.length; i++)
-				{
-					if(data.fields[i].type == 'header')
-					{
-						html = '<h3>' + escapeHtml(data.fields[i].title) + '</h3>';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-					else if(data.fields[i].type == 'hidden')
-					{
-						html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-					else if(data.fields[i].type == 'list' && data.fields[i].list)
-					{
-						html = '<div class="form-title"><label for="param['+ escapeHtml(data.fields[i].guid) + ']">'+ escapeHtml(data.fields[i].name) + ':</label></div>'
-								+ '<select class="form-field" name="param['+ escapeHtml(data.fields[i].guid) + ']">'
-								+ '<option value=""></option>';
-						for(j = 0; j < data.fields[i].list.length; j++)
-						{
-							html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '">' + escapeHtml(data.fields[i].list[j]) + '</option>';
-						}
-						html += '</select>';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-					else if(data.fields[i].type == 'date')
-					{
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = '<div class="form-title"><label for="param['+ escapeHtml(data.fields[i].guid) + ']">' + escapeHtml(data.fields[i].name) + ':</label></div>'
-								+ '<input class="form-field" id="param['+ escapeHtml(data.fields[i].guid) + ']" name="param['+ escapeHtml(data.fields[i].guid) + ']" type="edit" value=""/>'
-								+ '<div id="param['+ escapeHtml(data.fields[i].guid) + ']-error" class="form-error"></div>';
-						el.appendChild(wrapper);
-
-						var picker = new Pikaday({
-							field: document.getElementById('param['+ escapeHtml(data.fields[i].guid) + ']'),
-							format: 'DD.MM.YYYY'
-						});
-					}
-					else
-					{
-						html = '<div class="form-title"><label for="param['+ escapeHtml(data.fields[i].guid) + ']">' + escapeHtml(data.fields[i].name) + ':</label></div>'
-						+ '<input class="form-field" id="param['+ escapeHtml(data.fields[i].guid) + ']" name="param['+ escapeHtml(data.fields[i].guid) + ']" type="edit" value=""/>'
-						+ '<div id="param['+ escapeHtml(data.fields[i].guid) + ']-error" class="form-error"></div>';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-
-				}
-
-				html = '<div class="f-right">'
-					+ '<button class="button-accept" type="submit" onclick="return f_start_runbook(\'runbook\');">Запустить</button>'
-					+ '&nbsp;'
-					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
-					+ '</div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper.firstChild);
-
-				gi(params+'-container').style.display='block';
-			}
-		},
-		form_id
-	);
-	
-	return false;
-}
-
 /*
 form_data = {
 	code = '0 - success, otherwise error',
@@ -418,9 +249,9 @@ function f_show_form(url, form_id)
 					}
 					else if(data.fields[i].type == 'list' && data.fields[i].list)
 					{
-						html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
-								+ '<select class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
-								+ '<option value=""></option>';
+						html = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
+							+ '<select class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
+							+ '<option value=""></option>';
 						for(j = 0; j < data.fields[i].list.length; j++)
 						{
 							selected = ''
@@ -431,8 +262,21 @@ function f_show_form(url, form_id)
 							html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '"' + selected + '>' + escapeHtml(data.fields[i].list[j]) + '</option>';
 						}
 						html += '</select>'
-							+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+							+ '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
 
+						var wrapper = document.createElement('div');
+						wrapper.innerHTML = html;
+						el.appendChild(wrapper);
+					}
+					else if(data.fields[i].type == 'flags' && data.fields[i].list)
+					{
+						html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
+						for(j = 0; j < data.fields[i].list.length; j++)
+						{
+							html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j + ']" name="' + escapeHtml(data.fields[i].name) + '[' + j + ']" type="checkbox" value="1"/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
+						}
+						html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+							
 						var wrapper = document.createElement('div');
 						wrapper.innerHTML = html;
 						el.appendChild(wrapper);
@@ -441,8 +285,8 @@ function f_show_form(url, form_id)
 					{
 						var wrapper = document.createElement('div');
 						wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-								+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
-								+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+							+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
+							+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
 						el.appendChild(wrapper);
 
 						var picker = new Pikaday({
@@ -453,8 +297,8 @@ function f_show_form(url, form_id)
 					else
 					{
 						html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-						+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + '"/>'
-						+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+							+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + '"/>'
+							+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
 
 						var wrapper = document.createElement('div');
 						wrapper.innerHTML = html;
@@ -492,7 +336,7 @@ function f_send_form(form_id)
 			var err = gi(form_id + el.elements[i].name + '-error');
 			if(err)
 			{
-				err.style.display='none';
+				err.style.display = 'none';
 			}
 
 			if(el.elements[i].type == 'checkbox')
@@ -542,7 +386,7 @@ function f_send_form(form_id)
 					if(el)
 					{
 						el.textContent = data.errors[i].msg;
-						el.style.display='block';
+						el.style.display = 'block';
 					}
 				}
 			}

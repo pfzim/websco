@@ -543,7 +543,7 @@ EOT;
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE j.`guid` = !
 			LIMIT 1
-		', $_guid)))
+		', $guid)))
 		{
 			$this->core->error('Job '.$guid.' not found!');
 			return FALSE;
@@ -609,6 +609,9 @@ EOT;
 						case 'l':
 							$type = 'list';
 							break;
+						case 'f':
+							$type = 'flags';
+							break;
 						case 'a':
 							$type = 'samaccountname';
 							break;
@@ -630,7 +633,7 @@ EOT;
 			
 			$name = preg_replace('/\s*:\s*$/i', '', $name);
 			
-			if(($type == 'list') && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
+			if((($type == 'list') || ($type == 'flags')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
 			{
 				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*)/i', '\2', $name);
 				$list = preg_split('/\s*[,;]\s*/', $matches[1]);
