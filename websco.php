@@ -401,7 +401,7 @@ function log_file($message)
 		}
 		exit;
 
-		case 'save_uform':
+		case 'start_runbook':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
@@ -483,6 +483,15 @@ function log_file($message)
 						continue;
 					}
 				}
+				elseif($param['type'] == 'integer')
+				{
+					if(!preg_match('/^\d+$/i', $value))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'Only numbers accepted');
+						continue;
+					}
+				}
 
 				$params[$param['guid']] = $value;
 			}
@@ -559,6 +568,7 @@ function log_file($message)
 				'code' => 0,
 				'message' => '',
 				'title' => $runbook['name'],
+				'action' => 'start_runbook',
 				'fields' => array(
 					array(
 						'type' => 'hidden',

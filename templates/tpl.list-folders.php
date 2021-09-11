@@ -26,7 +26,7 @@
 				<?php foreach($runbooks as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
-						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$row['guid']); ?>" onclick="return f_show_form(this.href, 'uform');"><?php eh($row['name']); ?></a></td>
+						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
 						<td>
 							<a href="<?php eh($self.'?action=list_jobs&guid='.$row['guid']); ?>">View jobs</a>
 						</td>
@@ -38,6 +38,6 @@
 
 		<br />
 
-<?php include(TEMPLATES_DIR.'tpl.form.php'); ?>
+<?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.job-info.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

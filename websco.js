@@ -218,8 +218,9 @@ form_data = {
 }
 */
 
-function f_show_form(url, form_id)
+function f_show_form(url)
 {
+	var form_id = 'uform';
 	gi('loading').style.display = 'block';
 	f_http(
 		url,
@@ -307,7 +308,7 @@ function f_show_form(url, form_id)
 				}
 
 				html = '<br /><div class="f-right">'
-					+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + form_id + '\');">OK</button>'
+					+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">OK</button>'
 					+ '&nbsp;'
 					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
 					+ '</div>';
@@ -325,8 +326,9 @@ function f_show_form(url, form_id)
 	return false;
 }
 
-function f_send_form(form_id)
+function f_send_form(action)
 {
+	var form_id = 'uform';
 	var form_data = {};
 	var el = gi(form_id + '-fields');
 	for(i = 0; i < el.elements.length; i++)
@@ -364,7 +366,7 @@ function f_send_form(form_id)
 	//return;
 
 	gi('loading').style.display = 'block';
-	f_http("websco.php?action=save_" + form_id,
+	f_http('websco.php?action=' + action,
 		function(data, form_id)
 		{
 			gi('loading').style.display = 'none';
@@ -376,7 +378,7 @@ function f_send_form(form_id)
 				//window.location = window.location;
 				//f_update_doc(data.data);
 				//f_get_perms();
-				f_on_saved(form_id, data);
+				f_on_saved(action, data);
 			}
 			else if(data.errors)
 			{
@@ -399,9 +401,9 @@ function f_send_form(form_id)
 	return false;
 }
 
-function f_on_saved(form_id, data)
+function f_on_saved(action, data)
 {
-	if(form_id = 'uform')
+	if(form_id = 'start_runbook')
 	{
 		f_get_job(data.guid);
 	}
