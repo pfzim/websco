@@ -70,7 +70,12 @@ class Core
 
 	public function error($str)
 	{
-		if($this->rise_exception)
+		$this->error_ex($str, $this->rise_exception);
+	}
+
+	public function error_ex($str, $rise_exception)
+	{
+		if($rise_exception)
 		{
 			throw new Exception(__CLASS__.': '.$str);
 		}

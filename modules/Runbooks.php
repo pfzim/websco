@@ -368,7 +368,8 @@ EOT;
 							@runbooks_folders
 						SET
 							`pid` = !,
-							`name` = !
+							`name` = !,
+							`flags` = (`flags` & ~0x0001)
 						WHERE
 							`guid` = !
 						LIMIT 1
@@ -540,8 +541,11 @@ EOT;
 	{
 		if(!$this->core->db->select_assoc_ex($job, rpv('
 			SELECT
+				j.`id`,
 				j.`guid`,
 				r.`name`,
+				r.`id` AS `runbook_id`,
+				r.`guid` AS `runbook_guid`,
 				r.`folder_id`,
 				u.`login`
 			FROM @runbooks_jobs AS j
@@ -562,8 +566,11 @@ EOT;
 		$properties = $xml->content->children('m', TRUE)->properties->children('d', TRUE);
 
 		$job_info = array(
+			'id' => $job['id'],
 			'guid' => $job['guid'],
 			'name' => $job['name'],
+			'runbook_id' => $job['runbook_id'],
+			'runbook_guid' => $job['runbook_guid'],
 			'folder_id' => $job['folder_id'],
 			'user' => $job['login'],
 			'status' => (string) $properties->Status,

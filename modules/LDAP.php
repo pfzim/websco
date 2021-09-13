@@ -24,6 +24,7 @@ class LDAP
 	private $ldap_user = NULL;
 	private $ldap_passwd = NULL;
 	private $core = NULL;
+	private $rise_exception = FALSE;
 
 	function __construct(&$core)
 	{
@@ -33,6 +34,7 @@ class LDAP
 		$this->ldap_user = LDAP_USER;
 		$this->ldap_passwd = LDAP_PASSWD;
 		$this->link = NULL;
+		$this->rise_exception = FALSE;
 	}
 
 	private function connect()
@@ -40,7 +42,7 @@ class LDAP
 		$this->link = @ldap_connect($this->ldap_uri);
 		if(!$this->link)
 		{
-			$this->core->error(ldap_error($this->link));
+			$this->core->error_ex(ldap_error($this->link), $this->rise_exception);
 			$this->link = NULL;
 			return FALSE;
 		}
@@ -50,7 +52,7 @@ class LDAP
 		
 		if(!@ldap_bind($this->link, $this->ldap_user, $this->ldap_passwd))
 		{
-			$this->core->error(ldap_error($this->link));
+			$this->core->error_ex(ldap_error($this->link), $this->rise_exception);
 			ldap_unbind($this->link);
 			$this->link = NULL;
 			return FALSE;
@@ -86,7 +88,7 @@ class LDAP
 		{
 			if(!@ldap_bind($this->link, $this->ldap_user, $this->ldap_passwd))
 			{
-				$this->core->error(ldap_error($this->link));
+				$this->core->error_ex(ldap_error($this->link), $this->rise_exception);
 				$this->link = NULL;
 				return FALSE;
 			}
@@ -117,7 +119,7 @@ class LDAP
 		$search_result = ldap_search($lnk, LDAP_BASE_DN, $query, $attrs);
 		if(!$search_result)
 		{
-			$this->core->error(ldap_error($lnk));
+			$this->core->error_ex(ldap_error($lnk), $this->rise_exception);
 			return FALSE;
 		}
 		
@@ -133,5 +135,10 @@ class LDAP
 		ldap_free_result($search_result);
 
 		return $i;
+	}
+	
+	public function set_rise_exception($rise_exception)
+	{
+		$this->rise_exception = $rise_exception;
 	}
 }

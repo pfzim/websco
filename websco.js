@@ -106,6 +106,12 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 	return true;
 }
 
+function f_restart_job(rb_guid, job_id)
+{
+	gi('job').style.display = 'none';
+	f_show_form('websco.php?' + json2url({'action': 'get_runbook', 'guid': rb_guid, 'job_id': job_id}));
+}
+
 function f_get_job(guid)
 {
 	gi('loading').style.display = 'block';
@@ -139,6 +145,8 @@ function f_get_job(guid)
 				el.innerText = data.user;
 				el = gi('job_update');
 				el.setAttribute('onclick', 'f_get_job(\'' + guid + '\');');
+				el = gi('job_restart');
+				el.setAttribute('onclick', 'f_restart_job(\'' + data.runbook_guid + '\', ' + data.id + ');');
 				gi('job').style.display = 'block';
 				el = gi('job_table_data');
 				el.innerHTML = '';
@@ -162,11 +170,6 @@ function f_get_job(guid)
 					{
 						html += '<tr><td>' + data.instances[i].params_in[j].name +'</td><td>' + data.instances[i].params_in[j].value +'</td></tr>';
 					}
-					html += '<tr><td colspan="2"><b>Output parameters</b></td></tr>';
-					for(j = 0; j < data.instances[i].params_out.length; j++)
-					{
-						html += '<tr><td>' + data.instances[i].params_out[j].name +'</td><td><pre>' + data.instances[i].params_out[j].value +'</pre></td></tr>';
-					}
 					html += '<tr><td colspan="2"><b>Activities</b></td></tr>';
 					for(j = 0; j < data.instances[i].activities.length; j++)
 					{
@@ -184,6 +187,11 @@ function f_get_job(guid)
 						}
 
 						html += '<tr><td>' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
+					}
+					html += '<tr><td colspan="2"><b>Output parameters</b></td></tr>';
+					for(j = 0; j < data.instances[i].params_out.length; j++)
+					{
+						html += '<tr><td>' + data.instances[i].params_out[j].name +'</td><td><pre>' + data.instances[i].params_out[j].value +'</pre></td></tr>';
 					}
 				}
 
@@ -271,10 +279,18 @@ function f_show_form(url)
 					}
 					else if(data.fields[i].type == 'flags' && data.fields[i].list)
 					{
+						value = parseInt(data.fields[i].value, 10);
+						
 						html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
 						for(j = 0; j < data.fields[i].list.length; j++)
 						{
-							html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
+							checked = '';
+							if(value & (0x01 << j))
+							{
+								checked = ' checked="checked"';
+							}
+							
+							html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"' + checked + '/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
 						}
 						html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
 							

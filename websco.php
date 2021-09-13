@@ -507,13 +507,22 @@ function log_file($message)
 
 			log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
 
-			$job_id = $core->Runbooks->start_runbook($runbook['guid'], $params);
+			$job_guid = $core->Runbooks->start_runbook($runbook['guid'], $params);
 
-			if($job_id !== FALSE)
+			if($job_guid !== FALSE)
 			{
-				$core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_id, $core->UserAuth->get_id()));
-				log_db('Job created: '.$runbook['name'], $job_id, 0);
-				echo '{"code": 0, "guid": "'.json_escape($job_id).'", "message": "Created job ID: '.json_escape($job_id).'"}';
+				if($core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $core->UserAuth->get_id())))
+				{
+					$job_id = $core->db->last_id();
+					
+					foreach($params as $key => $value)
+					{
+						$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $key, $value));
+					}
+				}
+				
+				log_db('Job created: '.$runbook['name'], $job_guid, 0);
+				echo '{"code": 0, "guid": "'.json_escape($job_guid).'", "message": "Created job ID: '.json_escape($job_guid).'"}';
 			}
 			else
 			{
@@ -546,6 +555,7 @@ function log_file($message)
 
 			$core->db->select_assoc_ex($jobs, rpv('
 				SELECT
+					j.`id`,
 					DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
 					j.`guid`,
 					u.`login`
@@ -570,11 +580,13 @@ function log_file($message)
 				'title' => $runbook['name'],
 				'action' => 'start_runbook',
 				'fields' => array(
+					/*
 					array(
 						'type' => 'hidden',
 						'name' => 'action',
-						'value' => 'save_uform'
+						'value' => 'start_runbook'
 					),
+					*/
 					array(
 						'type' => 'hidden',
 						'name' => 'guid',
@@ -584,6 +596,13 @@ function log_file($message)
 			);
 
 			$params = $core->Runbooks->get_runbook_params($runbook['guid']);
+			
+			$job_params = NULL;
+			
+			if(!empty($_GET['job_id']))
+			{
+				$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $_GET['job_id']));
+			}
 
 			foreach($params as &$param)
 			{
@@ -597,6 +616,15 @@ function log_file($message)
 				if(($param['type'] == 'list') || ($param['type'] == 'flags'))
 				{
 					$field['list'] = $param['list'];
+				}
+				
+				foreach($job_params as &$row)
+				{
+					if($row['guid'] == $param['guid'])
+					{
+						$field['value'] = $row['value'];
+						break;
+					}
 				}
 				
 				$result_json['fields'][] = $field;
@@ -629,8 +657,8 @@ function log_file($message)
 				}
 			}
 
-			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = ! ORDER BY f.`name`', $pid));
-			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
+			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE (f.`flags` & 0x0001) = 0 AND f.`pid` = ! ORDER BY f.`name`', $pid));
+			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE (r.`flags` & 0x0001) = 0 AND r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
 
 			include(TEMPLATES_DIR.'tpl.list-folders.php');
 		}

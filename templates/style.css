@@ -430,6 +430,15 @@ body {
     margin-bottom: 5px;
     width: 130px;
 }
+.button-other {
+    background-color: #f5eaea;
+    color: black;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 5px;
+    margin-bottom: 5px;
+    width: 130px;
+}
 .form-error {
 	padding: 5px;
 	margin-bottom: 5px;

@@ -36,9 +36,12 @@ class UserAuth
 	
 	private $rights = array();           // $rights[$object_id] = $bit_flags_permissions
 
+	private $rise_exception = FALSE;
+
 	function __construct(&$core)
 	{
 		$this->core = &$core;
+		$this->rise_exception = FALSE;
 		
 		if(!isset($this->core->LDAP))
 		{
@@ -122,7 +125,7 @@ class UserAuth
 	{
 		if(empty($login) || empty($passwd))
 		{
-			$this->error('Empty login or password!');
+			$this->core->error_ex('Empty login or password!', $this->rise_exception);
 			return FALSE;
 		}
 
@@ -130,7 +133,7 @@ class UserAuth
 		{
 			if(!$this->ldap)
 			{
-				$this->error('LDAP class not initialized!');
+				$this->core->error_ex('LDAP class not initialized!', $this->rise_exception);
 				return FALSE;
 			}
 
@@ -145,7 +148,7 @@ class UserAuth
 
 			if(!$this->ldap->reset_user($login, $passwd, TRUE))
 			{
-				$this->error($this->ldap->get_last_error());
+				$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 				return FALSE;
 			}
 
@@ -250,13 +253,13 @@ class UserAuth
 	{
 		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE u.`login`= ! OR u.`mail` = ! LIMIT 1', $login, $mail)))
 		{
-			$this->error('User already exist!');
+			$this->core->error_ex('User already exist!', $this->rise_exception);
 			return 0;
 		}
 
 		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, 0x0001)', $login, $passwd, $mail)))
 		{
-			$this->error($this->core->db->get_last_error());
+			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return 0;
 		}
 
@@ -317,7 +320,7 @@ class UserAuth
 			}
 			else
 			{
-				$this->error($this->core->db->get_last_error());
+				$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			}
 		}
 
@@ -328,7 +331,7 @@ class UserAuth
 	{
 		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & 0x0001) = 0x0000 LIMIT 1', $this->uid)))
 		{
-			$this->error($this->core->db->get_last_error());
+			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return FALSE;
 		}
 
@@ -517,22 +520,10 @@ class UserAuth
 		}
 		return $result;
 	}
-
-	public function get_last_error()
+	
+	public function set_rise_exception($rise_exception)
 	{
-		return $this->error_msg;
-	}
-
-	private function error($str)
-	{
-		if($this->rise_exception)
-		{
-			throw new Exception(__CLASS__.': '.$str);
-		}
-		else
-		{
-			$this->error_msg = $str;
-		}
+		$this->rise_exception = $rise_exception;
 	}
 }
 
