@@ -45,6 +45,7 @@
 							<td class="mono"><?php eh($core->UserAuth->permissions_to_string($row['allow_bits'])); ?></td>
 							<td>
 								<span class="command" onclick="f_edit(<?php eh($row['id']);?>, 'permission');">Edit</span>
+								<a href="<?php eh($self.'?action=get_permission2&id='.$row['id']); ?>" onclick="return f_show_form(this.href);">Edit2</a>
 								<span class="command" onclick="f_delete_perm(event);">Delete</span>
 							</td>
 						</tr>
@@ -78,4 +79,5 @@
 				</div>
 			</div>
 		</div>
+<?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

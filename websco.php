@@ -166,6 +166,62 @@ function log_file($message)
 		}
 		exit;
 
+		case 'get_permission2':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			//assert_permission_ajax(0, RB_ACCESS_EXECUTE);
+
+			if(!$core->db->select_assoc_ex($permission, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed get permissions"}';
+				exit;
+			}
+
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'title' => 'Edit permissions',
+				'action' => 'save_permission2',
+				'fields' => array(
+					array(
+						'type' => 'hidden',
+						'name' => 'id',
+						'value' => $permission[0]['id']
+					),
+					array(
+						'type' => 'hidden',
+						'name' => 'pid',
+						'value' => $permission[0]['oid']
+					),
+					array(
+						'type' => 'string',
+						'name' => 'dn',
+						'title' => 'DN*',
+						'value' => $permission[0]['dn'],
+						'list' => array('Execute')
+					),
+					array(
+						'type' => 'flags',
+						'name' => 'allow_bits',
+						'title' => 'Allow rights',
+						'value' => ord($permission[0]['allow_bits'][0]) | (ord($permission[0]['allow_bits'][1]) << 8) | (ord($permission[0]['allow_bits'][2]) << 16) | (ord($permission[0]['allow_bits'][3]) << 24),
+						'list' => array('Execute')
+					),
+					array(
+						'type' => 'flags',
+						'name' => 'apply_to_childs',
+						'title' => 'Apply to childs',
+						'value' => 0,
+						'list' => array('Apply to childs')
+					),
+				)
+			);
+
+			echo json_encode($result_json);
+		}
+		exit;
+
 		case 'get_permission':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -192,6 +248,83 @@ function log_file($message)
 			);
 
 			echo json_encode($result_json);
+		}
+		exit;
+
+		case 'save_permission2':
+		{
+			header("Content-Type: text/plain; charset=utf-8");
+
+			$result_json = array(
+				'code' => 0,
+				'message' => '',
+				'errors' => array()
+			);
+
+			$v_id = intval(@$_POST['id']);
+			$v_pid = intval(@$_POST['pid']);
+			$v_dn = trim(@$_POST['dn']);
+			$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+
+			if(isset($_POST['allow_bits']))
+			{
+				foreach($_POST['allow_bits'] as $bit => $bit_value)
+				{
+					if(intval($bit_value))
+					{
+						set_permission_bit($v_allow, intval($bit) + 1);
+					}
+				}
+			}
+
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having access mean admin
+
+			if(empty($v_dn))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'dn', 'msg' => 'Fill DN!');
+			}
+
+			if($result_json['code'])
+			{
+				$result_json['message'] = 'Not all required field filled!';
+				echo json_encode($result_json);
+				exit;
+			}
+
+			if(!$v_id)
+			{
+				if($core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)",
+					$v_pid,
+					$v_dn,
+					$v_allow
+				)))
+				{
+					$v_id = $core->db->last_id();
+					
+					log_db('Added permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
+					
+					echo '{"code": 0, "id": '.$v_id.', "pid": '.$v_pid.', "message": "Added (ID '.$id.')"}';
+					exit;
+				}
+			}
+			else
+			{
+				if($core->db->put(rpv("UPDATE `@access` SET `dn` = !, `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1",
+					$v_dn,
+					$v_allow,
+					$v_id,
+					$v_pid
+				)))
+				{
+					log_db('Updated permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
+
+					echo '{"code": 0, "id": '.$v_id.', "pid": '.$v_pid.',"message": "Updated (ID '.$v_id.')"}';
+					exit;
+				}
+			}
+
+			echo '{"code": 1, "id": '.$v_id.', "pid": '.$v_pid.',"message": "Error: '.json_escape($core->get_last_error()).'"}';
 		}
 		exit;
 
