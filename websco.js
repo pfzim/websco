@@ -204,6 +204,51 @@ function f_get_job(guid)
 	return false;
 }
 
+// make fake empty form
+function f_new_permission(pid)
+{
+	var data = {
+		code: 0,
+		messsage: '',
+		title: 'Add permissions',
+		action: 'save_permission2',
+		fields: [
+			{
+				type: 'hidden',
+				name: 'id',
+				value: 0
+			},
+			{
+				type: 'hidden',
+				name: 'pid',
+				value: pid
+			},
+			{
+				type: 'string',
+				name: 'dn',
+				title: 'DN*',
+				value: ''
+			},
+			{
+				type: 'flags',
+				name: 'allow_bits',
+				title: 'Allow rights',
+				value: 0,
+				list: ['Execute']
+			},
+			{
+				type: 'flags',
+				name: '',
+				title: 'Apply to childs',
+				value: 0,
+				list: ['Apply to childs']
+			}
+		]
+	};
+	
+	on_received_form(data,'uform');
+}
+
 /*
 form_data = {
 	code = '0 - success, otherwise error',
@@ -226,116 +271,118 @@ form_data = {
 }
 */
 
+function on_received_form(data, form_id)
+{
+	gi('loading').style.display = 'none';
+	if(data.code)
+	{
+		f_notify(data.message, 'error');
+	}
+	else
+	{
+		gi(form_id + '-title').innerText = data.title;
+		
+		var el = gi(form_id + '-fields');
+		el.innerHTML = '';
+		html = '';
+		for(i = 0; i < data.fields.length; i++)
+		{
+			if(data.fields[i].type == 'hidden')
+			{
+				html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
+
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper);
+			}
+			else if(data.fields[i].type == 'list' && data.fields[i].list)
+			{
+				html = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
+					+ '<select class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
+					+ '<option value=""></option>';
+				for(j = 0; j < data.fields[i].list.length; j++)
+				{
+					selected = ''
+					if(data.fields[i].list[j] == data.fields[i].value)
+					{
+						selected = ' selected="selected"'
+					}
+					html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '"' + selected + '>' + escapeHtml(data.fields[i].list[j]) + '</option>';
+				}
+				html += '</select>'
+					+ '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper);
+			}
+			else if(data.fields[i].type == 'flags' && data.fields[i].list)
+			{
+				value = parseInt(data.fields[i].value, 10);
+				
+				html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
+				for(j = 0; j < data.fields[i].list.length; j++)
+				{
+					checked = '';
+					if(value & (0x01 << j))
+					{
+						checked = ' checked="checked"';
+					}
+					
+					html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"' + checked + '/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
+				}
+				html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
+					
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper);
+			}
+			else if(data.fields[i].type == 'date')
+			{
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
+					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+				el.appendChild(wrapper);
+
+				var picker = new Pikaday({
+					field: document.getElementById(form_id + data.fields[i].name),
+					format: 'DD.MM.YYYY'
+				});
+			}
+			else
+			{
+				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + '"/>'
+					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper);
+			}
+		}
+
+		html = '<br /><div class="f-right">'
+			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">OK</button>'
+			+ '&nbsp;'
+			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
+			+ '</div>';
+
+		var wrapper = document.createElement('div');
+		wrapper.innerHTML = html;
+		el.appendChild(wrapper);
+
+		gi(form_id +'-container').style.display='block';
+	}
+}
+
 function f_show_form(url)
 {
 	var form_id = 'uform';
 	gi('loading').style.display = 'block';
 	f_http(
 		url,
-		function(data, form_id)
-		{
-			gi('loading').style.display = 'none';
-			if(data.code)
-			{
-				f_notify(data.message, 'error');
-			}
-			else
-			{
-				gi(form_id + '-title').innerText = data.title;
-				
-				var el = gi(form_id + '-fields');
-				el.innerHTML = '';
-				html = '';
-				for(i = 0; i < data.fields.length; i++)
-				{
-					if(data.fields[i].type == 'hidden')
-					{
-						html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-					else if(data.fields[i].type == 'list' && data.fields[i].list)
-					{
-						html = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
-							+ '<select class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
-							+ '<option value=""></option>';
-						for(j = 0; j < data.fields[i].list.length; j++)
-						{
-							selected = ''
-							if(data.fields[i].list[j] == data.fields[i].value)
-							{
-								selected = ' selected="selected"'
-							}
-							html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '"' + selected + '>' + escapeHtml(data.fields[i].list[j]) + '</option>';
-						}
-						html += '</select>'
-							+ '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-					else if(data.fields[i].type == 'flags' && data.fields[i].list)
-					{
-						value = parseInt(data.fields[i].value, 10);
-						
-						html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
-						for(j = 0; j < data.fields[i].list.length; j++)
-						{
-							checked = '';
-							if(value & (0x01 << j))
-							{
-								checked = ' checked="checked"';
-							}
-							
-							html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"' + checked + '/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
-						}
-						html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
-							
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-					else if(data.fields[i].type == 'date')
-					{
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-							+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
-							+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-						el.appendChild(wrapper);
-
-						var picker = new Pikaday({
-							field: document.getElementById(form_id + data.fields[i].name),
-							format: 'DD.MM.YYYY'
-						});
-					}
-					else
-					{
-						html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-							+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + '"/>'
-							+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-						var wrapper = document.createElement('div');
-						wrapper.innerHTML = html;
-						el.appendChild(wrapper);
-					}
-				}
-
-				html = '<br /><div class="f-right">'
-					+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">OK</button>'
-					+ '&nbsp;'
-					+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
-					+ '</div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-
-				gi(form_id +'-container').style.display='block';
-			}
-		},
+		on_received_form,
 		form_id
 	);
 	
@@ -602,6 +649,9 @@ function f_get_perms(id)
 				var el = gi('section_name');
 				el.innerText = data.name;
 				g_pid = data.id;
+
+				el = gi('add_new_permission');
+				el.setAttribute('onclick', 'f_new_permission(' + data.id + ');');
 				
 				el = gi(params);
 				el.innerHTML = '';

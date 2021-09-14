@@ -17,7 +17,7 @@
 		</ul>
 	</div>
 	<div class="content-box">
-		<span class="command" onclick="f_edit(null, 'permission');">Add permission group</span>
+		<span id="add_new_permission" class="command" onclick="f_new_permission(0);">Add permission group</span>
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
