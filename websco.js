@@ -211,7 +211,7 @@ function f_new_permission(pid)
 		code: 0,
 		messsage: '',
 		title: 'Add permissions',
-		action: 'save_permission2',
+		action: 'save_permission',
 		fields: [
 			{
 				type: 'hidden',
@@ -470,7 +470,7 @@ function f_on_saved(action, data)
 	{
 		f_get_job(data.guid);
 	}
-	else if(action == 'save_permission2')
+	else if(action == 'save_permission')
 	{
 		f_get_perms(data.pid);
 	}
@@ -659,7 +659,7 @@ function f_get_perms(id)
 				for(i = 0; i < data.permissions.length; i++)
 				{
 					html = '<td>' + data.permissions[i].id + '</td><td>' + data.permissions[i].group + '</td><td>' + data.permissions[i].perms + '</td>'
-						+ '<td><span class="command" onclick="f_edit(' + data.permissions[i].id + ', \'permission\');">Edit</span> <a href="?action=get_permission2&id=' + data.permissions[i].id + '" onclick="return f_show_form(this.href);">Edit2</a> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
+						+ '<td><span class="command" onclick="return f_show_form(\'?action=get_permission&id=' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
 
 					var tr = document.createElement('tr');
 					tr.setAttribute("data-id", data.permissions[i].id);

@@ -166,7 +166,7 @@ function log_file($message)
 		}
 		exit;
 
-		case 'get_permission2':
+		case 'get_permission':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
@@ -182,7 +182,7 @@ function log_file($message)
 				'code' => 0,
 				'message' => '',
 				'title' => 'Edit permissions',
-				'action' => 'save_permission2',
+				'action' => 'save_permission',
 				'fields' => array(
 					array(
 						'type' => 'hidden',
@@ -222,7 +222,7 @@ function log_file($message)
 		}
 		exit;
 
-		case 'get_permission':
+		case 'get_permission_old':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
@@ -251,7 +251,7 @@ function log_file($message)
 		}
 		exit;
 
-		case 'save_permission2':
+		case 'save_permission':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
@@ -328,7 +328,7 @@ function log_file($message)
 		}
 		exit;
 
-		case 'save_permission':
+		case 'save_permission_old':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
