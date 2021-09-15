@@ -322,14 +322,14 @@ function log_file($message)
 					global $core;
 					$childs = 0;
 					
-					log_file('Apply to childs of ID: '.$parent_guid);
-					if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
+					//log_file('Apply to childs of ID: '.$parent_guid);
+					if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
 					{
 						foreach($folders as &$folder)
 						{
-							log_file('Folder ID: '.$folder['id']);
+							//log_file('  Folder ID: '.$folder['id'].', GUID: '.$folder['guid'].', Name: '.$folder['name']);
 
-							if($core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = #', $folder['id'])))
+							if($core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # AND a.`dn` = !', $folder['id'], $v_dn)))
 							{
 								if($replace)
 								{
@@ -340,10 +340,12 @@ function log_file($message)
 									$bits = $core->UserAuth->merge_permissions($v_allow, $permissions[0]['allow_bits']);
 								}
 								$core->db->put(rpv("UPDATE `@access` SET `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1", $bits, $permissions[0]['id'], $folder['id']));
+								//log_file('  UPDATE');
 							}
 							else
 							{
 								$core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)", $folder['id'], $v_dn, $v_allow));
+								//log_file('  INSERT');
 							}
 
 							$childs += permissions_apply_to_childs($folder['guid'], $v_dn, $v_allow, $replace) + 1;
@@ -353,7 +355,7 @@ function log_file($message)
 					return $childs;
 				}
 
-				if($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE f.`id` = #', $v_pid)))
+				if($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE f.`id` = #', $v_id)))
 				{
 					$result_json['childs'] = permissions_apply_to_childs($folders[0]['guid'], $v_dn, $v_allow, $v_replace_childs);
 				}
