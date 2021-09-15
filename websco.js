@@ -542,14 +542,39 @@ function f_delete_perm(ev)
 
 function f_async(a)
 {
+	return f_async_ex(a.href);
+}
+
+function f_async_ex(url)
+{
 	gi('loading').style.display = 'block';
 	f_http(
-		a.href,
+		url,
 		function(data, el)
 		{
 			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			f_msg(data.message);
+		},
+		null
+	);
+	
+	return false;
+}
+
+function f_show_hide(url)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		url,
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				f_get_perms(data.id);
+			}
 		},
 		null
 	);
@@ -580,6 +605,18 @@ function f_get_perms(id)
 				el = gi('add_new_permission');
 				el.setAttribute('onclick', 'f_new_permission(' + data.id + ');');
 				
+				el = gi('show_hide');
+				if(data.flags & 0x0002)
+				{
+					el.innerText = 'Show folder in list';
+					el.setAttribute('onclick', 'f_show_hide(\'?' + json2url({'action': 'show_folder', 'id': data.id }) + '\');');
+				}
+				else
+				{
+					el.innerText = 'Hide folder from list';
+					el.setAttribute('onclick', 'f_show_hide(\'?' + json2url({'action': 'hide_folder', 'id': data.id }) + '\');');
+				}
+
 				el = gi(params);
 				el.innerHTML = '';
 				html = '';

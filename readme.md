@@ -14,4 +14,4 @@ Bit `flags` in table `runbooks`
 | Bits   | Description                               |
 |--------|-------------------------------------------|
 | 0x0001 | Deleted                                   |
-| 0x0002 |                                           |
+| 0x0002 | Hide from list                            |

@@ -407,12 +407,13 @@ function log_file($message)
 			{
 				$current_section = array(
 					'name' => 'Top level',
-					'id' => 0
+					'id' => 0,
+					'flags' => 0
 				);
 			}
 			else
 			{
-				$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $_GET['id']));
+				$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`name`, f.`flags` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $_GET['id']));
 				$current_section = &$folder[0];
 			}
 			
@@ -422,6 +423,7 @@ function log_file($message)
 				'code' => 0,
 				'name' => $current_section['name'],
 				'id' => $current_section['id'],
+				'flags' => $current_section['flags'],
 				'permissions' => array()
 			);
 			
@@ -448,7 +450,7 @@ function log_file($message)
 		{
 			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
 
-			log_db('Delete permission', 'id='.$v_id, 0);
+			log_db('Delete permission', 'id='.$id, 0);
 
 			if(!$core->db->put(rpv("DELETE FROM `@access` WHERE `id` = # LIMIT 1", $id)))
 			{
@@ -731,6 +733,38 @@ function log_file($message)
 		}
 		exit;
 
+		case 'hide_folder':
+		{
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
+
+			log_db('Hide folder', 'id='.$id, 0);
+
+			if(!$core->db->put(rpv("UPDATE `@runbooks_folders` SET `flags` = (`flags` | 0x0002) WHERE `id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed hide"}';
+				exit;
+			}
+
+			echo '{"code": 0, "id": '.$id.', "message": "The folder was hidden (ID: '.$id.')"}';
+		}
+		exit;
+		
+		case 'show_folder':
+		{
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
+
+			log_db('Hide folder', 'id='.$id, 0);
+
+			if(!$core->db->put(rpv("UPDATE `@runbooks_folders` SET `flags` = (`flags` & ~0x0002) WHERE `id` = # LIMIT 1", $id)))
+			{
+				echo '{"code": 1, "message": "Failed hide"}';
+				exit;
+			}
+
+			echo '{"code": 0, "id": '.$id.', "message": "The folder was shown (ID: '.$id.')"}';
+		}
+		exit;
+
 		case 'list_folder':
 		{
 			if(empty($_GET['guid']))
@@ -754,8 +788,8 @@ function log_file($message)
 				}
 			}
 
-			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE (f.`flags` & 0x0001) = 0 AND f.`pid` = ! ORDER BY f.`name`', $pid));
-			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE (r.`flags` & 0x0001) = 0 AND r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
+			$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE (f.`flags` & (0x0001 | 0x0002)) = 0 AND f.`pid` = ! ORDER BY f.`name`', $pid));
+			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE (r.`flags` & (0x0001 | 0x0002)) = 0 AND r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
 
 			include(TEMPLATES_DIR.'tpl.list-folders.php');
 		}
