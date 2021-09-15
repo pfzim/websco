@@ -365,7 +365,7 @@ function on_received_form(data, form_id)
 		html = '<br /><div class="f-right">'
 			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">OK</button>'
 			+ '&nbsp;'
-			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Отмена</button>'
+			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Cancel</button>'
 			+ '</div>';
 
 		var wrapper = document.createElement('div');

@@ -6,11 +6,11 @@
 <div>
 	<div class="left-menu">
 		<ul>
-		<li<?php if($id == 0) { echo ' class="active"'; } ?>><a href="?action=permissions&amp;id=0">Top level</a></li>
+		<li<?php /*if($id == 0) { echo ' class="active"'; }*/ ?>><a href="?action=permissions&amp;id=0">Top level</a></li>
 		<li>
 			<ul>
 		<?php $i = 0; foreach($folders as &$row) { $i++; ?>
-		<li<?php if($id == $row['id']) { echo ' class="active"'; } ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="?action=get_permissions&amp;id=<?php eh($row['id']); ?>" onclick="return f_get_perms(<?php eh($row['id']); ?>);"><?php eh($row['name']); ?></a></li>
+		<li<?php /*if($id == $row['id']) { echo ' class="active"'; }*/ ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="?action=get_permissions&amp;id=<?php eh($row['id']); ?>" onclick="return f_get_perms(<?php eh($row['id']); ?>);"><?php eh($row['name']); ?></a></li>
 		<?php } ?>
 			</ul>
 		</li>
