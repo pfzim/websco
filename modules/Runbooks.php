@@ -648,7 +648,7 @@ EOT;
 			
 			if((($type == 'list') || ($type == 'flags')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
 			{
-				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*)/i', '\2', $name);
+				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*?)/i', '\2', $name);
 				$list = preg_split('/\s*[,;]\s*/', $matches[1]);
 				
 				$form_fields[] = array(
