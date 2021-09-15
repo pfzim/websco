@@ -9,11 +9,11 @@
 class Runbooks
 {
 	private $core;
-	
+
 	function __construct(&$core)
 	{
 		$this->core = &$core;
-		
+
 		$this->orchestrator_url = ORCHESTRATOR_URL;
 		$this->orchestrator_user = LDAP_USER;
 		$this->orchestrator_passwd = LDAP_PASSWD;
@@ -43,7 +43,7 @@ class Runbooks
 			$this->core->error('Unexpected HTTP '.$result['http_code'].' response code!');
 			return FALSE;
 		}
-		
+
 		$xml = @simplexml_load_string($output);
 		if($xml == FALSE)
 		{
@@ -56,10 +56,10 @@ class Runbooks
 
 	/**
 	 Start runbook.
- 
+
 		\param [in] $guid   - runbook ID
 		\param [in] $params - array of param GUID and value
-		
+
 		\return - created job ID
 	*/
 
@@ -102,14 +102,21 @@ EOT;
 
 		$output = curl_exec($ch);
 		$result = curl_getinfo($ch);
-		
+
 		//echo $output;
+		//log_file($output);
 
 		if(intval($result['http_code']) != 201)
 		{
+			/*
+				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+				  <code></code>
+				  <message xml:lang="ru-RU">The requested operation requires Publish permissions on the Runbook</message>
+				</error>
+			*/
 			return FALSE;
 		}
-		
+
 		$xml = @simplexml_load_string($output);
 		if($xml == FALSE)
 		{
@@ -121,9 +128,9 @@ EOT;
 
 	/**
 	 Get job instances list.
- 
+
 		\param [in] $guid   - job ID
-		
+
 		\return - array of job instances ID and it statuses
 	*/
 
@@ -155,7 +162,7 @@ EOT;
 					'name' => (string) $properties->Name,
 					'value' => (string) $properties->Value
 				);
-				
+
 				if(((string) $properties->Direction) == 'Out')
 				{
 					$instance['params_out'][] = $activity;
@@ -171,7 +178,7 @@ EOT;
 			foreach($sub_xml->entry as $entry)
 			{
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-				
+
 				$activity = array(
 					'guid' => (string) $properties->ActivityId,
 					'name' => '',
@@ -197,13 +204,13 @@ EOT;
 		$folders = array();
 		$skip = 0;
 		$total = 0;
-		
+
 		do
 		{
 			$xml = $this->get_http_xml($this->orchestrator_url.'/Folders?$inlinecount=allpages&$top=50&$skip='.$skip);
-			
+
 			$total = intval($xml->children('m', TRUE)->count);
-			
+
 			foreach($xml->entry as $entry)
 			{
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
@@ -213,7 +220,7 @@ EOT;
 					'name' => (string) $properties->Name,
 					'pid' => (string) $properties->ParentId
 				);
-				
+
 				$folders[] = $folder;
 
 				//break;
@@ -221,7 +228,7 @@ EOT;
 			}
 		}
 		while($skip < $total);
-			
+
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
@@ -233,17 +240,17 @@ EOT;
 		$activities = array();
 		$skip = 0;
 		$total = 0;
-		
+
 		do
 		{
 			$xml = $this->get_http_xml($this->orchestrator_url.'/Activities?$inlinecount=allpages&$top=50&$skip='.$skip);
-			
+
 			$total = intval($xml->children('m', TRUE)->count);
-			
+
 			foreach($xml->entry as $entry)
 			{
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-				
+
 				/*
 					<d:Id m:type="Edm.Guid">1423fe6f-7e0e-4e0a-bfd1-00af163cd522</d:Id>
 					<d:RunbookId m:type="Edm.Guid">b2862173-3bf0-4787-8f76-a04294ab1f55</d:RunbookId>
@@ -269,7 +276,7 @@ EOT;
 			}
 		}
 		while($skip < $total);
-			
+
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
@@ -281,13 +288,13 @@ EOT;
 		$runbooks = array();
 		$skip = 0;
 		$total = 0;
-		
+
 		do
 		{
 			$xml = $this->get_http_xml($this->orchestrator_url.'/Runbooks?$inlinecount=allpages&$top=50&$skip='.$skip);
-				
+
 			$total = intval($xml->children('m', TRUE)->count);
-			
+
 			foreach($xml->entry as $entry)
 			{
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
@@ -301,7 +308,7 @@ EOT;
 					'path' => (string) $properties->Path,
 					'params' => array()
 				);
-				
+
 				$xml_runbook_params = $this->get_http_xml($this->orchestrator_url.'/Runbooks(guid\''.$properties->Id.'\')/Parameters');
 
 				if($xml_runbook_params !== FALSE)
@@ -326,7 +333,7 @@ EOT;
 			}
 		}
 		while($skip < $total);
-			
+
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
@@ -338,7 +345,7 @@ EOT;
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | 0x0001)"));
 		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | 0x0001)"));
 		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | 0x0001)"));
-		
+
 		$total = 0;
 		$folders = $this->get_folders();
 
@@ -382,7 +389,7 @@ EOT;
 				$folder_id = $res[0][0];
 			}
 		}
-		
+
 		unset($folders);
 
 		$activities = $this->get_activities();
@@ -517,7 +524,7 @@ EOT;
 
 	public function get_runbook($guid)
 	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, r.`name` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $guid)))
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, r.`name`, r.`description` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $guid)))
 		{
 			$this->core->error('Runbook '.$guid.' not found!');
 			return FALSE;
@@ -528,7 +535,7 @@ EOT;
 
 	public function get_runbook_by_id($id)
 	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, r.`name` FROM @runbooks AS r WHERE r.`id` = ! LIMIT 1", $id)))
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, r.`name`, r.`description` FROM @runbooks AS r WHERE r.`id` = ! LIMIT 1", $id)))
 		{
 			$this->core->error('Runbook '.$guid.' not found!');
 			return FALSE;
@@ -590,20 +597,20 @@ EOT;
 	public function get_runbook_params($guid)
 	{
 		$this->core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $guid));
-		
-		$form_fields = array();		
-		
+
+		$form_fields = array();
+
 		$i = 0;
 		foreach($runbook_params as &$row)
 		{
 			$required = FALSE;
 			$type = 'string';
-			
+
 			$i++;
 			if(preg_match('#[/_]([isdlafr]+)$#i', $row['name'], $matches))
 			{
 				$suffix = $matches[1];
-				
+
 				$k = 0;
 				$len = strlen($suffix);
 				while($k < $len)
@@ -632,25 +639,25 @@ EOT;
 							$required = TRUE;
 							break;
 					}
-					
+
 					$k++;
 				}
 			}
 
 			$name = preg_replace('#\s*[/_][isdlafr]+$#i', '', $row['name']);
-			
+
 			if(preg_match('/\*\s*:?\s*$/i', $name))
 			{
 				$required = TRUE;
 			}
-			
+
 			$name = preg_replace('/\s*:\s*$/i', '', $name);
-			
+
 			if((($type == 'list') || ($type == 'flags')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
 			{
 				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*?)/i', '\2', $name);
 				$list = preg_split('/\s*[,;]\s*/', $matches[1]);
-				
+
 				$form_fields[] = array(
 					'type' => $type,
 					'required' => $required,
@@ -669,7 +676,7 @@ EOT;
 				);
 			}
 		}
-			
+
 		return $form_fields;
 	}
 }

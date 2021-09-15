@@ -6,8 +6,8 @@
 			<thead>
 				<tr>
 					<th width="5%">№</th>
-					<th width="60%">Name</th>
-					<th width="60%">Operations</th>
+					<th width="70%">Name</th>
+					<th width="25%">Operations</th>
 				</tr>
 			</thead>
 			<tbody id="table-data">

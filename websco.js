@@ -281,8 +281,20 @@ function on_received_form(data, form_id)
 	else
 	{
 		gi(form_id + '-title').innerText = data.title;
+
+		var el = gi(form_id + '-description');
+		if(data.description && (data.description.length > 0))
+		{
+			el.innerText = data.description;
+			el.style.display = 'block';
+		}
+		else
+		{
+			el.innerText = '';
+			el.style.display = 'none';
+		}
 		
-		var el = gi(form_id + '-fields');
+		el = gi(form_id + '-fields');
 		el.innerHTML = '';
 		html = '';
 		for(i = 0; i < data.fields.length; i++)

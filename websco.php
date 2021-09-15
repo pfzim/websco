@@ -323,7 +323,7 @@ function log_file($message)
 					$childs = 0;
 
 					//log_file('Apply to childs of ID: '.$parent_guid);
-					if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
+					if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
 					{
 						foreach($folders as &$folder)
 						{
@@ -678,6 +678,7 @@ function log_file($message)
 				'code' => 0,
 				'message' => '',
 				'title' => $runbook['name'],
+				'description' => $runbook['description'],
 				'action' => 'start_runbook',
 				'fields' => array(
 					/*

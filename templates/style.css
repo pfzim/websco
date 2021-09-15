@@ -395,6 +395,7 @@ body {
 }
 .form-title {
     margin-bottom: 3px;
+    margin-top: 3px;
 }
 .form-field {
     border: 1px solid #ccc;
@@ -447,6 +448,16 @@ body {
 	color: #a94442;
 	background-color: #f2dede;
 	display: none;
+}
+.form-description {
+    padding: 5px;
+    margin-bottom: 15px;
+    border: 1px solid #EEEEEE;
+    border-radius: 4px;
+    font-size: 8pt;
+    color: #aaa;
+    background-color: #F5F5F5;
+    width: 500px;
 }
 .tooltip-user {
     position: absolute;
