@@ -241,7 +241,7 @@ function f_new_permission(pid)
 				name: '',
 				title: 'Apply to childs',
 				value: 0,
-				list: ['Apply to childs']
+				list: ['Apply to childs', 'Replace childs']
 			}
 		]
 	};

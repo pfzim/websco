@@ -213,7 +213,7 @@ function log_file($message)
 						'name' => 'apply_to_childs',
 						'title' => 'Apply to childs',
 						'value' => 0,
-						'list' => array('Apply to childs')
+						'list' => array('Apply to childs', 'Replace childs')
 					),
 				)
 			);
@@ -236,6 +236,8 @@ function log_file($message)
 			$v_pid = intval(@$_POST['pid']);
 			$v_dn = trim(@$_POST['dn']);
 			$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
+			$v_apply_to_childs = intval(@$_POST['apply_to_childs'][0]);
+			$v_replace_childs = intval(@$_POST['apply_to_childs'][1]);
 
 			if(isset($_POST['allow_bits']))
 			{
@@ -275,8 +277,14 @@ function log_file($message)
 					
 					log_db('Added permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
 					
-					echo '{"code": 0, "id": '.$v_id.', "pid": '.$v_pid.', "message": "Added (ID '.$id.')"}';
-					exit;
+					$result_json['id'] = $v_id;
+					$result_json['pid'] = $v_pid;
+					$result_json['message'] = 'Added (ID '.$v_id.')';
+				}
+				else
+				{
+					$result_json['code'] = 1;
+					$result_json['message'] = 'ERROR: '.$core->get_last_error();
 				}
 			}
 			else
@@ -290,12 +298,68 @@ function log_file($message)
 				{
 					log_db('Updated permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
 
-					echo '{"code": 0, "id": '.$v_id.', "pid": '.$v_pid.',"message": "Updated (ID '.$v_id.')"}';
-					exit;
+					$result_json['id'] = $v_id;
+					$result_json['pid'] = $v_pid;
+					$result_json['message'] = 'Updated (ID '.$v_id.')';
+				}
+				else
+				{
+					$result_json['code'] = 1;
+					$result_json['message'] = 'ERROR: '.$core->get_last_error();
+				}
+			}
+			
+			if($result_json['code'])
+			{
+				echo json_encode($result_json);
+				exit;
+			}
+
+			if($v_apply_to_childs)
+			{
+				function permissions_apply_to_childs($parent_guid, $v_dn, $v_allow, $replace)
+				{
+					global $core;
+					$childs = 0;
+					
+					log_file('Apply to childs of ID: '.$parent_guid);
+					if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE f.`pid` = #', $parent_guid)))
+					{
+						foreach($folders as &$folder)
+						{
+							log_file('Folder ID: '.$folder['id']);
+
+							if($core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = #', $folder['id'])))
+							{
+								if($replace)
+								{
+									$bits = $v_allow;
+								}
+								else
+								{
+									$bits = $core->UserAuth->merge_permissions($v_allow, $permissions[0]['allow_bits']);
+								}
+								$core->db->put(rpv("UPDATE `@access` SET `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1", $bits, $permissions[0]['id'], $folder['id']));
+							}
+							else
+							{
+								$core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)", $folder['id'], $v_dn, $v_allow));
+							}
+
+							$childs += permissions_apply_to_childs($folder['guid'], $v_dn, $v_allow, $replace) + 1;
+						}
+					}
+					
+					return $childs;
+				}
+
+				if($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE f.`id` = #', $v_pid)))
+				{
+					$result_json['childs'] = permissions_apply_to_childs($folders[0]['guid'], $v_dn, $v_allow, $v_replace_childs);
 				}
 			}
 
-			echo '{"code": 1, "id": '.$v_id.', "pid": '.$v_pid.',"message": "Error: '.json_escape($core->get_last_error()).'"}';
+			echo json_encode($result_json);
 		}
 		exit;
 
@@ -329,7 +393,7 @@ function log_file($message)
 			}
 			
 			$core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = ! ORDER BY f.`name`', $current_folder['pid']));
-			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $_GET['id']));
+			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_folder['id']));
 
 			include(TEMPLATES_DIR.'tpl.admin-permissions.php');
 		}

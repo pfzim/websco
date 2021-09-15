@@ -17,6 +17,19 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+	Usage example:
+
+		define('RB_ACCESS_READ', 1);
+		define('RB_ACCESS_WRITE', 2);
+		define('RB_ACCESS_EXECUTE', 3);
+		define('RB_ACCESS_LIST', 4);
+
+		$core->UserAuth->set_bits_representation('rwxl');
+
+	Where 1, 2, 3, 4 are the ordinal numbers of the bits.
+*/
+
 define('UA_DISABLED',	0x0001);  /// Ignored for LDAP user
 define('UA_LDAP',		0x0002);  /// Is a LDAP user (overwise is internal user)
 
@@ -28,12 +41,12 @@ class UserAuth
 	private $login = NULL;				/// sAMAccountName, zl cookie
 	private $token = NULL;				/// zh cookie
 	private $flags = 0;
-	
+
 	private $ldap = NULL;
 
 	private $bits_string_representation = '';  // like 'rwxd'
 	private $max_bits = 0;
-	
+
 	private $rights = array();           // $rights[$object_id] = $bit_flags_permissions
 
 	private $rise_exception = FALSE;
@@ -42,7 +55,7 @@ class UserAuth
 	{
 		$this->core = &$core;
 		$this->rise_exception = FALSE;
-		
+
 		if(!isset($this->core->LDAP))
 		{
 			$this->ldap = NULL;
@@ -96,7 +109,7 @@ class UserAuth
 
 			/*
 			// preload user info
-		
+
 			if($this->core->db->select_ex($user_data, rpv("
 				SELECT
 					m.`id`,
@@ -229,7 +242,7 @@ class UserAuth
 		setcookie('zl', $this->login, time() + 2592000, '/');
 
 		//$this->core->db->put(rpv('UPDATE @users SET `sid` = ! WHERE `id` = # LIMIT 1', $this->token, $this->uid));
-		
+
 		//$this->core->db->put(rpv('INSERT INTO `@log` (`date`, `uid`, `type`, `p1`, `ip`) VALUES (NOW(), #, #, #, !)', $this->uid, LOG_LOGIN, 0, $ip));
 
 		return TRUE;
@@ -275,10 +288,10 @@ class UserAuth
 				return TRUE;
 			}
 		}
-		
+
 		return FALSE;
 	}
-	
+
 	public function check_password($passwd)
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
@@ -294,7 +307,7 @@ class UserAuth
 
 		return FALSE;
 	}
-	
+
 	/**
 	 *  \brief Activate other user
 	 *
@@ -438,7 +451,7 @@ class UserAuth
 		if(	$this->uid
 			&& $this->is_ldap_user()
 			&& $link
-			&& $this->core->db->select_ex($result, rpv("SELECT dn, allow_bits FROM @access WHERE oid = #", $object_id))
+			&& $this->core->db->select_ex($result, rpv("SELECT `dn`, `allow_bits` FROM @access WHERE `oid` = #", $object_id))
 		)
 		{
 			foreach($result as &$row)
@@ -463,20 +476,33 @@ class UserAuth
 				*/
 				if($this->ldap->search($records, '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
 				{
+					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[1]);
+					/*
 					for($i = 0; $i <= ((int) ($this->max_bits / 8)); $i++)
 					{
 						$this->rights[$object_id][$i] = chr(ord($this->rights[$object_id][$i]) | ord($row[1][$i]));
 					}
+					*/
 				}
 			}
 		}
+	}
+
+	public function merge_permissions($rights, $added_rights)
+	{
+		for($i = 0; $i <= ((int) ($this->max_bits / 8)); $i++)
+		{
+			$rights[$i] = chr(ord($rights[$i]) | ord($added_rights[$i]));
+		}
+
+		return $rights;
 	}
 
 	/**
 	 *  \brief Check user permissions for object
 	 *
 	 *  \param [in] $object_id Object ID
-	 *  \param [in] $level One-based bit number
+	 *  \param [in] $level One-based ordinal number of bit
 	 *  \return true - if user have requested permisiions for object. For internal user always true.
 	 */
 
@@ -501,12 +527,12 @@ class UserAuth
 		$this->bits_string_representation = $representation;
 		$this->max_bits = strlen($representation);
 	}
-	
+
 	public function permissions_to_string($allow_bits)
 	{
 		$result = '';
 		$bits_count = strlen($this->bits_string_representation);
-		
+
 		for($i = 0; $i < $bits_count; $i++)
 		{
 			if((ord($allow_bits[(int) ($i / 8)]) >> ($i % 8)) & 0x01)
@@ -520,12 +546,20 @@ class UserAuth
 		}
 		return $result;
 	}
-	
+
 	public function set_rise_exception($rise_exception)
 	{
 		$this->rise_exception = $rise_exception;
 	}
 }
+
+/**
+ *  \brief Set and Unset bits
+ *
+ *  \param [in/out] $bits Existings bits
+ *  \param [in] $bit One-based ordinal number of bit
+ *  \return Nothing
+ */
 
 function set_permission_bit(&$bits, $bit)
 {
