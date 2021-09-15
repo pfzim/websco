@@ -562,7 +562,7 @@ body {
 }
 .left-menu {
 	float: left;
-	width: 200px;
+	width: 300px;
     background-color: #FAFAFA;
 	border-radius: 4px;
     margin-right: 10px;
@@ -581,12 +581,17 @@ body {
     text-decoration: none;
 }
 */
+.left-menu li a {
+    text-decoration: none;
+}
 .left-menu li span {
     cursor: pointer;
     display: block;
 	float: left;
     color: #000;
     /*padding: 8px 5px;*/
+	padding-left: 8px;
+	padding-right: 8px;
     text-decoration: none;
 }
 /*
@@ -595,6 +600,9 @@ body {
     color: white;
 }
 */
+.left-menu li a:hover {
+    text-decoration: underline;
+}
 .doc-info {
     background-color: #FAFAFA;
 	border-radius: 4px;
