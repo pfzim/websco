@@ -1,6 +1,6 @@
 <?php
 /*
-    WebSCO
+    WebSCO - web console for Microsoft System Center Orchestrator
     Copyright (C) 2021 Dmitry V. Zimin
 
     This program is free software: you can redistribute it and/or modify
@@ -124,7 +124,7 @@ function log_file($message)
 			{
 				if(!$core->UserAuth->logon(@$_POST['login'], @$_POST['passwd']))
 				{
-					$error_msg = 'Неверное имя пользователя или пароль!';
+					$error_msg = 'Invalid user name or password!';
 					include(TEMPLATES_DIR.'tpl.login.php');
 					exit;
 				}
@@ -274,9 +274,9 @@ function log_file($message)
 				)))
 				{
 					$v_id = $core->db->last_id();
-					
+
 					log_db('Added permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
-					
+
 					$result_json['id'] = $v_id;
 					$result_json['pid'] = $v_pid;
 					$result_json['message'] = 'Added (ID '.$v_id.')';
@@ -308,7 +308,7 @@ function log_file($message)
 					$result_json['message'] = 'ERROR: '.$core->get_last_error();
 				}
 			}
-			
+
 			if($result_json['code'])
 			{
 				echo json_encode($result_json);
@@ -321,7 +321,7 @@ function log_file($message)
 				{
 					global $core;
 					$childs = 0;
-					
+
 					//log_file('Apply to childs of ID: '.$parent_guid);
 					if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
 					{
@@ -351,7 +351,7 @@ function log_file($message)
 							$childs += permissions_apply_to_childs($folder['guid'], $v_dn, $v_allow, $replace) + 1;
 						}
 					}
-					
+
 					return $childs;
 				}
 
@@ -393,7 +393,7 @@ function log_file($message)
 				$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
 				$current_folder = &$folder[0];
 			}
-			
+
 			$core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = ! ORDER BY f.`name`', $current_folder['pid']));
 			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_folder['id']));
 
@@ -418,7 +418,7 @@ function log_file($message)
 				$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`name`, f.`flags` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $_GET['id']));
 				$current_section = &$folder[0];
 			}
-			
+
 			$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_section['id']));
 
 			$result_json = array(
@@ -428,7 +428,7 @@ function log_file($message)
 				'flags' => $current_section['flags'],
 				'permissions' => array()
 			);
-			
+
 			foreach($permissions as &$row)
 			{
 				$group_name = &$row['dn'];
@@ -436,14 +436,14 @@ function log_file($message)
 				{
 					$group_name = &$matches[1];
 				}
-				
+
 				$result_json['permissions'][] = array(
 					'id' => &$row['id'],
 					'group' => $group_name,
-					'perms' => $core->UserAuth->permissions_to_string($row['allow_bits'])						
+					'perms' => $core->UserAuth->permissions_to_string($row['allow_bits'])
 				);
 			}
-			
+
 			echo json_encode($result_json);
 		}
 		exit;
@@ -514,14 +514,14 @@ function log_file($message)
 				'message' => '',
 				'errors' => array()
 			);
-			
+
 			$params = array(
 			);
 
 			$runbook_params = $core->Runbooks->get_runbook_params($runbook['guid']);
-			
+
 			//log_file(json_encode($_POST, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-			
+
 			foreach($runbook_params as &$param)
 			{
 				$value = '';
@@ -539,7 +539,7 @@ function log_file($message)
 							}
 						}
 					}
-					
+
 					if($param['required'] && ($flags == 0))
 					{
 						$result_json['code'] = 1;
@@ -557,7 +557,7 @@ function log_file($message)
 				{
 					$value = trim($_POST['param'][$param['guid']]);
 				}
-				
+
 				if($param['required'] && $value == '')
 				{
 					$result_json['code'] = 1;
@@ -567,7 +567,7 @@ function log_file($message)
 				elseif($param['type'] == 'date')
 				{
 					list($nd, $nm, $ny) = explode('.', $value, 3);
-					
+
 					if(!datecheck($nd, $nm, $ny))
 					{
 						$result_json['code'] = 1;
@@ -603,7 +603,7 @@ function log_file($message)
 				echo json_encode($result_json);
 				exit;
 			}
-			
+
 			//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
 
 			log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
@@ -615,13 +615,13 @@ function log_file($message)
 				if($core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $core->UserAuth->get_id())))
 				{
 					$job_id = $core->db->last_id();
-					
+
 					foreach($params as $key => $value)
 					{
 						$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $key, $value));
 					}
 				}
-				
+
 				log_db('Job created: '.$runbook['name'], $job_guid, 0);
 				echo '{"code": 0, "guid": "'.json_escape($job_guid).'", "message": "Created job ID: '.json_escape($job_guid).'"}';
 			}
@@ -631,13 +631,12 @@ function log_file($message)
 			}
 		}
 		exit;
-		
+
 		case 'get_job':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
 			echo json_encode($core->Runbooks->get_job($_GET['guid']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-			
 		}
 		exit;
 
@@ -697,9 +696,9 @@ function log_file($message)
 			);
 
 			$params = $core->Runbooks->get_runbook_params($runbook['guid']);
-			
+
 			$job_params = NULL;
-			
+
 			if(!empty($_GET['job_id']))
 			{
 				$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $_GET['job_id']));
@@ -713,12 +712,12 @@ function log_file($message)
 					'title' => $param['name'],
 					'value' => ''
 				);
-				
+
 				if(($param['type'] == 'list') || ($param['type'] == 'flags'))
 				{
 					$field['list'] = $param['list'];
 				}
-				
+
 				foreach($job_params as &$row)
 				{
 					if($row['guid'] == $param['guid'])
@@ -727,7 +726,7 @@ function log_file($message)
 						break;
 					}
 				}
-				
+
 				$result_json['fields'][] = $field;
 			}
 
@@ -750,7 +749,7 @@ function log_file($message)
 			echo '{"code": 0, "id": '.$id.', "message": "The folder was hidden (ID: '.$id.')"}';
 		}
 		exit;
-		
+
 		case 'show_folder':
 		{
 			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
