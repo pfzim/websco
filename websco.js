@@ -441,7 +441,7 @@ function f_send_form(action)
 				//window.location = window.location;
 				//f_update_doc(data.data);
 				//f_get_perms();
-				f_on_saved(action, data);
+				on_saved(action, data);
 			}
 			else if(data.errors)
 			{
@@ -464,7 +464,7 @@ function f_send_form(action)
 	return false;
 }
 
-function f_on_saved(action, data)
+function on_saved(action, data)
 {
 	if(action == 'start_runbook')
 	{
@@ -557,79 +557,6 @@ function f_async(a)
 	return false;
 }
 
-function f_save(form_id)
-{
-	var form_data = {};
-	var el = gi(form_id);
-	for(i = 0; i < el.elements.length; i++)
-	{
-		if(el.elements[i].name)
-		{
-			var err = gi(el.elements[i].name + '-error');
-			if(err)
-			{
-				err.style.display='none';
-			}
-
-			if(el.elements[i].type == 'checkbox')
-			{
-				if(el.elements[i].checked)
-				{
-					form_data[el.elements[i].name] = el.elements[i].value;
-				}
-			}
-			else if(el.elements[i].type == 'select-one')
-			{
-				if(el.elements[i].selectedIndex != -1)
-				{
-					form_data[el.elements[i].name] = el.elements[i].value;
-				}
-			}
-			else
-			{
-				form_data[el.elements[i].name] = el.elements[i].value;
-			}
-		}
-	}
-
-	//alert(json2url(form_data));
-	//return;
-
-	gi('loading').style.display = 'block';
-	f_http("websco.php?action=save_" + form_id,
-		function(data, params)
-		{
-			gi('loading').style.display = 'none';
-			f_notify(data.message, data.code?"error":"success");
-			if(!data.code)
-			{
-				gi(params+'-container').style.display='none';
-				//window.location = '?action=doc&id='+data.id;
-				//window.location = window.location;
-				//f_update_doc(data.data);
-				f_get_perms();
-			}
-			else if(data.errors)
-			{
-				for(i = 0; i < data.errors.length; i++)
-				{
-					var el = gi(data.errors[i].name + "-error");
-					if(el)
-					{
-						el.textContent = data.errors[i].msg;
-						el.style.display='block';
-					}
-				}
-			}
-		},
-		form_id,
-		'application/x-www-form-urlencoded',
-		json2url(form_data)
-	);
-
-	return false;
-}
-
 function f_get_perms(id)
 {
 	gi('loading').style.display = 'block';
@@ -674,92 +601,6 @@ function f_get_perms(id)
 	);
 	
 	return false;
-}
-
-function f_edit(ev, form_id)
-{
-	var id = 0;
-	if(ev)
-	{
-		//var el_src = ev.target || ev.srcElement;
-		//id = el_src.parentNode.parentNode.getAttribute('data-id');
-		id = ev;
-	}
-	if(!id)
-	{
-		var form_data = {};
-		var el = gi(form_id);
-		for(i = 0; i < el.elements.length; i++)
-		{
-			if(el.elements[i].name)
-			{
-				var err = gi(el.elements[i].name + '-error');
-				if(err)
-				{
-					err.style.display='none';
-				}
-
-				if(el.elements[i].name == 'id')
-				{
-					el.elements[i].value = id;
-				}
-				else if(el.elements[i].name == 'pid')
-				{
-					el.elements[i].value = g_pid;
-				}
-				else
-				{
-					if(el.elements[i].type == 'checkbox')
-					{
-						el.elements[i].checked = false;
-					}
-					else
-					{
-						el.elements[i].value = '';
-					}
-				}
-			}
-		}
-		gi(form_id + '-container').style.display='block';
-	}
-	else
-	{
-		gi('loading').style.display = 'block';
-		f_http(
-			"websco.php?"+json2url({'action': 'get_' + form_id, 'id': id }),
-			function(data, params)
-			{
-				gi('loading').style.display = 'none';
-				if(data.code)
-				{
-					f_notify(data.message, "error");
-				}
-				else
-				{
-					var el = gi(params);
-					for(i = 0; i < el.elements.length; i++)
-					{
-						if(el.elements[i].name)
-						{
-							if(data.data[el.elements[i].name])
-							{
-								if(el.elements[i].type == 'checkbox')
-								{
-									el.elements[i].checked = (parseInt(data.data[el.elements[i].name], 10) != 0);
-								}
-								else
-								{
-									el.elements[i].value = data.data[el.elements[i].name];
-								}
-							}
-						}
-					}
-					gi(params+'-container').style.display='block';
-				}
-			},
-			form_id
-		);
-	}
 }
 
 function f_expand(self, _pid)
