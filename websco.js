@@ -238,7 +238,7 @@ function f_new_permission(pid)
 			},
 			{
 				type: 'flags',
-				name: '',
+				name: 'apply_to_childs',
 				title: 'Apply to childs',
 				value: 0,
 				list: ['Apply to childs', 'Replace childs']

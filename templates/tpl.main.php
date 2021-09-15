@@ -1,7 +1,7 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 
 <p>
-	Альтернативный веб интерфейс для System Center Orchestartor.
+	Альтернативный веб интерфейс для System Center Orchestrator.
 </p>
 
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>
