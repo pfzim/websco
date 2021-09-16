@@ -108,6 +108,7 @@ EOT;
 
 		if(intval($result['http_code']) != 201)
 		{
+			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>

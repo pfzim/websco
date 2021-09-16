@@ -78,7 +78,7 @@ function log_db($operation, $params, $flags)
 
 function log_file($message)
 {
-	error_log(date('c').'  '.$message."\n", 3, '/var/www/html/websco/log/websco.log');
+	error_log(date('c').'  '.$message."\n", 3, '/var/log/websco/websco.log');
 }
 
 	$action = '';
