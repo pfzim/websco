@@ -1,0 +1,9 @@
+/var/log/websco/websco.log {
+    weekly
+    rotate 12
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 www-data www-data
+}
