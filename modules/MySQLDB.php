@@ -21,6 +21,7 @@
 /**
 	Class for operate with MySQL database
 */
+
 class MySQLDB
 {
 	private $core = NULL;

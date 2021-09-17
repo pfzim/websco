@@ -1,6 +1,7 @@
 <?php
 /*
-    UserAuth class - Internal or LDAP user authentication and access control
+    UserAuth class - Internal or LDAP user authentication and access
+	                 control module.
     Copyright (C) 2020 Dmitry V. Zimin
 
     This program is free software: you can redistribute it and/or modify
