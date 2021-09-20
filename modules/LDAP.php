@@ -25,6 +25,7 @@ class LDAP
 	private $ldap_passwd = NULL;
 	private $core = NULL;
 	private $rise_exception = FALSE;
+	private $use_gssapi = FALSE;
 
 	function __construct(&$core)
 	{
@@ -35,6 +36,7 @@ class LDAP
 		$this->ldap_passwd = LDAP_PASSWD;
 		$this->link = NULL;
 		$this->rise_exception = FALSE;
+		$this->use_gssapi = (defined('USE_GSSAPI') && USE_GSSAPI);
 	}
 
 	private function connect()
@@ -50,7 +52,16 @@ class LDAP
 		ldap_set_option($this->link, LDAP_OPT_PROTOCOL_VERSION, 3);
 		ldap_set_option($this->link, LDAP_OPT_REFERRALS, 0);
 		
-		if(!@ldap_bind($this->link, $this->ldap_user, $this->ldap_passwd))
+		if($this->use_gssapi)
+		{
+			$result = @ldap_sasl_bind($this->link, NULL, NULL, 'GSSAPI');
+		}
+		else
+		{
+			$result = @ldap_bind($this->link, $this->ldap_user, $this->ldap_passwd);
+		}
+
+		if(!$result)
 		{
 			$this->core->error_ex(ldap_error($this->link), $this->rise_exception);
 			ldap_unbind($this->link);
@@ -81,6 +92,7 @@ class LDAP
 	// needed for check user password
 	public function reset_user($ldap_user, $ldap_passwd, $force_connect = FALSE)
 	{
+		$this->use_gssapi = FALSE;
 		$this->ldap_user = $ldap_user;
 		$this->ldap_passwd = $ldap_passwd;
 		

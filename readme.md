@@ -4,6 +4,7 @@
 
 ```
 sudo apt-get install php php-mysql php-ldap php-curl php-xml
+sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-kerb libapache2-mod-auth-gssapi libsasl2-2 krb5-clients krb5-user krb5 ldap-utils gss-ntlmssp?
 ```
 
 

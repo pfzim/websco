@@ -42,8 +42,19 @@ class Runbooks
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_POST, false);
-		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
-		curl_setopt($ch, CURLOPT_USERPWD, $this->orchestrator_user.':'.$this->orchestrator_passwd);
+
+		if(defined('USE_GSSAPI') && USE_GSSAPI)
+		{
+			curl_setopt($ch, CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG);
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);
+			curl_setopt($ch, CURLOPT_USERPWD, ":");
+		}
+		else
+		{
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+			curl_setopt($ch, CURLOPT_USERPWD, $this->orchestrator_user.':'.$this->orchestrator_passwd);
+		}
+
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml'));
 
@@ -111,8 +122,19 @@ EOT;
 
 		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs');
 		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
-		curl_setopt($ch, CURLOPT_USERPWD, $this->orchestrator_user.':'.$this->orchestrator_passwd);
+
+		if(defined('USE_GSSAPI') && USE_GSSAPI)
+		{
+			curl_setopt($ch, CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG);
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);
+			curl_setopt($ch, CURLOPT_USERPWD, ":");
+		}
+		else
+		{
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+			curl_setopt($ch, CURLOPT_USERPWD, $this->orchestrator_user.':'.$this->orchestrator_passwd);
+		}
+
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml'));
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
