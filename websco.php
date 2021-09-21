@@ -653,6 +653,19 @@ function log_file($message)
 				exit;
 			}
 
+			$offset = 0;
+			$total = 0;
+			
+			if(isset($_GET['offset']))
+			{
+				$offset = $_GET['offset'];
+			}
+
+			if($core->db->select_ex($result, rpv("SELECT COUNT(*) FROM @runbooks_jobs")))
+			{
+				$total = $result[0][0];
+			}
+
 			$core->db->select_assoc_ex($jobs, rpv('
 				SELECT
 					j.`id`,
@@ -662,8 +675,12 @@ function log_file($message)
 				FROM @runbooks_jobs AS j
 				LEFT JOIN @users AS u ON u.`id` = j.`uid`
 				WHERE j.`pid` = #
-				ORDER BY j.`date` DESC
-			', $runbook['id']));
+				ORDER BY j.`date` DESC, j.`id` DESC
+				LIMIT #,100
+			',
+				$runbook['id'],
+				$offset
+			));
 
 			include(TEMPLATES_DIR.'tpl.list-jobs.php');
 		}

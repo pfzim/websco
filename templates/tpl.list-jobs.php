@@ -25,6 +25,29 @@
 			</tbody>
 		</table>
 
+		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php eh($self.'?action='.$action.'&guid='.$runbook['guid'].'&offset=0'); ?>">1</a>
+		<?php 
+			$min = max(100, $offset - 1000);
+			$max = min($offset + 1000, $total - ($total % 100));
+
+			if($min > 100) { echo '&nbsp;...&nbsp;'; }
+
+			for($i = $min; $i <= $max; $i += 100)
+			{
+			?>
+				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php eh($self.'?action='.$action.'&guid='.$runbook['guid'].'&offset='.$i); ?>"><?php eh($i/100 + 1); ?></a>
+			<?php
+			}
+
+			$max = $total - ($total % 100);
+			if($i < $max)
+			{
+			?>
+				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php eh($self.'?action='.$action.'&guid='.$runbook['guid'].'&offset='.$max); ?>"><?php eh($max/100 + 1); ?></a>
+			<?php
+			}
+		?>
+
 
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.job-info.php'); ?>
