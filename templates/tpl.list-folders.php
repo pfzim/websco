@@ -1,6 +1,6 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 
-		<h3 align="center">Folder: <?php eh($current_folder_name); ?></h3>
+		<h3 align="center">Current folder: <?php eh($current_folder_name); ?></h3>
 
 		<table id="table" class="main-table">
 			<thead>

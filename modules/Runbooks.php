@@ -33,8 +33,8 @@ class Runbooks
 		$this->core = &$core;
 
 		$this->orchestrator_url = ORCHESTRATOR_URL;
-		$this->orchestrator_user = LDAP_USER;
-		$this->orchestrator_passwd = LDAP_PASSWD;
+		$this->orchestrator_user = ORCHESTRATOR_USER;
+		$this->orchestrator_passwd = ORCHESTRATOR_PASSWD;
 	}
 
 	public function get_http_xml($url)
@@ -274,6 +274,43 @@ EOT;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		return $folders;
+	}
+
+	public function get_jobs()
+	{
+		$jobs = array();
+		$skip = 0;
+		$total = 0;
+
+		do
+		{
+			$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+
+			$total = intval($xml->children('m', TRUE)->count);
+
+			foreach($xml->entry as $entry)
+			{
+				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+
+				$job = array(
+					'guid' => (string) $properties->Id,
+					'pid' => (string) $properties->RunbookId,
+					'date' => (string) $properties->CreationTime
+				);
+
+				$jobs[] = $job;
+
+				//break;
+				$skip++;
+			}
+			//break;
+		}
+		while($skip < $total);
+
+		//echo $output;
+		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+		return $jobs;
 	}
 
 	public function get_activities()
@@ -558,6 +595,34 @@ EOT;
 			}
 
 			$total++;
+		}
+
+		return $total;
+	}
+
+	public function sync_jobs()
+	{
+		$total = 0;
+		$jobs = $this->get_jobs();
+
+		foreach($jobs as &$job)
+		{
+			if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
+			{
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
+				{
+					$this->core->db->put(rpv("
+							INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
+							VALUES (!, #, !, NULL, 0x0000)
+						",
+						$job['date'],
+						$rb[0][0],
+						$job['guid']
+					));
+
+					$total++;
+				}
+			}
 		}
 
 		return $total;

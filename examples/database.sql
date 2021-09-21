@@ -122,9 +122,9 @@ CREATE TABLE `w_runbooks_jobs` (
   `date` datetime NOT NULL,
   `pid` int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
-  `uid` int(10) unsigned NOT NULL,
+  `uid` int(10) unsigned DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`,`guid`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

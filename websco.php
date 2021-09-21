@@ -502,6 +502,18 @@ function log_file($message)
 		}
 		exit;
 
+		case 'sync_jobs':
+		{
+			header('Content-Type: text/plain; charset=utf-8');
+
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having Write access mean admin
+
+			$total = $core->Runbooks->sync_jobs();
+
+			echo '{"code": 0, "message": "'.json_escape('Jobs loaded: '.$total).'"}';
+		}
+		exit;
+
 		case 'start_runbook':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
@@ -661,7 +673,7 @@ function log_file($message)
 				$offset = $_GET['offset'];
 			}
 
-			if($core->db->select_ex($result, rpv("SELECT COUNT(*) FROM @runbooks_jobs")))
+			if($core->db->select_ex($result, rpv("SELECT COUNT(*) FROM @runbooks_jobs AS j WHERE j.`pid` = #", $runbook['id'])))
 			{
 				$total = $result[0][0];
 			}
@@ -811,6 +823,12 @@ function log_file($message)
 			$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE (r.`flags` & (0x0001 | 0x0002)) = 0 AND r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
 
 			include(TEMPLATES_DIR.'tpl.list-folders.php');
+		}
+		exit;
+
+		case 'list_tools':
+		{
+			include(TEMPLATES_DIR.'tpl.list-tools.php');
 		}
 		exit;
 	}

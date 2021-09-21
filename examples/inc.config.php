@@ -66,3 +66,5 @@
 
 	define('WS_URL', 'http://websco.contoso.com/');
 	define('ORCHESTRATOR_URL', 'http://contoso-scor-01:81/Orchestrator2012/Orchestrator.svc');
+	define('ORCHESTRATOR_USER', 'domain\\websco');
+	define('ORCHESTRATOR_PASSWD', '');
