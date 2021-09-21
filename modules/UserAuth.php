@@ -195,7 +195,7 @@ class UserAuth
 			}
 			else // add new LDAP user
 			{
-				$this->token = uniqid();
+				$this->token = bin2hex(random_bytes(8));
 				$this->login = $sam_account_name;
 				$this->flags = UA_LDAP;
 				$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, sid, flags) VALUES (!, \'\', !, !, #)', $this->login, @$records[0]['mail'][0], $this->token, $this->flags));
@@ -235,7 +235,7 @@ class UserAuth
 
 		if(empty($this->token))
 		{
-			$this->token = uniqid();
+			$this->token = bin2hex(random_bytes(8));
 			$this->core->db->put(rpv('UPDATE @users SET `sid` = ! WHERE `id` = # LIMIT 1', $this->token, $this->uid));
 		}
 

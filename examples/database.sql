@@ -171,7 +171,7 @@ CREATE TABLE `w_users` (
   `login` varchar(255) NOT NULL,
   `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
-  `sid` varchar(15) DEFAULT NULL,
+  `sid` varchar(16) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;

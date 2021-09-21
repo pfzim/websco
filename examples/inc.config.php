@@ -14,6 +14,9 @@
 		configure krb5.conf:
 		[libdefaults]
 			default_realm = CONTOSO.COM
+			default_client_keytab_name = FILE:/etc/kerberos/server.keytab
+			default_ccache_name = FILE:/tmp/krb5cc_0
+			#default_keytab_name = FILE:/etc/kerberos/server.keytab
 
 		[realms]
 			CONTOSO.COM = {
@@ -26,21 +29,29 @@
 		[domain_realm]
 			.contoso.com = CONTOSO.COM
 			contoso.com = CONTOSO.COM
+		[logging]
+			kdc = FILE:/var/log/krb5/krb5kdc.log
+			admin_server = FILE:/var/log/krb5/kadmin.log
+			default = FILE:/var/log/krb5/krb5lib.log
 			
 		check:
+			ktinit -ki
 			kinit -S HTTP/web.contoso.com -p <any_user>@CONTOSO.COM
 			klist
 		
 		kdestroy -A
+		
+		after update keytab run on client:
+			klist purge
 	*/
 
 	define('USE_GSSAPI', TRUE);
 
 	define('LDAP_URI', 'ldap://contoso-dc-01');
-	define('LDAP_PORT', 389);
 	define('LDAP_USER', 'domain\\websco');
 	define('LDAP_PASSWD', '');
 	define('LDAP_BASE_DN', 'DC=contoso,DC=local');
+
 	define('LDAP_ADMIN_GROUP_DN', 'CN=WEBSCO-Administrators,OU=Administrators,OU=DC=contoso,DC=local');
 
 	define('MAIL_HOST', 'smtp.contoso.com');

@@ -170,7 +170,7 @@ function log_file($message)
 		{
 			header("Content-Type: text/plain; charset=utf-8");
 
-			//assert_permission_ajax(0, RB_ACCESS_EXECUTE);
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);
 
 			if(!$core->db->select_assoc_ex($permission, rpv("SELECT m.`id`, m.`oid`, m.`dn`, m.`allow_bits` FROM `@access` AS m WHERE m.`id` = # LIMIT 1", $id)))
 			{
@@ -369,14 +369,12 @@ function log_file($message)
 		{
 			header("Content-Type: text/html; charset=utf-8");
 
-			/*
-			if(!$user_perm->check_permission(0, LPD_ACCESS_READ))
+			if(!$core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE))
 			{
-				$error_msg = "Access denied to section 0 for user ".$uid."!";
-				include('templ/tpl.message.php');
+				$error_msg = "Access denied to section 0 for user ".$core->UserAuth->get_login()."!";
+				include(TEMPLATES_DIR.'tpl.message.php');
 				exit;
 			}
-			*/
 
 			if(empty($_GET['id']) || intval($_GET['id']) == 0)
 			{
@@ -404,6 +402,8 @@ function log_file($message)
 		case 'get_permissions':
 		{
 			header("Content-Type: text/plain; charset=utf-8");
+
+			assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having access mean admin
 
 			if(empty($_GET['id']) || intval($_GET['id']) == 0)
 			{
