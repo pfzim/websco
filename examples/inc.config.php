@@ -47,7 +47,7 @@
 
 	define('USE_GSSAPI', TRUE);
 
-	define('LDAP_URI', 'ldap://contoso-dc-01');
+	define('LDAP_URI', 'ldap://contoso-dc-01 ldap://contoso-dc-02');
 	define('LDAP_USER', 'domain\\websco');
 	define('LDAP_PASSWD', '');
 	define('LDAP_BASE_DN', 'DC=contoso,DC=local');
