@@ -82,7 +82,11 @@ function log_file($message)
 }
 
 	$action = '';
-	if(isset($_GET['action']))
+	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
+	{
+		$action = $argv[1];
+	}
+	elseif(isset($_GET['action']))
 	{
 		$action = $_GET['action'];
 	}

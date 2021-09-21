@@ -393,7 +393,7 @@ body {
     transform: translate(-50%, -50%);
 	overflow-y: auto;
 }
-.modal-content h3 {
+.form-header {
     width: 500px;
 }
 .form-title {
