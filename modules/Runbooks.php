@@ -276,15 +276,22 @@ EOT;
 		return $folders;
 	}
 
-	public function get_jobs()
+	public function get_jobs($guid)
 	{
 		$jobs = array();
 		$skip = 0;
 		$total = 0;
+		
+		$job_filter = '';
+		
+		if(!empty($guid))
+		{
+			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+		}
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$xml = $this->get_http_xml($this->orchestrator_url.$job_filter.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
 
 			$total = intval($xml->children('m', TRUE)->count);
 
@@ -600,10 +607,10 @@ EOT;
 		return $total;
 	}
 
-	public function sync_jobs()
+	public function sync_jobs($guid)
 	{
 		$total = 0;
-		$jobs = $this->get_jobs();
+		$jobs = $this->get_jobs($guid);
 
 		foreach($jobs as &$job)
 		{

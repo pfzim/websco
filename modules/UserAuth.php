@@ -487,6 +487,11 @@ class UserAuth
 				}
 			}
 		}
+
+		if(isset($this->core->Mem))
+		{
+			$this->core->Mem->set($this->get_id().'_'.$object_id, $this->rights[$object_id]);
+		}
 	}
 
 	public function merge_permissions($rights, $added_rights)
@@ -516,7 +521,22 @@ class UserAuth
 
 		if(!isset($this->rights[$object_id]))
 		{
-			$this->get_user_rights($object_id);
+			if(isset($this->core->Mem))
+			{
+				$cached_rights = $this->core->Mem->get($this->get_id().'_'.$object_id);
+				if($cached_rights !== FALSE)
+				{
+					$this->rights[$object_id] = $cached_rights;
+				}
+				else
+				{
+					$this->get_user_rights($object_id);
+				}
+			}
+			else
+			{
+				$this->get_user_rights($object_id);
+			}
 		}
 
 		$level--;

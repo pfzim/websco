@@ -1,6 +1,6 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 
-		<h3 align="center">Jobs: <?php eh($runbook['name']); ?></h3>
+		<h3 align="center">Jobs for runbook: <?php eh($runbook['name']); ?> (<a href="<?php eh($self.'?action=sync_jobs&guid='.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
 
 		<table id="table" class="main-table">
 			<thead>

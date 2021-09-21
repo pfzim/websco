@@ -112,6 +112,7 @@ function log_file($message)
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
+	$core->load('Mem');
 	$core->load('LDAP');
 	$core->load('UserAuth');
 	$core->load('Runbooks');
@@ -510,9 +511,18 @@ function log_file($message)
 		{
 			header('Content-Type: text/plain; charset=utf-8');
 
-			assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having Write access mean admin
+			$runbook_guid = '';
+			if(!empty($_GET['guid']))
+			{
+				$runbook_guid = $_GET['guid'];
+			}
 
-			$total = $core->Runbooks->sync_jobs();
+			if(empty($runbook_guid))
+			{
+				assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// non-priveleged users cannot sync all jobs at once
+			}
+
+			$total = $core->Runbooks->sync_jobs($runbook_guid);
 
 			echo '{"code": 0, "message": "'.json_escape('Jobs loaded: '.$total).'"}';
 		}
@@ -671,7 +681,7 @@ function log_file($message)
 
 			$offset = 0;
 			$total = 0;
-			
+
 			if(isset($_GET['offset']))
 			{
 				$offset = $_GET['offset'];
