@@ -4,7 +4,7 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<title>WebSCO - System Center Orchestartor web interface</title>
+		<title>WebSCO - System Center Orchestrator web interface</title>
 		<link type="text/css" href="templates/style.css" rel="stylesheet" />
 		<link type="text/css" href="templates/pikaday.css" rel="stylesheet" />
 		<script src="websco.js"></script>
