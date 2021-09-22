@@ -26,8 +26,9 @@ if(!defined('ROOT_DIR'))
 
 if(!file_exists(ROOT_DIR.'inc.config.php'))
 {
-	header('Content-Type: text/plain; charset=utf-8');
-	echo 'Configuration file inc.config.php is not found!';
+	//header('Content-Type: text/plain; charset=utf-8');
+	//echo 'Configuration file inc.config.php is not found!';
+	header('Location: install.php');
 	exit;
 }
 
@@ -119,6 +120,24 @@ function log_file($message)
 
 	define('RB_ACCESS_EXECUTE', 1);
 	$core->UserAuth->set_bits_representation('x');
+
+	$g_config = array();
+
+	if($db->select(rpv('SELECT m.`name`, m.`value` FROM @config AS m WHERE m.`uid` = 0')))
+	{
+		foreach($db->data as &$row)
+		{
+			$g_config[$row[0]] = $row[1];
+		}
+	}
+
+	/*
+	if(!isset($g_config['db_version']) || (intval($g_config['db_version']) != 5))
+	{
+		header('Location: upgrade.php');
+		exit;
+	}
+	*/
 
 	if(!$core->UserAuth->get_id())
 	{

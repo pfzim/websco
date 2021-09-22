@@ -64,7 +64,7 @@
 	define('MAIL_PORT', 25);
 	define('MAIL_TO_ADMIN', 'admin@contoso.com');
 
-	define('WS_URL', 'http://websco.contoso.com/');
-	define('ORCHESTRATOR_URL', 'http://contoso-scor-01:81/Orchestrator2012/Orchestrator.svc');
+	define('WS_URL', 'https://websco.contoso.com/');
+	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');
