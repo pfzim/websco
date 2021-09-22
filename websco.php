@@ -123,12 +123,14 @@ function log_file($message)
 
 	$g_config = array();
 
-	if($db->select(rpv('SELECT m.`name`, m.`value` FROM @config AS m WHERE m.`uid` = 0')))
+	if($core->db->select_ex($cfg, rpv('SELECT m.`name`, m.`value` FROM @config AS m WHERE m.`uid` = 0')))
 	{
-		foreach($db->data as &$row)
+		foreach($cfg as &$row)
 		{
 			$g_config[$row[0]] = $row[1];
 		}
+
+		unset($cfg);
 	}
 
 	/*
