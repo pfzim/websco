@@ -1351,7 +1351,7 @@ EOT;
 	<body>
 		<div class="container">
 		<div class="form-horizontal">
-		<form id="uform-fields" action="?action=download_config" method="post">
+		<form id="uform-fields" action="?action=download_config" method="post" target="_blank">
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Language settings</h3>
@@ -1496,7 +1496,7 @@ EOT;
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<h3>Orchestator settings</h3>
+					<h3>Orchestrator settings</h3>
 				</div>
 			</div>
 			<div class="form-group">
