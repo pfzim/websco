@@ -41,12 +41,12 @@ class Mem
 	{
 		$this->connect();
 
-		log_file('Mem save: '.$key.' = '.bin2hex($value));
+		//log_file('Mem save: '.$key.' = '.bin2hex($value));
 
 		return $this->mc->set($key, $value, 900);
 	}
 
-	public function get($key)
+	public function get($key, &$value)
 	{
 		$this->connect();
 
@@ -54,12 +54,12 @@ class Mem
 
 		if($this->mc->getResultCode() == Memcached::RES_NOTFOUND)
 		{
-			log_file('Mem load: '.$key.' - NOT FOUND');
+			//log_file('Mem load: '.$key.' - NOT FOUND');
 			return FALSE;
 		}
 
-		log_file('Mem load: '.$key.' = '.bin2hex($value));
+		//log_file('Mem load: '.$key.' = '.bin2hex($value));
 
-		return $value;
+		return TRUE;
 	}
 }

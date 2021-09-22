@@ -42,6 +42,8 @@ class UserAuth
 	private $login = NULL;				/// sAMAccountName, zl cookie
 	private $token = NULL;				/// zh cookie
 	private $flags = 0;
+	
+	private $salt = 'UserAuth';
 
 	private $ldap = NULL;
 
@@ -56,6 +58,7 @@ class UserAuth
 	{
 		$this->core = &$core;
 		$this->rise_exception = FALSE;
+		$this->salt = 'UserAuth';
 
 		if(!isset($this->core->LDAP))
 		{
@@ -217,7 +220,7 @@ class UserAuth
 						AND m.`passwd` = MD5(!)
 						AND (m.`flags` & (0x0001 | 0x0002)) = 0x0000
 					LIMIT 1
-				", $login, $passwd
+				", $login, $passwd.$this->salt
 			)))
 			{
 				//$this->core->db->put(rpv('INSERT INTO `@log` (`date`, `uid`, `type`, `p1`, `ip`) VALUES (NOW(), #, #, #, !)', 0, LOG_LOGIN_FAILED, 0, $ip));
@@ -271,7 +274,7 @@ class UserAuth
 			return 0;
 		}
 
-		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, 0x0001)', $login, $passwd, $mail)))
+		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, 0x0001)', $login, $passwd.$this->salt, $mail)))
 		{
 			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return 0;
@@ -284,7 +287,7 @@ class UserAuth
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd, $this->uid)))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $this->uid)))
 			{
 				return TRUE;
 			}
@@ -297,7 +300,7 @@ class UserAuth
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
 		{
-			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & 0x0002) = 0x0000 LIMIT 1', $this->uid, $passwd)))
+			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & 0x0002) = 0x0000 LIMIT 1', $this->uid, $passwd.$this->salt)))
 			{
 				if(intval($user[0][0]) == $this->uid)
 				{
@@ -443,6 +446,13 @@ class UserAuth
 		return FALSE;
 	}
 
+	/**
+	 *  \brief Get user permissions for object directly from DB and LDAP
+	 *
+	 *  \param [in] $object_id Object ID
+	 *  \return void
+	 */
+
 	private function get_user_rights($object_id)
 	{
 		$this->rights[$object_id] = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
@@ -475,7 +485,7 @@ class UserAuth
 				}
 				ldap_free_result($sr);
 				*/
-				if($this->ldap->search($records, '(&(objectClass=user)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
+				if($this->ldap->search($records, '(&(objectClass=user)(objectCategory=person)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
 				{
 					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[1]);
 					/*
@@ -509,7 +519,7 @@ class UserAuth
 	 *
 	 *  \param [in] $object_id Object ID
 	 *  \param [in] $level One-based ordinal number of bit
-	 *  \return true - if user have requested permisiions for object. For internal user always true.
+	 *  \return true - if user have requested permissions for object. For internal user always true.
 	 */
 
 	public function check_permission($object_id, $level)
@@ -519,23 +529,11 @@ class UserAuth
 			return TRUE;  /// Internal user is always admin
 		}
 
-		if(!isset($this->rights[$object_id]))
+		if(!isset($this->rights[$object_id]))  // local cache empty
 		{
-			if(isset($this->core->Mem))
+			if(!isset($this->core->Mem) || !$this->core->Mem->get($this->get_id().'_'.$object_id, $this->rights[$object_id]))  // memcached empty
 			{
-				$cached_rights = $this->core->Mem->get($this->get_id().'_'.$object_id);
-				if($cached_rights !== FALSE)
-				{
-					$this->rights[$object_id] = $cached_rights;
-				}
-				else
-				{
-					$this->get_user_rights($object_id);
-				}
-			}
-			else
-			{
-				$this->get_user_rights($object_id);
+				$this->get_user_rights($object_id); // get from DB if local cache and memcached fail
 			}
 		}
 
