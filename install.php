@@ -1596,7 +1596,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');">6. Check SCORCH connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');">7. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
