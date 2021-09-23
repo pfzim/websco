@@ -8,6 +8,12 @@ sudo apt-get install memcached php-memcached
 sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-kerb libapache2-mod-auth-gssapi libsasl2-2 krb5-clients krb5-user krb5 ldap-utils gss-ntlmssp?
 ```
 
+## Screenshots
+
+![Runbook input form example](/docs/screenshots/runbook1.png "Runbook input form example")
+![Result example](/docs/screenshots/result2.png "Result example")
+![Runbook input form example](/docs/screenshots/runbook2.png "Runbook input form example")
+![Result example](/docs/screenshots/result2.png "Result example")
 
 ## Technical information
 
