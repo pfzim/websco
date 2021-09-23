@@ -10,9 +10,16 @@ sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-
 
 ## Screenshots
 
+### Runbook input form
 ![Runbook input form example](/docs/screenshots/runbook1.png "Runbook input form example")
+
+### Result
 ![Result example](/docs/screenshots/result2.png "Result example")
+
+### Runbook input form
 ![Runbook input form example](/docs/screenshots/runbook2.png "Runbook input form example")
+
+### Result
 ![Result example](/docs/screenshots/result2.png "Result example")
 
 ## Technical information
