@@ -113,7 +113,10 @@ function log_file($message)
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
-	$core->load('Mem');
+	if(defined('USE_MEMCACHED') && USE_MEMCACHED)
+	{
+		$core->load('Mem');
+	}
 	$core->load('LDAP');
 	$core->load('UserAuth');
 	$core->load('Runbooks');
@@ -385,6 +388,11 @@ function log_file($message)
 				{
 					$result_json['childs'] = permissions_apply_to_childs($folders[0]['guid'], $v_dn, $v_allow, $v_replace_childs);
 				}
+			}
+
+			if(isset($core->Mem))
+			{
+				$core->Mem->flush();
 			}
 
 			echo json_encode($result_json);

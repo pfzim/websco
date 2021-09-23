@@ -437,6 +437,9 @@ $config = <<<'EOT'
 	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
 
 	define('WS_URL', '#web_url#');
+
+	define('USE_MEMCACHED', #use_memcached#);
+
 EOT;
 
 
@@ -730,6 +733,7 @@ EOT;
 							'#scorch_passwd#',
 							'#web_url#',
 							'#mail_auth#',
+							'#use_memcached#',
 							'#language#'
 						),
 						array(
@@ -756,6 +760,7 @@ EOT;
 							sql_escape(@$_POST['scorch_passwd']),
 							sql_escape(@$_POST['web_url']),
 							empty($_POST['mail_user'])?'FALSE':'TRUE',
+							intval(@$_POST['use_memcached'])?'TRUE':'FALSE',
 							sql_escape(@$_POST['language'])
 						),
 						$config
@@ -831,6 +836,7 @@ EOT;
 							'#scorch_passwd#',
 							'#web_url#',
 							'#mail_auth#',
+							'#use_memcached#',
 							'#language#'
 						),
 						array(
@@ -857,6 +863,7 @@ EOT;
 							sql_escape(@$_POST['scorch_passwd']),
 							sql_escape(@$_POST['web_url']),
 							empty($_POST['mail_user'])?'FALSE':'TRUE',
+							intval(@$_POST['use_memcached'])?'TRUE':'FALSE',
 							sql_escape(@$_POST['language'])
 						),
 						$config
@@ -1520,7 +1527,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<h3>Kerberos</h3>
+					<h3>Kerberos (keytab required)</h3>
 				</div>
 			</div>
 			<div class="form-group">
@@ -1696,6 +1703,12 @@ input:checked + .slider:after
 				<label for="web_url" class="control-label col-sm-2">WebSCO URL:</label>
 				<div class="col-sm-5">
 					<input id="web_url" name="web_url" class="form-control" type="text" value="https://websco.contoso.com" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_memcached" class="control-label col-sm-2">Use memcached:</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="use_memcached" name="use_memcached" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">

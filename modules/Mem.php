@@ -62,4 +62,11 @@ class Mem
 
 		return TRUE;
 	}
+
+	public function flush()
+	{
+		$this->connect();
+
+		return $this->mc->flush();
+	}
 }

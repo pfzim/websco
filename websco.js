@@ -618,15 +618,23 @@ function f_get_perms(id)
 				el.setAttribute('onclick', 'f_new_permission(' + data.id + ');');
 				
 				el = gi('show_hide');
-				if(data.flags & 0x0002)
+				if(id == 0)
 				{
-					el.innerText = 'Show folder in list';
-					el.setAttribute('onclick', 'f_show_hide(\'?' + json2url({'action': 'show_folder', 'id': data.id }) + '\');');
+					el.style.display = 'none';
 				}
 				else
 				{
-					el.innerText = 'Hide folder from list';
-					el.setAttribute('onclick', 'f_show_hide(\'?' + json2url({'action': 'hide_folder', 'id': data.id }) + '\');');
+					if(data.flags & 0x0002)
+					{
+						el.innerText = 'Show folder in list';
+						el.setAttribute('onclick', 'f_show_hide(\'?' + json2url({'action': 'show_folder', 'id': data.id }) + '\');');
+					}
+					else
+					{
+						el.innerText = 'Hide folder from list';
+						el.setAttribute('onclick', 'f_show_hide(\'?' + json2url({'action': 'hide_folder', 'id': data.id }) + '\');');
+					}
+					el.style.display = 'inline';
 				}
 
 				el = gi(params);
