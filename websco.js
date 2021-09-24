@@ -186,7 +186,7 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td>' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
+						html += '<tr><td>' + data.instances[i].activities[j].sequence + '. ' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
 					}
 					html += '<tr><td colspan="2"><b>Output parameters</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
