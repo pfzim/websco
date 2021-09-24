@@ -143,26 +143,6 @@ function L($key)
 	define('RB_ACCESS_EXECUTE', 1);
 	$core->UserAuth->set_bits_representation('x');
 
-	$g_config = array();
-
-	if($core->db->select_ex($cfg, rpv('SELECT m.`name`, m.`value` FROM @config AS m WHERE m.`uid` = 0')))
-	{
-		foreach($cfg as &$row)
-		{
-			$g_config[$row[0]] = $row[1];
-		}
-
-		unset($cfg);
-	}
-
-	/*
-	if(!isset($g_config['db_version']) || (intval($g_config['db_version']) != 5))
-	{
-		header('Location: upgrade.php');
-		exit;
-	}
-	*/
-
 	if(!$core->UserAuth->get_id())
 	{
 		header('Content-Type: text/html; charset=utf-8');
