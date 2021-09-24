@@ -652,7 +652,7 @@ function L($key)
 
 			if($result_json['code'])
 			{
-				$result_json['message'] = LL('NotAllFilled!');
+				$result_json['message'] = LL('NotAllFilled');
 				echo json_encode($result_json);
 				exit;
 			}
