@@ -47,6 +47,7 @@
 
 	define('USE_GSSAPI', TRUE);
 
+	define('USE_LDAP_AUTH', TRUE);
 	define('LDAP_URI', 'ldap://contoso-dc-01 ldap://contoso-dc-02');
 	define('LDAP_USER', 'domain\\websco');
 	define('LDAP_PASSWD', '');
@@ -68,3 +69,5 @@
 	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');
+
+	define('USE_MEMCACHED', TRUE);

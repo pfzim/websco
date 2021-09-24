@@ -235,24 +235,6 @@ EOT;
 				$instance['activities'][] = $activity;
 			}
 
-			function cmp_name($a, $b)
-			{
-				return strcasecmp($a['name'], $b['name']);
-			}
-
-			function cmp_sequence($a, $b)
-			{
-				$a = intval($a['sequence']);
-				$b = intval($b['sequence']);
-
-				if($a == $b)
-				{
-					return 0;
-				}
-
-				return ($a < $b) ? -1 : 1;
-			}
-
 			usort($instance['params_in'], 'cmp_name');
 			usort($instance['activities'], 'cmp_sequence');
 			usort($instance['params_out'], 'cmp_name');
@@ -814,4 +796,22 @@ EOT;
 
 		return $form_fields;
 	}
+}
+
+function cmp_name($a, $b)
+{
+	return strcasecmp($a['name'], $b['name']);
+}
+
+function cmp_sequence($a, $b)
+{
+	$a = intval($a['sequence']);
+	$b = intval($b['sequence']);
+
+	if($a == $b)
+	{
+		return 0;
+	}
+
+	return ($a < $b) ? -1 : 1;
 }

@@ -130,6 +130,7 @@ function L($key)
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
+	/*
 	if(defined('USE_MEMCACHED') && USE_MEMCACHED)
 	{
 		$core->load('Mem');
@@ -137,7 +138,8 @@ function L($key)
 	$core->load('LDAP');
 	$core->load('UserAuth');
 	$core->load('Runbooks');
-
+	*/
+	
 	define('RB_ACCESS_EXECUTE', 1);
 	$core->UserAuth->set_bits_representation('x');
 
@@ -281,7 +283,7 @@ function L($key)
 			$v_pid = intval(@$_POST['pid']);
 			$v_dn = trim(@$_POST['dn']);
 			$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-			$v_apply_to_childs = intval(@$_POST['apply_to_childs'][0]);
+			$v_apply_to_childs = intval(@$_POST['apply_to_childs'][0]) || intval(@$_POST['apply_to_childs'][1]);
 			$v_replace_childs = intval(@$_POST['apply_to_childs'][1]);
 
 			if(isset($_POST['allow_bits']))
@@ -406,7 +408,7 @@ function L($key)
 				}
 			}
 
-			if(isset($core->Mem))
+			if(defined('USE_MEMCACHED') && USE_MEMCACHED)
 			{
 				$core->Mem->flush();
 			}

@@ -47,24 +47,29 @@ class Core
 	{
 		if(isset($this->$module))
 		{
-			return TRUE;
+			return $this->$module;
 		}
 
 		$filepath = MODULES_DIR.$module.'.php';
 		if(!file_exists($filepath))
 		{
 			$this->error('ERROR: Module '.$filepath.' not found!');
-			return FALSE;
+			return NULL;
 		}
 		
 		require_once($filepath);
 
 		$this->$name = new $module($this);
 
-		return TRUE;
+		return $this->$module;
 	}
 
 	public function load($module)
+	{
+		return $this->load_ex($module, $module);
+	}
+
+	public function __get($module)
 	{
 		return $this->load_ex($module, $module);
 	}

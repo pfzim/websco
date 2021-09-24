@@ -60,13 +60,13 @@ class UserAuth
 		$this->rise_exception = FALSE;
 		$this->salt = 'UserAuth';
 
-		if(!isset($this->core->LDAP))
+		if(defined('USE_LDAP_AUTH') && USE_LDAP_AUTH)
 		{
-			$this->ldap = NULL;
+			$this->ldap = &$this->core->LDAP;
 		}
 		else
 		{
-			$this->ldap = &$this->core->LDAP;
+			$this->ldap = NULL;
 		}
 
 		$this->bits_string_representation = '';
@@ -498,7 +498,7 @@ class UserAuth
 			}
 		}
 
-		if(isset($this->core->Mem))
+		if(defined('USE_MEMCACHED') && USE_MEMCACHED)
 		{
 			$this->core->Mem->set($this->get_id().'_'.$object_id, $this->rights[$object_id]);
 		}
@@ -531,7 +531,7 @@ class UserAuth
 
 		if(!isset($this->rights[$object_id]))  // local cache empty
 		{
-			if(!isset($this->core->Mem) || !$this->core->Mem->get($this->get_id().'_'.$object_id, $this->rights[$object_id]))  // memcached empty
+			if(!defined('USE_MEMCACHED') || !USE_MEMCACHED || !$this->core->Mem->get($this->get_id().'_'.$object_id, $this->rights[$object_id]))  // memcached empty
 			{
 				$this->get_user_rights($object_id); // get from DB if local cache and memcached fail
 			}
