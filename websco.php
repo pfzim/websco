@@ -866,7 +866,7 @@ function L($key)
 				$pid = $_GET['guid'];
 			}
 
-			$current_folder_name = 'Root';
+			$current_folder_name = LL('RootLevel');
 			$parent_folder_id = '';
 
 			if($core->db->select_assoc_ex($current_folder, rpv('SELECT f.`id`, f.`pid`, f.`name` FROM @runbooks_folders AS f WHERE f.`guid` = !', $pid)))

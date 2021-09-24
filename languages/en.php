@@ -35,7 +35,7 @@
 		'SyncJobs'					=> 'Sync jobs (too slow)',
 		'UsageExample'				=> 'Usage example',
 		'CurrentUserToken'			=> 'Current user token',
-		'TokenNote'					=> 'The token will be reset if you logout.',
+		'TokenNote'					=> 'The token will be reset if you press Logout.',
 		'UnknownError'				=> 'Unknown error',
 		'InvalidUserPasswd'			=> 'Invalid user name or password!',
 		'EditPermissions'			=> 'Edit permissions',
