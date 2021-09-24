@@ -162,7 +162,7 @@ function f_get_job(guid)
 						cl = 'status-warn';
 					}
 
-					
+
 					html += '<tr><td>Instance ID: ' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
 
 					html += '<tr><td colspan="2"><b>Input parameters</b></td></tr>';
@@ -245,7 +245,7 @@ function f_new_permission(pid)
 			}
 		]
 	};
-	
+
 	on_received_form(data,'uform');
 }
 
@@ -293,7 +293,7 @@ function on_received_form(data, form_id)
 			el.innerText = '';
 			el.style.display = 'none';
 		}
-		
+
 		el = gi(form_id + '-fields');
 		el.innerHTML = '';
 		html = '';
@@ -331,7 +331,7 @@ function on_received_form(data, form_id)
 			else if(data.fields[i].type == 'flags' && data.fields[i].list)
 			{
 				value = parseInt(data.fields[i].value, 10);
-				
+
 				html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
 				for(j = 0; j < data.fields[i].list.length; j++)
 				{
@@ -340,11 +340,11 @@ function on_received_form(data, form_id)
 					{
 						checked = ' checked="checked"';
 					}
-					
+
 					html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"' + checked + '/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
 				}
 				html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
-					
+
 				var wrapper = document.createElement('div');
 				wrapper.innerHTML = html;
 				el.appendChild(wrapper);
@@ -397,7 +397,7 @@ function f_show_form(url)
 		on_received_form,
 		form_id
 	);
-	
+
 	return false;
 }
 
@@ -570,7 +570,7 @@ function f_async_ex(url)
 		},
 		null
 	);
-	
+
 	return false;
 }
 
@@ -590,7 +590,7 @@ function f_show_hide(url)
 		},
 		null
 	);
-	
+
 	return false;
 }
 
@@ -616,7 +616,7 @@ function f_get_perms(id)
 
 				el = gi('add_new_permission');
 				el.setAttribute('onclick', 'f_new_permission(' + data.id + ');');
-				
+
 				el = gi('show_hide');
 				if(id == 0)
 				{
@@ -656,7 +656,7 @@ function f_get_perms(id)
 		},
 		'table-data'
 	);
-	
+
 	return false;
 }
 

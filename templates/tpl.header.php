@@ -13,17 +13,17 @@
 	</head>
 	<body>
 		<ul class="menu-bar">
-			<li><a href="<?php eh($self); ?>"><?php eh($lang["headerHome"]) ?></a></li>
+			<li><a href="<?php eh($self); ?>"><?php L('Home') ?></a></li>
 			<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="<?php eh($self.'?action=list_folder'); ?>">Runbooks</a></li>
-				<li><a href="<?php eh($self.'?action=list_tools'); ?>">Tools</a></li>
-				<li><a href="<?php eh($self.'?action=permissions'); ?>">Permissions</a></li>
+				<li><a href="<?php eh($self.'?action=list_folder'); ?>"><?php L('Runbooks') ?></a></li>
+				<li><a href="<?php eh($self.'?action=list_tools'); ?>"><?php L('Tools') ?></a></li>
+				<li><a href="<?php eh($self.'?action=permissions'); ?>"><?php L('Permissions') ?></a></li>
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
 				<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="?action=logoff"><?php eh($lang["headerLogOut"]) ?></a></li>
+				<li><a href="?action=logoff"><?php L('Logout') ?></a></li>
 				<?php } else { ?>
-				<li><a href="?action=login"><?php eh($lang["headerLogIn"]) ?></a></li>
+				<li><a href="?action=login"><?php L('LoginBtn') ?></a></li>
 				<?php } ?>
 			</ul>
 		</ul>

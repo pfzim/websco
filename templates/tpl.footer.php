@@ -1,6 +1,6 @@
 <?php if(!defined('Z_PROTECTED')) exit; ?>
 		<div id="message-box" class="modal-container" style="display: none">
-			<span class="close" onclick="this.parentNode.style.display='none'">&times;</span>
+			<span class="close white" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
 				<h3 id="message-text"></h3>
 				<br />
@@ -9,7 +9,7 @@
 		</div>
 		<div id="loading" class="modal-container" style="display: none">
 			<div class="modal-content">
-				<h3><?php eh($lang["footerLoading"]) ?></h3>
+				<h3><?php L('Loading') ?></h3>
 			</div>
 		</div>
 <?php if(!defined('Z_HIDE_COPYRIGHT')) { ?>

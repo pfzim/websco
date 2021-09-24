@@ -1,15 +1,15 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 
-		<h3 align="center">Jobs for runbook: <?php eh($runbook['name']); ?> (<a href="<?php eh($self.'?action=sync_jobs&guid='.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
+		<h3 align="center"><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php eh($self.'?action=sync_jobs&guid='.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
 
 		<table id="table" class="main-table">
 			<thead>
 				<tr>
 					<th width="10%">№</th>
-					<th width="20%">Date</th>
+					<th width="20%"><?php L('Date') ?></th>
 					<th width="30%">GUID</th>
-					<th width="20%">Who run</th>
-					<th width="20%">Operations</th>
+					<th width="20%"><?php L('WhoRun') ?></th>
+					<th width="20%"><?php L('Operations') ?></th>
 				</tr>
 			</thead>
 			<tbody id="table-data">
@@ -19,7 +19,7 @@
 						<td><?php eh($row['run_date']); ?></td>
 						<td><a href="<?php eh($self.'?action=get_job&guid='.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a></td>
 						<td><?php eh($row['login']); ?></td>
-						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$runbook['guid'].'&job_id='.$row['id']); ?>" onclick="return f_show_form(this.href);">Restart</a></td>
+						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$runbook['guid'].'&job_id='.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a></td>
 					</tr>
 				<?php } ?>
 			</tbody>

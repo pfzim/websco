@@ -60,7 +60,7 @@ function assert_permission_ajax($section_id, $allow_bit)
 
 	if(!$core->UserAuth->check_permission($section_id, $allow_bit))
 	{
-		echo '{"code": 1, "message": "Access denied to section '.$section_id.' for user '.$core->UserAuth->get_login().'!"}';
+		echo '{"code": 1, "message": "'.LL('AccessDeniedToSection').' '.$section_id.' '.LL('forUser').' '.$core->UserAuth->get_login().'!"}';
 		exit;
 	}
 }
@@ -80,6 +80,23 @@ function log_db($operation, $params, $flags)
 function log_file($message)
 {
 	error_log(date('c').'  '.$message."\n", 3, '/var/log/websco/websco.log');
+}
+
+function LL($key)
+{
+	global $lang;
+	
+	if(empty($lang[$key]))
+	{
+		return '{'.$key.'}';
+	}
+
+	return $lang[$key];
+}
+
+function L($key)
+{
+	eh(LL($key));
 }
 
 	$action = '';
@@ -103,7 +120,7 @@ function log_file($message)
 		switch($id)
 		{
 			default:
-				$error_msg = 'Unknown error';
+				$error_msg = LL('UnknownError');
 				break;
 		}
 
@@ -153,7 +170,7 @@ function log_file($message)
 			{
 				if(!$core->UserAuth->logon(@$_POST['login'], @$_POST['passwd']))
 				{
-					$error_msg = 'Invalid user name or password!';
+					$error_msg = LL('InvalidUserPasswd');
 					include(TEMPLATES_DIR.'tpl.login.php');
 					exit;
 				}
@@ -210,7 +227,7 @@ function log_file($message)
 			$result_json = array(
 				'code' => 0,
 				'message' => '',
-				'title' => 'Edit permissions',
+				'title' => LL('EditPermissions'),
 				'action' => 'save_permission',
 				'fields' => array(
 					array(
@@ -228,21 +245,20 @@ function log_file($message)
 						'name' => 'dn',
 						'title' => 'DN*',
 						'value' => $permission[0]['dn'],
-						'list' => array('Execute')
 					),
 					array(
 						'type' => 'flags',
 						'name' => 'allow_bits',
-						'title' => 'Allow rights',
+						'title' => LL('AllowRights'),
 						'value' => ord($permission[0]['allow_bits'][0]) | (ord($permission[0]['allow_bits'][1]) << 8) | (ord($permission[0]['allow_bits'][2]) << 16) | (ord($permission[0]['allow_bits'][3]) << 24),
-						'list' => array('Execute')
+						'list' => array(LL('Execute'))
 					),
 					array(
 						'type' => 'flags',
 						'name' => 'apply_to_childs',
-						'title' => 'Apply to childs',
+						'title' => LL('ApplyToChilds'),
 						'value' => 0,
-						'list' => array('Apply to childs', 'Replace childs')
+						'list' => array(LL('ApplyToChilds'), LL('ReplaceChilds'))
 					),
 				)
 			);
@@ -289,7 +305,7 @@ function log_file($message)
 
 			if($result_json['code'])
 			{
-				$result_json['message'] = 'Not all required field filled!';
+				$result_json['message'] = LL('NotAllFilled');
 				echo json_encode($result_json);
 				exit;
 			}
@@ -308,7 +324,7 @@ function log_file($message)
 
 					$result_json['id'] = $v_id;
 					$result_json['pid'] = $v_pid;
-					$result_json['message'] = 'Added (ID '.$v_id.')';
+					$result_json['message'] = LL('Added').' (ID '.$v_id.')';
 				}
 				else
 				{
@@ -329,7 +345,7 @@ function log_file($message)
 
 					$result_json['id'] = $v_id;
 					$result_json['pid'] = $v_pid;
-					$result_json['message'] = 'Updated (ID '.$v_id.')';
+					$result_json['message'] = LL('Updated').' (ID '.$v_id.')';
 				}
 				else
 				{
@@ -405,7 +421,7 @@ function log_file($message)
 
 			if(!$core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE))
 			{
-				$error_msg = "Access denied to section 0 for user ".$core->UserAuth->get_login()."!";
+				$error_msg = LL('AccessDeniedToSection').' 0 '.LL('forUser').' '.$core->UserAuth->get_login().'!';
 				include(TEMPLATES_DIR.'tpl.message.php');
 				exit;
 			}
@@ -414,7 +430,7 @@ function log_file($message)
 			{
 				//$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
 				$current_folder = array(
-					'name' => 'Top level',
+					'name' => LL('RootLevel'),
 					'id' => 0,
 					'pid' => '00000000-0000-0000-0000-000000000000',
 					'guid' => ''
@@ -598,7 +614,7 @@ function log_file($message)
 					if($param['required'] && ($flags == 0))
 					{
 						$result_json['code'] = 1;
-						$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => 'At least one flag must be selected');
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
 					}
 					else
 					{
@@ -616,7 +632,7 @@ function log_file($message)
 				if($param['required'] && $value == '')
 				{
 					$result_json['code'] = 1;
-					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'This field is required');
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ThisFieldRequired'));
 					continue;
 				}
 				elseif($param['type'] == 'date')
@@ -626,7 +642,7 @@ function log_file($message)
 					if(!datecheck($nd, $nm, $ny))
 					{
 						$result_json['code'] = 1;
-						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'Incorrect date DD.MM.YYYY');
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('IncorrectDate').' DD.MM.YYYY');
 						continue;
 					}
 				}
@@ -635,7 +651,7 @@ function log_file($message)
 					if(!in_array($value, $param['list']))
 					{
 						$result_json['code'] = 1;
-						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'Value not from list ('.implode(', ', $param['list']).')');
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ValueNotFromList').' ('.implode(', ', $param['list']).')');
 						continue;
 					}
 				}
@@ -644,7 +660,7 @@ function log_file($message)
 					if(!preg_match('/^\d+$/i', $value))
 					{
 						$result_json['code'] = 1;
-						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => 'Only numbers accepted');
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('OnlyNumbers'));
 						continue;
 					}
 				}
@@ -654,7 +670,7 @@ function log_file($message)
 
 			if($result_json['code'])
 			{
-				$result_json['message'] = 'Not all required fields are filled in correctly!';
+				$result_json['message'] = LL('NotAllFilled!');
 				echo json_encode($result_json);
 				exit;
 			}
@@ -678,7 +694,7 @@ function log_file($message)
 				}
 
 				log_db('Job created: '.$runbook['name'], $job_guid, 0);
-				echo '{"code": 0, "guid": "'.json_escape($job_guid).'", "message": "Created job ID: '.json_escape($job_guid).'"}';
+				echo '{"code": 0, "guid": "'.json_escape($job_guid).'", "message": "'.LL('CreatedJob').' ID: '.json_escape($job_guid).'"}';
 			}
 			else
 			{
@@ -703,7 +719,7 @@ function log_file($message)
 
 			if(!$core->UserAuth->check_permission($runbook['folder_id'], RB_ACCESS_EXECUTE))
 			{
-				$error_msg = "Access denied to section ".$runbook['folder_id']." for user ".$core->UserAuth->get_login()."!";
+				$error_msg = LL('AccessDeniedToSection').' '.$runbook['folder_id'].' '.LL('forUser').' '.$core->UserAuth->get_login().'!';
 				include(TEMPLATES_DIR.'tpl.message.php');
 				exit;
 			}
@@ -819,7 +835,7 @@ function log_file($message)
 				exit;
 			}
 
-			echo '{"code": 0, "id": '.$id.', "message": "The folder was hidden (ID: '.$id.')"}';
+			echo '{"code": 0, "id": '.$id.', "message": "'.LL('FolderWasHidden').' (ID: '.$id.')"}';
 		}
 		exit;
 
@@ -835,7 +851,7 @@ function log_file($message)
 				exit;
 			}
 
-			echo '{"code": 0, "id": '.$id.', "message": "The folder was shown (ID: '.$id.')"}';
+			echo '{"code": 0, "id": '.$id.', "message": "'.LL('FolderWasShown').' (ID: '.$id.')"}';
 		}
 		exit;
 

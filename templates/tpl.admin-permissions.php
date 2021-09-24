@@ -2,11 +2,11 @@
 <script type="text/javascript">
 	g_pid = <?php eh($id); ?>;
 </script>
-		<h3 align="center">Access rights management: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
+		<h3 align="center"><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
 <div>
 	<div class="left-menu">
 		<ul>
-		<li<?php /*if($id == 0) { echo ' class="active"'; }*/ ?>><a href="?action=permissions&amp;id=0">Top level</a></li>
+		<li<?php /*if($id == 0) { echo ' class="active"'; }*/ ?>><a href="?action=permissions&amp;id=0"><?php L('RootLevel') ?></a></li>
 		<li>
 			<ul>
 		<?php $i = 0; foreach($folders as &$row) { $i++; ?>
@@ -17,14 +17,14 @@
 		</ul>
 	</div>
 	<div class="content-box">
-		<span id="add_new_permission" class="command" onclick="f_new_permission(0);">Add permission group</span> <span id="show_hide" class="command"></span>
+		<span id="add_new_permission" class="command" onclick="f_new_permission(0);"><?php L('AddPermission') ?></span> <span id="show_hide" class="command"></span>
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
 				<th width="5%">ID</th>
 				<th width="55%">DN</th>
-				<th width="20%">Access</th>
-				<th width="20%">Operations</th>
+				<th width="20%"><?php L('Access') ?></th>
+				<th width="20%"><?php L('Operations') ?></th>
 			</tr>
 			</thead>
 			<tbody id="table-data">
@@ -44,8 +44,8 @@
 							<td><?php eh($group_name); ?></td>
 							<td class="mono"><?php eh($core->UserAuth->permissions_to_string($row['allow_bits'])); ?></td>
 							<td>
-								<span class="command" onclick="f_show_form('<?php eh($self.'?action=get_permission&id='.$row['id']); ?>');">Edit</span>
-								<span class="command" onclick="f_delete_perm(event);">Delete</span>
+								<span class="command" onclick="f_show_form('<?php eh($self.'?action=get_permission&id='.$row['id']); ?>');"><?php L('Edit') ?></span>
+								<span class="command" onclick="f_delete_perm(event);"><?php L('Delete') ?></span>
 							</td>
 						</tr>
 		<?php } ?>
@@ -55,6 +55,7 @@
 </div>
 		<br />
 		<br />
+		<!--
 		<div id="permission-container" class="modal-container" style="display: none">
 			<span class="close white" onclick="this.parentNode.style.display='none'">&times;</span>
 			<div class="modal-content">
@@ -78,5 +79,6 @@
 				</div>
 			</div>
 		</div>
+		-->
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>
