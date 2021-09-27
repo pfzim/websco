@@ -28,9 +28,9 @@ class Router
 	private $exception_handler = NULL;
 	private $exception_handler_ajax = NULL;
 
-	function __construct($core)
+	function __construct(&$core)
 	{
-		$this->core = $core;
+		$this->core = &$core;
 		$this->routes = array();
 		$this->exception_handler = NULL;
 		$this->exception_handler_ajax = NULL;
@@ -100,6 +100,6 @@ class Router
 			require_once($filepath);
 		}
 
-		call_user_func($route['func'], $this->core, $params);
+		call_user_func_array($route['func'], array(&$this->core, $params));
 	}
 }
