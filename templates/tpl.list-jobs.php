@@ -1,6 +1,6 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 
-		<h3 align="center"><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php eh($self.'/websco/sync_jobs/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
+		<h3 align="center"><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php eh('/websco/sync_jobs/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
 
 		<table id="table" class="main-table">
 			<thead>

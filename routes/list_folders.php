@@ -22,9 +22,18 @@ function list_folders(&$core, $params)
 			$parent_folder_id = $current_folder[0]['pid'];
 		}
 	}
+	
+	$filter_folders = 'AND (f.`flags` & (0x0001 | 0x0002)) = 0';
+	$filter_runbooks = 'AND (r.`flags` & (0x0001 | 0x0002)) = 0';
 
-	$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE (f.`flags` & (0x0001 | 0x0002)) = 0 AND f.`pid` = ! ORDER BY f.`name`', $pid));
-	$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE (r.`flags` & (0x0001 | 0x0002)) = 0 AND r.`folder_id` = ! ORDER BY r.`name`', $current_folder[0]['id']));
+	if($core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE))
+	{
+		$filter_folders = '';
+		$filter_runbooks = '';
+	}
+
+	$core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} {r1} ORDER BY f.`name`', $pid, $filter_folders));
+	$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = {s0} {r1} ORDER BY r.`name`', $current_folder[0]['id'], $filter_runbooks));
 
 	include(TEMPLATES_DIR.'tpl.list-folders.php');
 }
