@@ -68,7 +68,7 @@ class Router
 		{
 			$route = $this->routes[$params[0]];
 		}
-		
+
 		if($route['ajax'])
 		{
 			header('Content-Type: text/plain; charset=utf-8');
