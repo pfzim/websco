@@ -99,6 +99,14 @@ function L($key)
 	eh(LL($key));
 }
 
+function exception_handler($exception)
+{
+	$error_msg = 'Exception: '.$exception->getMessage();
+	include(TEMPLATES_DIR.'tpl.error.php');
+}
+
+	set_exception_handler('exception_handler');
+
 	$action = '';
 	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
 	{
