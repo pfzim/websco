@@ -14,21 +14,21 @@
 				<?php $i = 0; if(!empty($parent_folder_id)) { $i++; ?>
 				<tr>
 					<td><?php eh($i); ?>.</td>
-					<td><a href="<?php eh($self.'?action=list_folder&guid='.$parent_folder_id); ?>"><b>[<?php L('UpLevel') ?>]</b></a></td>
+					<td><a href="<?php eh('/websco/list_folder/'.$parent_folder_id); ?>"><b>[<?php L('UpLevel') ?>]</b></a></td>
 				</tr>
 				<?php } ?>
-				<?php foreach($folders as &$row) { $i++; ?>
+				<?php if(isset($folders)) foreach($folders as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
-						<td><a href="<?php eh($self.'?action=list_folder&guid='.$row['guid']); ?>"><b><?php eh($row['name']); ?></b></a></td>
+						<td><a href="<?php eh('/websco/list_folder/'.$row['guid']); ?>"><b><?php eh($row['name']); ?></b></a></td>
 					</tr>
 				<?php } ?>
-				<?php foreach($runbooks as &$row) { $i++; ?>
+				<?php if(isset($runbooks)) foreach($runbooks as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
-						<td><a href="<?php eh($self.'?action=get_runbook&guid='.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
+						<td><a href="<?php eh('/websco/get_runbook/'.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
 						<td>
-							<a href="<?php eh($self.'?action=list_jobs&guid='.$row['guid']); ?>"><?php L('ViewJobs') ?></a>
+							<a href="<?php eh('/websco/list_jobs/'.$row['guid']); ?>"><?php L('ViewJobs') ?></a>
 						</td>
 					</tr>
 				<?php } ?>

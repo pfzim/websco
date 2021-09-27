@@ -6,11 +6,11 @@
 <div>
 	<div class="left-menu">
 		<ul>
-		<li<?php /*if($id == 0) { echo ' class="active"'; }*/ ?>><a href="?action=permissions&amp;id=0"><?php L('RootLevel') ?></a></li>
+		<li<?php /*if($id == 0) { echo ' class="active"'; }*/ ?>><a href="/websco/permissions/0"><?php L('RootLevel') ?></a></li>
 		<li>
 			<ul>
 		<?php $i = 0; foreach($folders as &$row) { $i++; ?>
-		<li<?php /*if($id == $row['id']) { echo ' class="active"'; }*/ ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="?action=get_permissions&amp;id=<?php eh($row['id']); ?>" onclick="return f_get_perms(<?php eh($row['id']); ?>);"><?php eh($row['name']); ?></a></li>
+		<li<?php /*if($id == $row['id']) { echo ' class="active"'; }*/ ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="/websco/get_permissions/<?php eh($row['id']); ?>" onclick="return f_get_perms(<?php eh($row['id']); ?>);"><?php eh($row['name']); ?></a></li>
 		<?php } ?>
 			</ul>
 		</li>
@@ -44,7 +44,7 @@
 							<td><?php eh($group_name); ?></td>
 							<td class="mono"><?php eh($core->UserAuth->permissions_to_string($row['allow_bits'])); ?></td>
 							<td>
-								<span class="command" onclick="f_show_form('<?php eh($self.'?action=get_permission&id='.$row['id']); ?>');"><?php L('Edit') ?></span>
+								<span class="command" onclick="f_show_form('<?php eh('/websco/get_permission/'.$row['id']); ?>');"><?php L('Edit') ?></span>
 								<span class="command" onclick="f_delete_perm(event);"><?php L('Delete') ?></span>
 							</td>
 						</tr>

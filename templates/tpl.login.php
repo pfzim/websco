@@ -1,7 +1,7 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 			<div class="login-block">
 				<h1><?php L('LoginHdr') ?></h1>
-				<form action="<?php eh("$self?action=logon"); ?>" method="post">
+				<form action="<?php eh('/websco/logon'); ?>" method="post">
 					<?php L('UserName') ?>
 					<input name="login" type="text" autofocus="autofocus" placeholder="domain\user_name"/><br />
 					<?php L('Password') ?>

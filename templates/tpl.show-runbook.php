@@ -2,7 +2,7 @@
 
 		<h3 align="center"><?php eh($runbook['name']); ?></h3>
 
-		<form action="<?php eh($self); ?>" method="get">
+		<form action="<?php eh('/websco/'); ?>" method="get">
 			<input type="hidden" name="action" value="start_runbook" />
 			<input type="hidden" name="guid" value="<?php eh($runbook['guid']); ?>" />
 		<?php if(isset($runbook_params)) { ?>
