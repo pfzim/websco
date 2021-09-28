@@ -13,21 +13,31 @@ function permissions(&$core, $params)
 
 	if(empty($id) || intval($id) == 0)
 	{
-		//$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
 		$current_folder = array(
 			'name' => LL('RootLevel'),
 			'id' => 0,
 			'pid' => '00000000-0000-0000-0000-000000000000',
-			'guid' => ''
+			'guid' => '00000000-0000-0000-0000-000000000000',
+			'flags' => 0,
+			'childs' => NULL
 		);
 	}
 	else
 	{
-		$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
-		$current_folder = &$folder[0];
+		$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name`, f.`flags` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
+
+		$current_folder = array(
+			'name' => $folder[0]['name'],
+			'id' => $folder[0]['id'],
+			'pid' => $folder[0]['pid'],
+			'guid' => $folder[0]['guid'],
+			'flags' => $folder[0]['flags'],
+			'childs' => NULL
+		);
 	}
 
-	$core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name` FROM `@runbooks_folders` AS f WHERE f.`pid` = ! ORDER BY f.`name`', $current_folder['pid']));
+	$folders_tree = $core->Runbooks->get_folders_tree(FALSE);
+
 	$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_folder['id']));
 
 	include(TEMPLATES_DIR.'tpl.admin-permissions.php');

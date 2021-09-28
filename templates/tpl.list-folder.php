@@ -3,10 +3,10 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree('list_folder', $current_folder_guid, $folders_tree) ?>
+		<?php print_folders_tree('list_folder', $current_folder['guid'], $folders_tree) ?>
 	</div>
 	<div class="content-box">
-		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder_name); ?></h3>
+		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder['name']); ?></h3>
 
 		<table id="table" class="main-table">
 			<thead>

@@ -22,36 +22,11 @@ function list_jobs(&$core, $params)
 		exit;
 	}
 
-	$current_folder_guid = $runbook['folder_guid'];
-
-	function load_tree(&$core, $guid, &$filter_folders)
-	{
-		$childs = NULL;
-		
-		if($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid`, f.`name` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} {r1} ORDER BY f.`name`', $guid, $filter_folders)))
-		{
-			$childs = array();
-			
-			foreach($folders as $folder)
-			{
-				$childs[] = array(
-					'name' => $folder['name'],
-					'guid' => $folder['guid'],
-					'childs' => load_tree($core, $folder['guid'], $filter_folders)
-				);
-			}
-		}
-
-		return $childs;
-	}
-
-	$folders_tree = array(
-		array(
-			'name' => LL('RootLevel'),
-			'guid' => '00000000-0000-0000-0000-000000000000',
-			'childs' => load_tree($core, '00000000-0000-0000-0000-000000000000', $filter_folders)
-		)
+	$current_folder = array(
+		'guid' => $runbook['folder_guid']
 	);
+
+	$folders_tree = $core->Runbooks->get_folders_tree(TRUE);
 
 	$total = 0;
 

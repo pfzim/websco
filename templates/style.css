@@ -714,6 +714,11 @@ ul.tree-menu:before {
   position:relative;
 }
 
+.tree-menu .disabled {
+	display:block;
+    color: gray;
+}
+
 .tree-menu .active {
 	display:block;
     background-color: #555;

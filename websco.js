@@ -485,7 +485,8 @@ function on_saved(action, data)
 	}
 	else if(action == 'save_permission')
 	{
-		f_get_perms(data.pid);
+		//f_get_perms(data.pid);
+		window.location = window.location;
 	}
 }
 

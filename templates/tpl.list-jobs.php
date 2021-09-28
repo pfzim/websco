@@ -3,7 +3,7 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree('list_folder', $current_folder_guid, $folders_tree) ?>
+		<?php print_folders_tree('list_folder', $current_folder_['guid'], $folders_tree) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php eh('/websco/sync_jobs/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>

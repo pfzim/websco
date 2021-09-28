@@ -524,6 +524,8 @@ class UserAuth
 
 	public function check_permission($object_id, $level)
 	{
+		$object_id = intval($object_id);
+
 		if($this->uid && !$this->is_ldap_user())
 		{
 			return TRUE;  /// Internal user is always admin

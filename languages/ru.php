@@ -54,6 +54,8 @@
 		'FlagMustBeSelected'		=> 'Хотя бы один флаг должен быть отмечен',
 		'FolderWasHidden'			=> 'Папка была скрыта',
 		'FolderWasShown'			=> 'Папка была показана',
+		'ShowFolder'				=> 'Показать папку в списке',
+		'HideFolder'				=> 'Скрыть папку из списка',
 		'AccessDeniedToSection'		=> 'Закрыт доступ к секции',
 		'forUser'					=> 'для пользователя',
 		'CreatedJob'				=> 'Создано задание',

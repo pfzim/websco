@@ -1,23 +1,21 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
+<?php include(TEMPLATES_DIR.'tpl.list-tree.php'); ?>
+
 <script type="text/javascript">
 	g_pid = <?php eh($id); ?>;
 </script>
 <div>
-	<div class="left-menu">
-		<ul>
-		<li<?php /*if($id == 0) { echo ' class="active"'; }*/ ?>><a href="/websco/permissions/0"><?php L('RootLevel') ?></a></li>
-		<li>
-			<ul>
-		<?php $i = 0; foreach($folders as &$row) { $i++; ?>
-		<li<?php /*if($id == $row['id']) { echo ' class="active"'; }*/ ?>><span onclick="f_expand(this, '<?php eh($row['guid']); ?>');">+</span><a href="/websco/get_permissions/<?php eh($row['id']); ?>" onclick="return f_get_perms(<?php eh($row['id']); ?>);"><?php eh($row['name']); ?></a></li>
-		<?php } ?>
-			</ul>
-		</li>
-		</ul>
+	<div class="tree-menu">
+		<?php print_folders_tree_id('permissions', $current_folder['id'], $folders_tree) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
-		<span id="add_new_permission" class="command" onclick="f_new_permission(0);"><?php L('AddPermission') ?></span> <span id="show_hide" class="command"></span>
+		<span id="add_new_permission" class="command" onclick="f_new_permission(0);"><?php L('AddPermission') ?></span>
+		<?php if($current_folder['id'] != 0) { if($current_folder['flags'] & 0x0002) { ?>
+			<span id="show_hide" class="command" onclick="f_show_hide('/websco/show_folder/<?php eh($current_folder['id']); ?>');"><?php L('ShowFolder') ?></span>
+		<?php } else { ?>
+			<span id="show_hide" class="command" onclick="f_show_hide('/websco/hide_folder/<?php eh($current_folder['id']); ?>');"><?php L('HideFolder') ?></span>
+		<?php } } ?>
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>
@@ -55,30 +53,6 @@
 </div>
 		<br />
 		<br />
-		<!--
-		<div id="permission-container" class="modal-container" style="display: none">
-			<span class="close white" onclick="this.parentNode.style.display='none'">&times;</span>
-			<div class="modal-content">
-				<span class="close" onclick="this.parentNode.parentNode.style.display='none'">&times;</span>
-				<form id="permission">
-				<h3>Edit permissions</h3>
-				<input name="id" type="hidden" value=""/>
-				<input name="pid" type="hidden" value=""/>
-				<div class="form-title"><label for="dn">DN*:</label></div>
-				<input class="form-field" id="dn" name="dn" type="edit" value=""/>
-				<div id="dn-error" class="form-error"></div>
-				<div class="form-title">Allow rights:</div>
-				<span><input id="allow_bit_1" name="allow_bit_1" type="checkbox" value="1"/><label for="allow_bit_1">Execute</label></span>
-				<div id="allow_bit_1-error" class="form-error"></div>
-				</form>
-				<br />
-				<div class="f-right">
-					<button class="button-accept" type="button" onclick="f_save('permission');">Сохранить</button>
-					&nbsp;
-					<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'">Отмена</button>
-				</div>
-			</div>
-		</div>
-		-->
+
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

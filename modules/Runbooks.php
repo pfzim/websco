@@ -796,6 +796,45 @@ EOT;
 
 		return $form_fields;
 	}
+
+	public function load_tree_childs($guid, $check_permissions)
+	{
+		$childs = NULL;
+
+		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} AND (f.`flags` & (0x0001)) = 0 ORDER BY f.`name`', $guid)))
+		{
+			$childs = array();
+			
+			foreach($folders as $folder)
+			{
+				if(!$check_permissions || $this->core->UserAuth->check_permission($folder['id'], RB_ACCESS_EXECUTE))
+				{
+					$childs[] = array(
+						'name' => $folder['name'],
+						'id' => $folder['id'],
+						'guid' => $folder['guid'],
+						'flags' => $folder['flags'],
+						'childs' => $this->load_tree_childs($folder['guid'], $check_permissions)
+					);
+				}
+			}
+		}
+
+		return $childs;
+	}
+
+	public function get_folders_tree($check_permissions)
+	{
+		return array(
+			array(
+				'name' => 'Root folder',
+				'guid' => '00000000-0000-0000-0000-000000000000',
+				'id' => 0,
+				'flags' => 0,
+				'childs' => $this->load_tree_childs('00000000-0000-0000-0000-000000000000', $check_permissions)
+			)
+		);
+	}
 }
 
 function cmp_name($a, $b)

@@ -54,6 +54,8 @@
 		'FlagMustBeSelected'		=> 'At least one flag must be selected',
 		'FolderWasHidden'			=> 'The folder was hidden',
 		'FolderWasShown'			=> 'The folder was shown',
+		'ShowFolder'				=> 'Show folder in list',
+		'HideFolder'				=> 'Hide folder from list',
 		'AccessDeniedToSection'		=> 'Access denied to section',
 		'forUser'					=> 'for user',
 		'CreatedJob'				=> 'Created job',
