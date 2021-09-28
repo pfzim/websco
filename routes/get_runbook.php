@@ -53,12 +53,15 @@ function get_runbook(&$core, $params)
 			$field['list'] = $param['list'];
 		}
 
-		foreach($job_params as &$row)
+		if($job_params)
 		{
-			if($row['guid'] == $param['guid'])
+			foreach($job_params as &$row)
 			{
-				$field['value'] = $row['value'];
-				break;
+				if($row['guid'] == $param['guid'])
+				{
+					$field['value'] = $row['value'];
+					break;
+				}
 			}
 		}
 
