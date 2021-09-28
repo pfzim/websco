@@ -1,6 +1,6 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 
-<h3 align="center"><?php L('Tools') ?></h3>
+<h3><?php L('Tools') ?></h3>
 
 <a href="<?php eh('/websco/sync'); ?>" onclick="return f_async(this);"><?php L('SyncRunbooks') ?></a><br />
 <a href="<?php eh('/websco/sync_jobs'); ?>" onclick="return f_async(this);"><?php L('SyncJobs') ?></a><br />

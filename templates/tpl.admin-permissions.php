@@ -2,7 +2,6 @@
 <script type="text/javascript">
 	g_pid = <?php eh($id); ?>;
 </script>
-		<h3 align="center"><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
 <div>
 	<div class="left-menu">
 		<ul>
@@ -17,6 +16,7 @@
 		</ul>
 	</div>
 	<div class="content-box">
+		<h3><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
 		<span id="add_new_permission" class="command" onclick="f_new_permission(0);"><?php L('AddPermission') ?></span> <span id="show_hide" class="command"></span>
 		<table id="table" class="main-table" width="100%">
 			<thead>

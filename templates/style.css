@@ -670,3 +670,82 @@ body {
 #job_table td {
 	border-bottom: thin solid lightgrey;
 }
+
+
+.tree-menu
+{
+	float: left;
+	width: 300px;
+    background-color: #FAFAFA;
+	border-radius: 4px;
+    margin-right: 10px;
+    font-size: 8pt;
+}
+
+.tree-menu ul {
+  margin:0 0 0 0.5em; /* indentation */
+  padding:0;
+  list-style:none;
+  color:#369;
+  position:relative;
+}
+
+.tree-menu ul:before {
+  content:"";
+  display:block;
+  width:0;
+  position:absolute;
+  top:0;
+  bottom:0;
+  left:4px;
+  border-left:1px dashed;
+    border-color: #CCC;
+}
+
+ul.tree-menu:before {
+  border-left:none
+}
+
+.tree-menu li {
+  margin:0 0 0 0;
+  padding:0 0 0 1.5em; /* indentation + .5em */
+  line-height:18px; /* default list item's `line-height` */
+  font-weight:bold;
+  position:relative;
+}
+
+.tree-menu .active {
+	display:block;
+    background-color: #555;
+    color: white;
+}
+.tree-menu li a {
+	display:block;
+    text-decoration: none;
+}
+
+.tree-menu a:hover {
+	display:block;
+    background-color: #555;
+    color: white;
+}
+
+.tree-menu li:before {
+  content:"";
+  display:block;
+  width:10px; /* same with indentation */
+  height:0;
+  border-top:1px dashed;
+  margin-top:-1px; /* border top width */
+  position:absolute;
+  top:1em; /* (line-height/2) */
+  left:4px;
+  border-color: #CCC;
+}
+
+.tree-menu li:last-child:before {
+  background:white; /* same with body background */
+  height:auto;
+  top:1em; /* (line-height/2) */
+  bottom:0;
+}

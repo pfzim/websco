@@ -1,6 +1,12 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
+<?php include(TEMPLATES_DIR.'tpl.list-tree.php'); ?>
 
-		<h3 align="center"><?php L('CurrentFolder') ?>: <?php eh($current_folder_name); ?></h3>
+<div>
+	<div class="tree-menu">
+		<?php print_folders_tree('list_folder', $current_folder_guid, $folders_tree) ?>
+	</div>
+	<div class="content-box">
+		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder_name); ?></h3>
 
 		<table id="table" class="main-table">
 			<thead>
@@ -11,18 +17,6 @@
 				</tr>
 			</thead>
 			<tbody id="table-data">
-				<?php $i = 0; if(!empty($parent_folder_id)) { $i++; ?>
-				<tr>
-					<td><?php eh($i); ?>.</td>
-					<td><a href="<?php eh('/websco/list_folder/'.$parent_folder_id); ?>"><b>[<?php L('UpLevel') ?>]</b></a></td>
-				</tr>
-				<?php } ?>
-				<?php if(isset($folders)) foreach($folders as &$row) { $i++; ?>
-					<tr>
-						<td><?php eh($i); ?>.</td>
-						<td><a href="<?php eh('/websco/list_folder/'.$row['guid']); ?>"><b><?php eh($row['name']); ?></b></a></td>
-					</tr>
-				<?php } ?>
 				<?php if(isset($runbooks)) foreach($runbooks as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
@@ -34,8 +28,9 @@
 				<?php } ?>
 			</tbody>
 		</table>
-
-
+	</div>
+</div>
+		<br />
 		<br />
 
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
