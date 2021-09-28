@@ -4,7 +4,7 @@
 			<div class="modal-content">
 				<h3 id="message-text"></h3>
 				<br />
-				<center><button class="button-accept" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'">OK</button></center>
+				<center><button class="button-accept" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'; window.location = window.location;">OK</button></center>
 			</div>
 		</div>
 		<div id="loading" class="modal-container" style="display: none">
