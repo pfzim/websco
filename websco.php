@@ -127,9 +127,9 @@ function exception_handler_ajax($exception)
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
 	
-	define('RB_ACCESS_EXECUTE', 1);
-	define('RB_ACCESS_LIST', 2);
-	$core->UserAuth->set_bits_representation('xl');
+	define('RB_ACCESS_LIST', 1);
+	define('RB_ACCESS_EXECUTE', 2);
+	$core->UserAuth->set_bits_representation('lx');
 
 	$core->Router->set_exception_handler_regular('exception_handler');
 	$core->Router->set_exception_handler_ajax('exception_handler_ajax');

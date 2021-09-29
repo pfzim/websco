@@ -234,7 +234,7 @@ function f_new_permission(pid)
 				name: 'allow_bits',
 				title: 'Allow rights',
 				value: 0,
-				list: ['Execute', 'List']
+				list: ['List', 'Execute']
 			},
 			{
 				type: 'flags',
