@@ -244,6 +244,37 @@ EOT;
 		return $instances;
 	}
 
+	public function get_job_first_instance_input_params($guid)
+	{
+		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
+
+		$params_in = array();
+
+		foreach($xml->entry as $entry)
+		{
+			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+
+			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.((string) $properties->Id).'\')/Parameters');
+
+			foreach($sub_xml->entry as $entry)
+			{
+				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+
+				if(((string) $properties->Direction) == 'In')
+				{
+					$params_in[] = array(
+						'guid' => (string) $properties->RunbookParameterId,
+						'value' => (string) $properties->Value
+					);
+				}
+			}
+
+			break;
+		}
+		
+		return $params_in;
+	}
+	
 	public function get_folders()
 	{
 		$folders = array();

@@ -36,7 +36,18 @@ function get_runbook(&$core, $params)
 
 	if(!empty($job_id))
 	{
-		$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id));
+		if(!$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
+		{
+			if($core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
+			{
+				$job_params = $core->Runbooks->get_job_first_instance_input_params($job[0]['guid']);
+
+				foreach($job_params as $param)
+				{
+					$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+				}
+			}
+		}
 	}
 
 	foreach($params as &$param)
