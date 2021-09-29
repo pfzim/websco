@@ -39,7 +39,7 @@ function get_permission(&$core, $params)
 				'name' => 'allow_bits',
 				'title' => LL('AllowRights'),
 				'value' => ord($permission[0]['allow_bits'][0]) | (ord($permission[0]['allow_bits'][1]) << 8) | (ord($permission[0]['allow_bits'][2]) << 16) | (ord($permission[0]['allow_bits'][3]) << 24),
-				'list' => array(LL('Execute'))
+				'list' => array(LL('Execute'), LL('List'))
 			),
 			array(
 				'type' => 'flags',

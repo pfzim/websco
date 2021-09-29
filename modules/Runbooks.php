@@ -804,10 +804,10 @@ EOT;
 		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} AND (f.`flags` & (0x0001)) = 0 ORDER BY f.`name`', $guid)))
 		{
 			$childs = array();
-			
+
 			foreach($folders as $folder)
 			{
-				if(!$check_permissions || $this->core->UserAuth->check_permission($folder['id'], RB_ACCESS_EXECUTE))
+				if(!$check_permissions || $this->core->UserAuth->check_permission($folder['id'], RB_ACCESS_LIST))     // || ($folder['id'] == 0) - if top level always allow list
 				{
 					$childs[] = array(
 						'name' => $folder['name'],

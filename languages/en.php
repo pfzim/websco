@@ -42,6 +42,7 @@
 		'ApplyToChilds'				=> 'Apply to childs',
 		'ReplaceChilds'				=> 'Replace childs',
 		'Execute'					=> 'Execute',
+		'List'						=> 'List',
 		'AllowRights'				=> 'Allow rights',
 		'NotAllFilled'				=> 'Not all required fields are filled in correctly!',
 		'Added'						=> 'AddedUpdated',

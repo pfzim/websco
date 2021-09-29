@@ -3,7 +3,7 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree('list_folder', $current_folder['guid'], $folders_tree) ?>
+		<?php print_folders_tree('list_folder', $current_folder['guid'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder['name']); ?></h3>

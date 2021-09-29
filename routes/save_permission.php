@@ -37,7 +37,7 @@ function save_permission(&$core, $params)
 	if($result_json['code'])
 	{
 		$result_json['message'] = LL('NotAllFilled');
-		echo json_encode($result_json);
+		echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 		exit;
 	}
 
@@ -87,7 +87,7 @@ function save_permission(&$core, $params)
 
 	if($result_json['code'])
 	{
-		echo json_encode($result_json);
+		echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 		exit;
 	}
 
@@ -98,7 +98,7 @@ function save_permission(&$core, $params)
 			global $core;
 			$childs = 0;
 
-			//log_file('Apply to childs of ID: '.$parent_guid);
+			log_file('Apply to childs of ID: '.$parent_guid);
 			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
 			{
 				foreach($folders as &$folder)
@@ -131,9 +131,19 @@ function save_permission(&$core, $params)
 			return $childs;
 		}
 
-		if($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE f.`id` = #', $v_pid)))
+		$folder_guid = NULL;
+		if($v_pid == 0)
 		{
-			$result_json['childs'] = permissions_apply_to_childs($folders[0]['guid'], $v_dn, $v_allow, $v_replace_childs);
+			$folder_guid = '00000000-0000-0000-0000-000000000000';
+		}
+		elseif($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE f.`id` = #', $v_pid)))
+		{
+			$folder_guid = $folders[0]['guid'];
+		}
+
+		if($folder_guid)
+		{
+			$result_json['childs'] = permissions_apply_to_childs($folder_guid, $v_dn, $v_allow, $v_replace_childs);
 		}
 	}
 
@@ -142,5 +152,6 @@ function save_permission(&$core, $params)
 		$core->Mem->flush();
 	}
 
-	echo json_encode($result_json);
+	//log_file('Save permissions: '.json_encode($result_json, JSON_UNESCAPED_UNICODE));
+	echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 }

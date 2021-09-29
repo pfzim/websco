@@ -104,11 +104,13 @@ function exception_handler($exception)
 {
 	$error_msg = 'Exception: '.$exception->getMessage();
 	include(TEMPLATES_DIR.'tpl.error.php');
+	log_file('Exception: '.$exception->getMessage());
 }
 
 function exception_handler_ajax($exception)
 {
 	echo '{"code": 1, "message": "Exception: '.json_escape($exception->getMessage()).'"}';
+	log_file('Exception: '.$exception->getMessage());
 }
 
 	$path = '';
@@ -125,7 +127,8 @@ function exception_handler_ajax($exception)
 	$core->load_ex('db', 'MySQLDB');
 	
 	define('RB_ACCESS_EXECUTE', 1);
-	$core->UserAuth->set_bits_representation('x');
+	define('RB_ACCESS_LIST', 2);
+	$core->UserAuth->set_bits_representation('xl');
 
 	$core->Router->set_exception_handler_regular('exception_handler');
 	$core->Router->set_exception_handler_ajax('exception_handler_ajax');

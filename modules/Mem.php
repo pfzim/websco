@@ -67,6 +67,8 @@ class Mem
 	{
 		$this->connect();
 
+		//log_file('Mem flush');
+
 		return $this->mc->flush();
 	}
 }
