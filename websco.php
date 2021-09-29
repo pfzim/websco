@@ -102,15 +102,16 @@ function L($key)
 
 function exception_handler($exception)
 {
-	$error_msg = 'Exception: '.$exception->getMessage();
+	$error_msg = 'Exception: File: '.$exception->getFile().'['.$exception->getLine().']: '.$exception->getMessage().' Trace: '.$exception->getTraceAsString();
 	include(TEMPLATES_DIR.'tpl.error.php');
-	log_file('Exception: '.$exception->getMessage());
+	log_file($error_msg);
 }
 
 function exception_handler_ajax($exception)
 {
-	echo '{"code": 1, "message": "Exception: '.json_escape($exception->getMessage()).'"}';
-	log_file('Exception: '.$exception->getMessage());
+	$error_msg = 'Exception: File: '.$exception->getFile().'['.$exception->getLine().']: '.$exception->getMessage().' Trace: '.$exception->getTraceAsString();
+	echo '{"code": 1, "message": "'.json_escape($error_msg).'"}';
+	log_file($error_msg);
 }
 
 	$path = '';
