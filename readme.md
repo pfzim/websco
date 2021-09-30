@@ -112,7 +112,7 @@ You can also use * (asterisk) before the slash to indicate a required parameter.
 For a list and check-boxes, in addition, before the slash in brackets, you need
 to list the parameters separated by commas. For example:
 
-Select the type of access (admin, guest)*/l
+1. Select the type of access (admin, guest)*/l
 
 This field will turn into a drop-down list with two values ​​admin and guest and
 will be required.
