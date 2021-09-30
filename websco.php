@@ -114,6 +114,13 @@ function exception_handler_ajax($exception)
 	log_file($error_msg);
 }
 
+	$core = new Core(TRUE);
+	$core->load_ex('db', 'MySQLDB');
+	
+	define('RB_ACCESS_LIST', 1);
+	define('RB_ACCESS_EXECUTE', 2);
+	$core->UserAuth->set_bits_representation('lx');
+
 	$path = '';
 	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
 	{
@@ -123,13 +130,6 @@ function exception_handler_ajax($exception)
 	{
 		$path = $_GET['path'];
 	}
-
-	$core = new Core(TRUE);
-	$core->load_ex('db', 'MySQLDB');
-	
-	define('RB_ACCESS_LIST', 1);
-	define('RB_ACCESS_EXECUTE', 2);
-	$core->UserAuth->set_bits_representation('lx');
 
 	$core->Router->set_exception_handler_regular('exception_handler');
 	$core->Router->set_exception_handler_ajax('exception_handler_ajax');
