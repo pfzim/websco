@@ -20,6 +20,7 @@
 		'Restart'					=> 'Restart',
 		'Refresh'					=> 'Refresh',
 		'JobID'						=> 'Job ID',
+		'JobSID'					=> 'SID',
 		'OK'						=> 'OK',
 		'Error'						=> 'Error',
 		'Runbooks'					=> 'Runbooks',

@@ -20,6 +20,7 @@
 		'Restart'					=> 'Перезапустить',
 		'Refresh'					=> 'Обновить',
 		'JobID'						=> 'ID задания',
+		'JobSID'					=> 'SID',
 		'OK'						=> 'OK',
 		'Error'						=> 'Ошибка',
 		'Runbooks'					=> 'Ранбуки',

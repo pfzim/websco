@@ -719,6 +719,16 @@ EOT;
 		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
 
 		$properties = $xml->content->children('m', TRUE)->properties->children('d', TRUE);
+		
+		$sid = (string) $properties->CreatedBy;
+		$sid_name = '';
+		if(!empty($sid))
+		{
+			if($this->core->LDAP->search($user, '(objectSid='.ldap_escape($sid, null, LDAP_ESCAPE_FILTER).')', array('samaccountname')))
+			{
+				$sid_name = $user[0]['sAMAccountName'][0];
+			}
+		}
 
 		$job_info = array(
 			'id' => $job['id'],
@@ -729,6 +739,8 @@ EOT;
 			'folder_id' => $job['folder_id'],
 			'user' => $job['login'],
 			'status' => (string) $properties->Status,
+			'sid' => $sid,
+			'sid_name' => $sid_name,
 			'instances' => array()
 		);
 

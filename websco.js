@@ -130,6 +130,8 @@ function f_get_job(guid)
 				el.innerText = data.name;
 				el = gi('job_guid');
 				el.innerText = data.guid;
+				el = gi('job_sid');
+				el.innerText = data.sid + ' (' + data.sid_name + ')';
 				el = gi('job_status');
 				el.innerText = data.status;
 				if(data.status == 'Completed')
