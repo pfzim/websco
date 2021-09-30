@@ -143,8 +143,7 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
-		$core->Router->add_route('list_folder', 'list_folder');					// default route
-		//$core->Router->add_route('list_folders2', 'list_folders2');					// default route
+		$core->Router->add_route('list_folder', 'list_folder');						// default route
 		$core->Router->add_route('delete_permission', 'delete_permission', TRUE);
 		$core->Router->add_route('expand', 'expand', TRUE);
 		$core->Router->add_route('get_job', 'get_job', TRUE);
