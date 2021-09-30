@@ -2,6 +2,15 @@
 
 [:ru:](#description-ru) [:us:](#description)  
 
+## System requirements
+- Apache
+- MariaDB (MySQL)
+- PHP
+- Microsoft System Center Orchestrator
+- Active Directory (optional)
+- memcached (optional)
+- Kerberos (optional)
+
 ## Installation
 
 ```
