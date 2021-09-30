@@ -828,7 +828,8 @@ function autocomplete_on_keydown(e)
   
 function autocomplete_create(input, action)
 {
-	input.setAttribute("data-action", action);
+	input.setAttribute('data-action', action);
+	//input.setAttribute('autocomplete', 'off');
 	input.addEventListener('input', autocomplete_on_input);
 	input.addEventListener('keydown', autocomplete_on_keydown);
 }
