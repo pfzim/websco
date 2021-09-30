@@ -122,9 +122,66 @@ function exception_handler_ajax($exception)
 	$core->UserAuth->set_bits_representation('lx');
 
 	$path = '';
+
 	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
 	{
-		$path = $argv[1];
+		$user = '';
+		$password = '';
+		$token = '';
+		$path = '';
+		
+		$i = 1;
+		while($i < ($argc-1))
+		{
+			switch($argv[$i])
+			{
+				case '--user':
+					{
+						$user = $argv[$i+1];
+					}
+					break;
+				case '--password':
+					{
+						$password = $argv[$i+1];
+					}
+					break;
+				case '--token':
+					{
+						$token = $argv[$i+1];
+					}
+					break;
+				case '--path':
+					{
+						$path = $argv[$i+1];
+					}
+					break;
+				default:
+					echo 'Unknown argument: '.$argv[$i]."\n";
+					exit(1);
+			}
+			
+			$i += 2;
+		}
+		
+		if(!empty($user))
+		{
+			if(!empty($token))
+			{
+				if(!$core->UserAuth->logon_by_token($user, $token))
+				{
+					echo 'Invalid username or token'."\n";
+					exit(1);
+				}
+			}
+			else
+			{
+				if(!$core->UserAuth->logon($user, $password))
+				{
+					echo 'Invalid username or password'."\n";
+					exit(1);
+				}
+			}
+		}
 	}
 	elseif(isset($_GET['path']))
 	{

@@ -78,33 +78,7 @@ class UserAuth
 		{
 			if(!empty($_COOKIE['zh']) && !empty($_COOKIE['zl']))
 			{
-				if($this->core->db->select_ex($user_data, rpv("
-					SELECT
-						m.`id`,
-						m.`flags`,
-						m.`login`,
-						m.`sid`
-					FROM
-						@users AS m
-					WHERE
-						m.`login` = !
-						AND m.`sid` IS NOT NULL
-						AND m.`sid` = !
-						AND (m.`flags` & 0x0001) = 0
-					LIMIT 1
-				", $_COOKIE['zl'], $_COOKIE['zh'])))
-				{
-					$this->loaded = TRUE;
-					$_SESSION['uid'] = $user_data[0][0];
-					$this->uid = $_SESSION['uid'];
-					$this->flags = intval($user_data[0][1]);
-					$this->login = $user_data[0][2];
-					$this->token = $user_data[0][3];
-
-					// Extend cookie life time
-					setcookie('zh', $this->token, time() + 2592000, '/');
-					setcookie('zl', $this->login, time() + 2592000, '/');
-				}
+				$this->logon_by_token($_COOKIE['zl'], $_COOKIE['zh']);
 			}
 		}
 		else
@@ -252,6 +226,41 @@ class UserAuth
 		return TRUE;
 	}
 
+	public function logon_by_token($login, $token)
+	{
+		if($this->core->db->select_ex($user_data, rpv("
+			SELECT
+				m.`id`,
+				m.`flags`,
+				m.`login`,
+				m.`sid`
+			FROM
+				@users AS m
+			WHERE
+				m.`login` = !
+				AND m.`sid` IS NOT NULL
+				AND m.`sid` = !
+				AND (m.`flags` & 0x0001) = 0
+			LIMIT 1
+		", $login, $token)))
+		{
+			$this->loaded = TRUE;
+			$_SESSION['uid'] = $user_data[0][0];
+			$this->uid = $_SESSION['uid'];
+			$this->flags = intval($user_data[0][1]);
+			$this->login = $user_data[0][2];
+			$this->token = $user_data[0][3];
+
+			// Extend cookie life time
+			setcookie('zh', $this->token, time() + 2592000, '/');
+			setcookie('zl', $this->login, time() + 2592000, '/');
+			
+			return TRUE;
+		}
+
+		return FALSE;
+	}
+	
 	public function logoff()
 	{
 		$_SESSION['uid'] = 0;
