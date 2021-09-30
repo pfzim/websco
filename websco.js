@@ -364,8 +364,14 @@ function on_received_form(data, form_id)
 			}
 			else
 			{
+				var placeholder = '';
+				if(data.fields[i].placeholder)
+				{
+					placeholder = '" placeholder="' + data.fields[i].placeholder;
+				}
+
 				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + '"/>'
+					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + placeholder + '"/>'
 					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
 
 				var wrapper = document.createElement('div');

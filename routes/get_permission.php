@@ -31,8 +31,9 @@ function get_permission(&$core, $params)
 			array(
 				'type' => 'string',
 				'name' => 'dn',
-				'title' => 'DN*',
+				'title' => LL('GroupDN').'*',
 				'value' => $permission[0]['dn'],
+				'placeholder' => 'CN=WebSCO access group,OU=Access groups,DC=domain,DC=local'
 			),
 			array(
 				'type' => 'flags',

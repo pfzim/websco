@@ -149,6 +149,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('expand', 'expand', TRUE);
 		$core->Router->add_route('get_job', 'get_job', TRUE);
 		$core->Router->add_route('get_permission', 'get_permission', TRUE);
+		$core->Router->add_route('new_permission', 'new_permission', TRUE);
 		$core->Router->add_route('get_permissions', 'get_permissions');
 		$core->Router->add_route('get_runbook', 'get_runbook', TRUE);
 		$core->Router->add_route('hide_folder', 'hide_folder', TRUE);

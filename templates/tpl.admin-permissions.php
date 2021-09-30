@@ -10,7 +10,7 @@
 	</div>
 	<div class="content-box">
 		<h3><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
-		<span id="add_new_permission" class="command" onclick="f_new_permission(<?php eh($current_folder['id']); ?>);"><?php L('AddPermission') ?></span>
+		<span id="add_new_permission" class="command" onclick="f_show_form('<?php eh('/websco/new_permission/'.$current_folder['id']); ?>');"><?php L('AddPermission') ?></span>
 		<?php if($current_folder['id'] != 0) { if($current_folder['flags'] & 0x0002) { ?>
 			<span id="show_hide" class="command" onclick="f_show_hide('/websco/show_folder/<?php eh($current_folder['id']); ?>');"><?php L('ShowFolder') ?></span>
 		<?php } else { ?>

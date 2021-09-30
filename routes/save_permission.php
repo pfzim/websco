@@ -31,7 +31,7 @@ function save_permission(&$core, $params)
 	if(empty($v_dn))
 	{
 		$result_json['code'] = 1;
-		$result_json['errors'][] = array('name' => 'dn', 'msg' => 'Fill DN!');
+		$result_json['errors'][] = array('name' => 'dn', 'msg' => LL('ThisFieldRequired'));
 	}
 
 	if($result_json['code'])
