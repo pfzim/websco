@@ -780,7 +780,7 @@ function autocomplete_on_input(ev)
 				for(i = 0; i < data.list.length; i++)
 				{
 					b = document.createElement('DIV');
-					b.innerHTML = (''+data.list[i]).replace(el.value, '<strong>' + el.value + '</strong>');
+					b.innerHTML = (''+data.list[i]).replace(new RegExp('(' + el.value + ')', 'i'), '<strong>$1</strong>');
 					b.setAttribute('onclick', 'autocomplete_on_click(\'' + el.id + '\', \'' + data.list[i] + '\');');
 					a.appendChild(b);
 				}

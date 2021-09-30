@@ -63,6 +63,18 @@ function get_runbook(&$core, $params)
 		{
 			$field['list'] = $param['list'];
 		}
+		elseif(($param['type'] == 'samaccountname'))
+		{
+			$field['autocomplete'] = 'complete_account';
+		}
+		elseif(($param['type'] == 'computer'))
+		{
+			$field['autocomplete'] = 'complete_computer';
+		}
+		elseif(($param['type'] == 'mail'))
+		{
+			$field['autocomplete'] = 'complete_mail';
+		}
 
 		if($job_params)
 		{
