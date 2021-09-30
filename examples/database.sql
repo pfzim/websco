@@ -153,7 +153,7 @@ DROP TABLE IF EXISTS `w_runbooks_jobs_params`;
 CREATE TABLE `w_runbooks_jobs_params` (
   `pid` int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
-  `value` varchar(512) NOT NULL,
+  `value` varchar(4096) NOT NULL,
   PRIMARY KEY (`pid`,`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
