@@ -58,7 +58,7 @@ Next, you need to run the script http://localhost/websco/install.php through the
 ### Runbook classic form
 ![Runbook input form example](/docs/screenshots/runbook_classic.png "Runbook input form example")
 
-### Some form in WebSCO
+### Same form in WebSCO
 ![Runbook input form example](/docs/screenshots/runbook1.png "Runbook input form example")
 
 ### Result
