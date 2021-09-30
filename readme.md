@@ -52,6 +52,9 @@ Next, you need to run the script http://localhost/websco/install.php through the
 
 ## Screenshots
 
+### Main screen
+![Main screen](/docs/screenshots/main.png "Main screen")
+
 ### Runbook classic form
 ![Runbook input form example](/docs/screenshots/runbook_classic.png "Runbook input form example")
 

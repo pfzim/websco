@@ -52,7 +52,7 @@ require_once(ROOT_DIR.'inc.config.php');
 	}
 
 	require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
-	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.'ru.php');
+	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
 	require_once(ROOT_DIR.'inc.utils.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
