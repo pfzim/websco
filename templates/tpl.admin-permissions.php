@@ -1,9 +1,6 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.list-tree.php'); ?>
 
-<script type="text/javascript">
-	g_pid = <?php eh($id); ?>;
-</script>
 <div>
 	<div class="tree-menu">
 		<?php print_folders_tree_id('permissions', $current_folder['id'], $folders_tree) ?>

@@ -1,4 +1,5 @@
 var g_pid = 0;
+var autocomplete_current_focus = -1;
 
 function gi(name)
 {
@@ -373,12 +374,17 @@ function on_received_form(data, form_id)
 				}
 
 				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + ']" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + placeholder + '"/>'
+					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + placeholder + '"/>'
 					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
 
 				var wrapper = document.createElement('div');
 				wrapper.innerHTML = html;
 				el.appendChild(wrapper);
+				
+				if(data.fields[i].autocomplete)
+				{
+					autocomplete_create(gi(form_id + data.fields[i].name), data.fields[i].autocomplete);
+				}
 			}
 		}
 
@@ -733,3 +739,138 @@ function f_expand(self, _pid)
 	}
 	return false;
 }
+
+function autocomplete_on_click(id, value)
+{
+	gi(id).value = value;
+	autocomplete_destroy();
+}
+
+function autocomplete_on_input(ev)
+{
+	var el = ev.target || ev.srcElement;
+
+	if(!el.value )
+	{
+		return false;
+	}
+
+	action = el.getAttribute('data-action');
+
+	f_http(
+		'/websco/' + action,
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				var a, b, i;
+				autocomplete_current_focus = -1;
+
+				autocomplete_destroy();
+				a = document.createElement('DIV');
+				a.setAttribute('id', 'autocomplete-container');
+				a.setAttribute('class', 'autocomplete-items');
+
+				el.parentNode.appendChild(a);
+				for(i = 0; i < data.list.length; i++)
+				{
+					b = document.createElement('DIV');
+					b.innerHTML = (''+data.list[i]).replace(el.value, '<strong>' + el.value + '</strong>');
+					b.setAttribute('onclick', 'autocomplete_on_click(\'' + el.id + '\', \'' + data.list[i] + '\');');
+					a.appendChild(b);
+				}
+			}
+		},
+		el,
+		'application/x-www-form-urlencoded',
+		json2url({search: el.value})
+	);
+}
+
+function autocomplete_on_keydown(e)
+{
+	var el = e.target || e.srcElement;
+	var x = gi('autocomplete-container');
+	if(!x)
+	{
+		return;
+	}
+
+	items = x.getElementsByTagName('div');
+
+	if(e.keyCode == 40)
+	{
+		autocomplete_current_focus++;
+		addActive(items);
+	}
+	else if(e.keyCode == 38) //up
+	{
+		autocomplete_current_focus--;
+		addActive(items);
+	}
+	else if (e.keyCode == 13)
+	{
+		e.preventDefault();
+		if (autocomplete_current_focus > -1)
+		{
+			if(items)
+			{
+				items[autocomplete_current_focus].click();
+			}
+		}
+	}
+}
+  
+function autocomplete_create(input, action)
+{
+	input.setAttribute("data-action", action);
+	input.addEventListener('input', autocomplete_on_input);
+	input.addEventListener('keydown', autocomplete_on_keydown);
+}
+
+function addActive(items)
+{
+	if(!items) return false;
+
+	autocomplete_remove_active(items);
+
+	if(autocomplete_current_focus >= items.length)
+	{
+		autocomplete_current_focus = 0;
+	}
+	
+	if(autocomplete_current_focus < 0)
+	{
+		autocomplete_current_focus = (items.length - 1);
+	}
+	
+	items[autocomplete_current_focus].classList.add('autocomplete-active');
+}
+
+function autocomplete_remove_active(items)
+{
+	for(var i = 0; i < items.length; i++)
+	{
+		items[i].classList.remove('autocomplete-active');
+	}
+}
+
+function autocomplete_destroy()
+{
+	var el = gi('autocomplete-container');
+	if(el)
+	{
+		el.parentNode.removeChild(el);
+	}
+}
+
+/*execute a function when someone clicks in the document:*/
+document.addEventListener('click', function (e) {
+		autocomplete_destroy();
+	}
+);

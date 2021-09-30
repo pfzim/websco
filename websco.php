@@ -218,6 +218,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('start_runbook', 'start_runbook', TRUE);
 		$core->Router->add_route('sync', 'sync', TRUE);
 		$core->Router->add_route('sync_jobs', 'sync_jobs', TRUE);
+		$core->Router->add_route('complete_account', 'complete_account', TRUE);
 	}
 
 	$core->Router->process($path);
