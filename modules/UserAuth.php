@@ -60,7 +60,7 @@ class UserAuth
 		$this->rise_exception = FALSE;
 		$this->salt = 'UserAuth';
 
-		if(defined('USE_LDAP_AUTH') && USE_LDAP_AUTH)
+		if(defined('USE_LDAP') && USE_LDAP)
 		{
 			$this->ldap = &$this->core->LDAP;
 		}

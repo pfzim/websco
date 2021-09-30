@@ -416,7 +416,7 @@ $config = <<<'EOT'
 
 	define('USE_GSSAPI', #use_gssapi#);
 
-	define('USE_LDAP_AUTH', TRUE);
+	define('USE_LDAP', TRUE);
 	define('LDAP_URI', '#ldap_uri#');
 	define('LDAP_USER', '#ldap_user#');
 	define('LDAP_PASSWD', '#ldap_passwd#');

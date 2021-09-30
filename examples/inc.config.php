@@ -47,13 +47,15 @@
 
 	define('USE_GSSAPI', TRUE);
 
-	define('USE_LDAP_AUTH', TRUE);
+	define('USE_LDAP', TRUE);
 	define('LDAP_URI', 'ldap://contoso-dc-01 ldap://contoso-dc-02');
 	define('LDAP_USER', 'domain\\websco');
 	define('LDAP_PASSWD', '');
 	define('LDAP_BASE_DN', 'DC=contoso,DC=local');
 
-	define('LDAP_ADMIN_GROUP_DN', 'CN=WEBSCO-Administrators,OU=Administrators,OU=DC=contoso,DC=local');
+	define('APP_LANGUAGE', 'en');
+
+	//define('LDAP_ADMIN_GROUP_DN', 'CN=WEBSCO-Administrators,OU=Administrators,OU=DC=contoso,DC=local');
 
 	define('MAIL_HOST', 'smtp.contoso.com');
 	define('MAIL_FROM', 'no-reply@contoso.com');

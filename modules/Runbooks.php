@@ -722,7 +722,7 @@ EOT;
 		
 		$sid = (string) $properties->CreatedBy;
 		$sid_name = '';
-		if(!empty($sid))
+		if(defined('USE_LDAP') && USE_LDAP && !empty($sid))
 		{
 			if($this->core->LDAP->search($user, '(objectSid='.ldap_escape($sid, null, LDAP_ESCAPE_FILTER).')', array('samaccountname')))
 			{

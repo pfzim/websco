@@ -10,7 +10,7 @@ function complete_computer(&$core, $params)
 		'list' => array()
 	);
 	
-	if(!empty($search) && strlen($search) >= 3)
+	if(defined('USE_LDAP') && USE_LDAP && !empty($search) && strlen($search) >= 3)
 	{
 		if($core->LDAP->search($result, '(&(objectClass=computer)(sAMAccountName='.ldap_escape($search, null, LDAP_ESCAPE_FILTER).'*))', array('samaccountname')))
 		{
