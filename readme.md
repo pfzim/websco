@@ -102,8 +102,8 @@ Access to runbooks is regulated less conveniently by folders, but also through
 AD groups. When configuring, you need to specify the DN of the groups. There
 is no inheritance, but it is possible to copy the rights to all subfolders.
 
-In order to hide the password from the service account in the config, you can
-configure Kerberos authentication using the keytab file.
+In order to hide the service account password in the config, you can configure
+Kerberos authentication using the keytab file.
 
 In order for the fields to be displayed as a drop-down list, check-box or
 calendar for entering a date, you need to add flags to the field names to the
