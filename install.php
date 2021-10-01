@@ -31,6 +31,13 @@ if(file_exists(ROOT_DIR.'inc.config.php'))
 	exit;
 }
 
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
+require_once ROOT_DIR.'libs/PHPMailer/src/Exception.php';
+require_once ROOT_DIR.'libs/PHPMailer/src/PHPMailer.php';
+require_once ROOT_DIR.'libs/PHPMailer/src/SMTP.php';
+
 class MySQLDB
 {
 	private $link = NULL;
@@ -290,6 +297,109 @@ function get_http_xml($url, $user, $passwd, $use_gssapi)
 	return $xml;
 }
 
+function build_config($config, $params)
+{
+	if(empty($params['db_host'])) throw new Exception('Host value not defined!');
+	if(empty($params['db_user'])) throw new Exception('Login value not defined!');
+	if(empty($params['db_name'])) throw new Exception('DB value not defined!');
+
+	if(empty($params['ldap_uri'])) throw new Exception('LDAP Host value not defined!');
+	if(empty($params['ldap_base'])) throw new Exception('LDAP Base DN value not defined!');
+
+	if(empty($params['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
+
+	if(empty($params['mail_host'])) throw new Exception('MAIL Host value not defined!');
+	if(empty($params['mail_port'])) throw new Exception('MAIL Port value not defined!');
+	if(empty($params['mail_from'])) throw new Exception('MAIL From value not defined!');
+	if(empty($params['mail_from_name'])) throw new Exception('MAIL From Name value not defined!');
+	if(empty($params['mail_admin'])) throw new Exception('MAIL Admin value not defined!');
+	if(empty($params['mail_admin_name'])) throw new Exception('MAIL Admin Name value not defined!');
+
+	$mail_verify_peer = (!empty($params['mail_verify_peer']) && intval($params['mail_verify_peer']));
+	$mail_verify_peer_name = (!empty($params['mail_verify_peer_name']) && intval($params['mail_verify_peer_name']));
+	$mail_allow_self_signed = (!empty($params['mail_allow_self_signed']) && intval($params['mail_allow_self_signed']));
+
+	if(empty($params['web_url'])) throw new Exception('Web URL not defined!');
+	if(empty($params['language'])) throw new Exception('Language not selected!');
+
+	if(!empty($params['use_gssapi']) && intval($params['use_gssapi']))
+	{
+		$use_gssapi = TRUE;
+	}
+	else
+	{
+		$use_gssapi = FALSE;
+		if(empty($params['ldap_user'])) throw new Exception('LDAP User value not defined!');
+		if(empty($params['ldap_passwd'])) throw new Exception('LDAP Password value not defined!');
+		if(empty($params['scorch_user'])) throw new Exception('SCORCH User value not defined!');
+		if(empty($params['scorch_passwd'])) throw new Exception('SCORCH Password value not defined!');
+	}
+
+	return str_replace(
+		array(
+			'#db_host#',
+			'#db_user#',
+			'#db_passwd#',
+			'#db_name#',
+			'#use_gssapi#',
+			'#ldap_uri#',
+			'#ldap_user#',
+			'#ldap_passwd#',
+			'#ldap_base#',
+			'#mail_host#',
+			'#mail_port#',
+			'#mail_user#',
+			'#mail_passwd#',
+			'#mail_secure#',
+			'#mail_admin#',
+			'#mail_admin_name#',
+			'#mail_from#',
+			'#mail_from_name#',
+			'#mail_verify_peer#',
+			'#mail_verify_peer_name#',
+			'#mail_allow_self_signed#',
+			'#scorch_url#',
+			'#scorch_user#',
+			'#scorch_passwd#',
+			'#web_url#',
+			'#mail_auth#',
+			'#use_memcached#',
+			'#language#'
+		),
+		array(
+			sql_escape(@$params['db_host']),
+			sql_escape(@$params['db_user']),
+			sql_escape(@$params['db_passwd']),
+			sql_escape(@$params['db_name']),
+			$use_gssapi?'TRUE':'FALSE',
+			sql_escape(@$params['ldap_uri']),
+			sql_escape(@$params['ldap_user']),
+			sql_escape(@$params['ldap_passwd']),
+			sql_escape(@$params['ldap_base']),
+			sql_escape(@$params['mail_host']),
+			sql_escape(@$params['mail_port']),
+			sql_escape(@$params['mail_user']),
+			sql_escape(@$params['mail_passwd']),
+			sql_escape(@$params['mail_secure']),
+			sql_escape(@$params['mail_admin']),
+			sql_escape(@$params['mail_admin_name']),
+			sql_escape(@$params['mail_from']),
+			sql_escape(@$params['mail_from_name']),
+			$mail_verify_peer?'TRUE':'FALSE',
+			$mail_verify_peer_name?'TRUE':'FALSE',
+			$mail_allow_self_signed?'TRUE':'FALSE',
+			sql_escape(@$params['scorch_url']),
+			sql_escape(@$params['scorch_user']),
+			sql_escape(@$params['scorch_passwd']),
+			sql_escape(@$params['web_url']),
+			empty($params['mail_user'])?'FALSE':'TRUE',
+			intval(@$params['use_memcached'])?'TRUE':'FALSE',
+			sql_escape(@$params['language'])
+		),
+		$config
+	);
+}
+
 $sql = array(
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_users` (
@@ -432,6 +542,9 @@ $config = <<<'EOT'
 	define('MAIL_PASSWD', '#mail_passwd#');
 	define('MAIL_SECURE', '#mail_secure#');
 	define('MAIL_PORT', #mail_port#);
+	define('MAIL_VERIFY_PEER', #mail_verify_peer#);
+	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
+	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
 
 	define('ORCHESTRATOR_URL', '#scorch_url#');
 	define('ORCHESTRATOR_USER', '#scorch_user#');
@@ -603,17 +716,23 @@ EOT;
 					echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
 				}
 				exit;
-				/*
+				//*
 				case 'check_mail':
 				{
 					if(empty($_POST['mail_host'])) throw new Exception('MAIL Host value not defined!');
 					if(empty($_POST['mail_port'])) throw new Exception('MAIL Port value not defined!');
 					if(empty($_POST['mail_from'])) throw new Exception('MAIL From value not defined!');
-					if(empty($_POST['mail_fromname'])) throw new Exception('MAIL From Name value not defined!');
+					if(empty($_POST['mail_from_name'])) throw new Exception('MAIL From Name value not defined!');
 					if(empty($_POST['mail_admin'])) throw new Exception('MAIL Admin value not defined!');
-					if(empty($_POST['mail_adminname'])) throw new Exception('MAIL Admin Name value not defined!');
+					if(empty($_POST['mail_admin_name'])) throw new Exception('MAIL Admin Name value not defined!');
 
-					require_once 'libs/PHPMailer/PHPMailerAutoload.php';
+					$mail_verify_peer = (!empty($_POST['mail_verify_peer']) && intval($_POST['mail_verify_peer']));
+					$mail_verify_peer_name = (!empty($_POST['mail_verify_peer_name']) && intval($_POST['mail_verify_peer_name']));
+					$mail_allow_self_signed = (!empty($_POST['mail_allow_self_signed']) && intval($_POST['mail_allow_self_signed']));
+					
+					//require_once 'libs/PHPMailer/PHPMailerAutoload.php';
+					//require_once(ROOT_DIR.DIRECTORY_SEPARATOR.'libs/PHPMailer/class.phpmailer.php');
+					//require_once(ROOT_DIR.DIRECTORY_SEPARATOR.'libs/PHPMailer/class.smtp.php');
 
 					$mail = new PHPMailer;
 
@@ -626,11 +745,19 @@ EOT;
 						$mail->Password = @$_POST['mail_passwd'];
 					}
 
+					$mail->SMTPOptions = array(
+						'ssl' => array(
+							'verify_peer' => $mail_verify_peer,
+							'verify_peer_name' => $mail_verify_peer_name,
+							'allow_self_signed' => $mail_allow_self_signed
+						)
+					);
+
 					$mail->SMTPSecure = @$_POST['mail_secure'];
 					$mail->Port = @$_POST['mail_port'];
 
-					$mail->setFrom(@$_POST['mail_from'], @$_POST['mail_fromname']);
-					$mail->addAddress(@$_POST['mail_admin'], @$_POST['mail_adminname']);
+					$mail->setFrom(@$_POST['mail_from'], @$_POST['mail_from_name']);
+					$mail->addAddress(@$_POST['mail_admin'], @$_POST['mail_admin_name']);
 
 					$mail->isHTML(true);
 
@@ -646,14 +773,14 @@ EOT;
 					echo '{"code": 0, "message": "OK"}';
 				}
 				exit;
-				*/
+				//*/
 				case 'create_admin_account':
 				{
 					if(empty($_POST['db_host'])) throw new Exception('Host value not defined!');
 					if(empty($_POST['db_user'])) throw new Exception('Login value not defined!');
 					if(empty($_POST['db_name'])) throw new Exception('DB value not defined!');
 					if(empty($_POST['admin_user'])) throw new Exception('Login value not defined!');
-					//if(empty($_POST['mail_admin'])) throw new Exception('MAIL Admin value not defined!');
+					if(empty($_POST['mail_admin'])) throw new Exception('MAIL Admin value not defined!');
 
 					$db = new MySQLDB();
 					$db->connect(@$_POST['db_host'], @$_POST['db_root_user'], @$_POST['db_root_passwd'], @$_POST['db_name']);
@@ -675,101 +802,9 @@ EOT;
 				exit;
 				case 'save_config':
 				{
-					if(empty($_POST['db_host'])) throw new Exception('Host value not defined!');
-					if(empty($_POST['db_user'])) throw new Exception('Login value not defined!');
-					if(empty($_POST['db_name'])) throw new Exception('DB value not defined!');
-
-					if(empty($_POST['ldap_uri'])) throw new Exception('LDAP Host value not defined!');
-					if(empty($_POST['ldap_base'])) throw new Exception('LDAP Base DN value not defined!');
-
-					if(empty($_POST['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
-
-					/*
-					if(empty($_POST['mail_host'])) throw new Exception('MAIL Host value not defined!');
-					if(empty($_POST['mail_port'])) throw new Exception('MAIL Port value not defined!');
-					if(empty($_POST['mail_from'])) throw new Exception('MAIL From value not defined!');
-					if(empty($_POST['mail_fromname'])) throw new Exception('MAIL From Name value not defined!');
-					if(empty($_POST['mail_admin'])) throw new Exception('MAIL Admin value not defined!');
-					if(empty($_POST['mail_adminname'])) throw new Exception('MAIL Admin Name value not defined!');
-					*/
-
-					if(empty($_POST['web_url'])) throw new Exception('Web URL not defined!');
-					if(empty($_POST['language'])) throw new Exception('Language not selected!');
-
-					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
+					if(@file_put_contents(ROOT_DIR.'inc.config.php', build_config($config, $_POST)) === FALSE)
 					{
-						$use_gssapi = TRUE;
-					}
-					else
-					{
-						$use_gssapi = FALSE;
-						if(empty($_POST['ldap_user'])) throw new Exception('LDAP User value not defined!');
-						if(empty($_POST['ldap_passwd'])) throw new Exception('LDAP Password value not defined!');
-						if(empty($_POST['scorch_user'])) throw new Exception('SCORCH User value not defined!');
-						if(empty($_POST['scorch_passwd'])) throw new Exception('SCORCH Password value not defined!');
-					}
-
-					$config = str_replace(
-						array(
-							'#db_host#',
-							'#db_user#',
-							'#db_passwd#',
-							'#db_name#',
-							'#use_gssapi#',
-							'#ldap_uri#',
-							'#ldap_user#',
-							'#ldap_passwd#',
-							'#ldap_base#',
-							'#mail_host#',
-							'#mail_port#',
-							'#mail_user#',
-							'#mail_passwd#',
-							'#mail_secure#',
-							'#mail_admin#',
-							'#mail_admin_name#',
-							'#mail_from#',
-							'#mail_from_name#',
-							'#scorch_url#',
-							'#scorch_user#',
-							'#scorch_passwd#',
-							'#web_url#',
-							'#mail_auth#',
-							'#use_memcached#',
-							'#language#'
-						),
-						array(
-							sql_escape(@$_POST['db_host']),
-							sql_escape(@$_POST['db_user']),
-							sql_escape(@$_POST['db_passwd']),
-							sql_escape(@$_POST['db_name']),
-							$use_gssapi?'TRUE':'FALSE',
-							sql_escape(@$_POST['ldap_uri']),
-							sql_escape(@$_POST['ldap_user']),
-							sql_escape(@$_POST['ldap_passwd']),
-							sql_escape(@$_POST['ldap_base']),
-							sql_escape(@$_POST['mail_host']),
-							sql_escape(@$_POST['mail_port']),
-							sql_escape(@$_POST['mail_user']),
-							sql_escape(@$_POST['mail_passwd']),
-							sql_escape(@$_POST['mail_secure']),
-							sql_escape(@$_POST['mail_admin']),
-							sql_escape(@$_POST['mail_admin_name']),
-							sql_escape(@$_POST['mail_from']),
-							sql_escape(@$_POST['mail_from_name']),
-							sql_escape(@$_POST['scorch_url']),
-							sql_escape(@$_POST['scorch_user']),
-							sql_escape(@$_POST['scorch_passwd']),
-							sql_escape(@$_POST['web_url']),
-							empty($_POST['mail_user'])?'FALSE':'TRUE',
-							intval(@$_POST['use_memcached'])?'TRUE':'FALSE',
-							sql_escape(@$_POST['language'])
-						),
-						$config
-					);
-
-					if(@file_put_contents(ROOT_DIR.'inc.config.php', $config) === FALSE)
-					{
-						throw new Exception("Save config error. Check write permissions");
+						throw new Exception('Save config error. Check write permissions to '.ROOT_DIR);
 					}
 
 					echo '{"code": 0, "message": "OK"}';
@@ -777,101 +812,8 @@ EOT;
 				exit;
 				case 'download_config':
 				{
-					if(empty($_POST['db_host'])) throw new Exception('Host value not defined!');
-					if(empty($_POST['db_user'])) throw new Exception('Login value not defined!');
-					if(empty($_POST['db_name'])) throw new Exception('DB value not defined!');
-
-					if(empty($_POST['ldap_uri'])) throw new Exception('LDAP Host value not defined!');
-					if(empty($_POST['ldap_base'])) throw new Exception('LDAP Base DN value not defined!');
-
-					if(empty($_POST['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
-
-					/*
-					if(empty($_POST['mail_host'])) throw new Exception('MAIL Host value not defined!');
-					if(empty($_POST['mail_port'])) throw new Exception('MAIL Port value not defined!');
-					if(empty($_POST['mail_from'])) throw new Exception('MAIL From value not defined!');
-					if(empty($_POST['mail_fromname'])) throw new Exception('MAIL From Name value not defined!');
-					if(empty($_POST['mail_admin'])) throw new Exception('MAIL Admin value not defined!');
-					if(empty($_POST['mail_adminname'])) throw new Exception('MAIL Admin Name value not defined!');
-					*/
-
-					if(empty($_POST['web_url'])) throw new Exception('Web URL not defined!');
-					if(empty($_POST['language'])) throw new Exception('Language not selected!');
-
-					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
-					{
-						$use_gssapi = TRUE;
-					}
-					else
-					{
-						$use_gssapi = FALSE;
-						if(empty($_POST['ldap_user'])) throw new Exception('LDAP User value not defined!');
-						if(empty($_POST['ldap_passwd'])) throw new Exception('LDAP Password value not defined!');
-						if(empty($_POST['scorch_user'])) throw new Exception('SCORCH User value not defined!');
-						if(empty($_POST['scorch_passwd'])) throw new Exception('SCORCH Password value not defined!');
-					}
-
-
-					$config = str_replace(
-						array(
-							'#db_host#',
-							'#db_user#',
-							'#db_passwd#',
-							'#db_name#',
-							'#use_gssapi#',
-							'#ldap_uri#',
-							'#ldap_user#',
-							'#ldap_passwd#',
-							'#ldap_base#',
-							'#mail_host#',
-							'#mail_port#',
-							'#mail_user#',
-							'#mail_passwd#',
-							'#mail_secure#',
-							'#mail_admin#',
-							'#mail_admin_name#',
-							'#mail_from#',
-							'#mail_from_name#',
-							'#scorch_url#',
-							'#scorch_user#',
-							'#scorch_passwd#',
-							'#web_url#',
-							'#mail_auth#',
-							'#use_memcached#',
-							'#language#'
-						),
-						array(
-							sql_escape(@$_POST['db_host']),
-							sql_escape(@$_POST['db_user']),
-							sql_escape(@$_POST['db_passwd']),
-							sql_escape(@$_POST['db_name']),
-							$use_gssapi?'TRUE':'FALSE',
-							sql_escape(@$_POST['ldap_uri']),
-							sql_escape(@$_POST['ldap_user']),
-							sql_escape(@$_POST['ldap_passwd']),
-							sql_escape(@$_POST['ldap_base']),
-							sql_escape(@$_POST['mail_host']),
-							sql_escape(@$_POST['mail_port']),
-							sql_escape(@$_POST['mail_user']),
-							sql_escape(@$_POST['mail_passwd']),
-							sql_escape(@$_POST['mail_secure']),
-							sql_escape(@$_POST['mail_admin']),
-							sql_escape(@$_POST['mail_admin_name']),
-							sql_escape(@$_POST['mail_from']),
-							sql_escape(@$_POST['mail_from_name']),
-							sql_escape(@$_POST['scorch_url']),
-							sql_escape(@$_POST['scorch_user']),
-							sql_escape(@$_POST['scorch_passwd']),
-							sql_escape(@$_POST['web_url']),
-							empty($_POST['mail_user'])?'FALSE':'TRUE',
-							intval(@$_POST['use_memcached'])?'TRUE':'FALSE',
-							sql_escape(@$_POST['language'])
-						),
-						$config
-					);
-
 					header("Content-Disposition: attachment; filename=\"inc.config.php\"; filename*=utf-8''inc.config.php");
-					echo $config;
+					echo build_config($config, $_POST);
 				}
 				exit;
 				case 'remove_self':
@@ -1601,7 +1543,7 @@ input:checked + .slider:after
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
-<!--
+<!-- -->
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Mail settings</h3>
@@ -1666,12 +1608,30 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
+				<label for="use_memcached" class="control-label col-sm-2">Verify peer:</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="mail_verify_peer" name="mail_verify_peer" class="form-control" type="checkbox" value="1" checked="checked"/><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_memcached" class="control-label col-sm-2">Verify peer name:</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="mail_verify_peer_name" name="mail_verify_peer_name" class="form-control" type="checkbox" value="1" checked="checked" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_memcached" class="control-label col-sm-2">Allow self signed certificate:</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="mail_allow_self_signed" name="mail_allow_self_signed" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');">7. Check mail connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');">8. Check mail connection</button>
 					<div id="result_check_mail" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
--->
+<!-- -->
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Local admin account</h3>
@@ -1691,7 +1651,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');">8. Create admin account</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');">9. Create admin account</button>
 					<div id="result_create_admin_account" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1714,7 +1674,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');">9. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');">10. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
 					<div id="result_save_config" class="alert alert-danger" style="display: none"></div>
 					<div id="result_download_config" class="alert alert-danger" style="display: none"></div>
 				</div>

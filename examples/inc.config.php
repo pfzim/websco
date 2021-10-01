@@ -15,7 +15,7 @@
 		[libdefaults]
 			default_realm = CONTOSO.COM
 			default_client_keytab_name = FILE:/etc/kerberos/server.keytab
-			default_ccache_name = FILE:/tmp/krb5cc_0
+			default_ccache_name = FILE:/tmp/krb5cc_%{uid}
 			#default_keytab_name = FILE:/etc/kerberos/server.keytab
 
 		[realms]
@@ -66,8 +66,11 @@
 	define('MAIL_SECURE', '');
 	define('MAIL_PORT', 25);
 	define('MAIL_TO_ADMIN', 'admin@contoso.com');
+	define('MAIL_VERIFY_PEER', TRUE);
+	define('MAIL_VERIFY_PEER_NAME', TRUE);
+	define('MAIL_ALLOW_SELF_SIGNED', FALSE);
 
-	define('WS_URL', 'https://websco.contoso.com/');
+	define('WS_URL', 'https://websco.contoso.com/websco');
 	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');

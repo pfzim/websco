@@ -213,7 +213,7 @@ class UserAuth
 		if(empty($this->token))
 		{
 			$this->token = bin2hex(random_bytes(8));
-			$this->core->db->put(rpv('UPDATE @users SET `sid` = ! WHERE `id` = # LIMIT 1', $this->token, $this->uid));
+			$this->core->db->put(rpv('UPDATE @users SET `sid` = !, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->token, $this->uid));
 		}
 
 		setcookie('zh', $this->token, time() + 2592000, '/');
@@ -268,7 +268,7 @@ class UserAuth
 		setcookie('zl', NULL, time() - 60, '/');
 
 		$this->loaded = FALSE;
-		$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL WHERE `id` = # LIMIT 1', $this->uid));
+		$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->uid));
 		$this->uid = 0;
 		$this->flags = 0;
 		$this->login = NULL;
@@ -292,14 +292,48 @@ class UserAuth
 		return $this->core->db->last_id();
 	}
 
+	public function reset_password($uid, $token, $passwd)
+	{
+		$affected = 0;
+
+		if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+		{
+			return ($affected > 0);
+		}
+
+		return FALSE;
+	}
+
+	public function make_reset_token($uid, &$token)
+	{
+		$token = bin2hex(random_bytes(8));
+
+		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $token, $uid)))
+		{
+			return TRUE;
+		}
+
+		return FALSE;
+	}
+
+	public function change_password_ex($uid, $passwd)
+	{
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid)))
+			{
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
 	public function change_password($passwd)
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $this->uid)))
-			{
-				return TRUE;
-			}
+			return $this->change_password_ex($this->uid, $passwd);
 		}
 
 		return FALSE;
@@ -351,6 +385,24 @@ class UserAuth
 		}
 
 		return FALSE;
+	}
+
+	/**
+	 *  \brief Find user by mail address. This function required for reset password
+	 *
+	 *  \param [in/out] $mail User mail address. This value replaced by value from database
+	 *  \return user_id or 0
+	 */
+
+	public function find_user_by_mail(&$mail)
+	{
+		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! LIMIT 1', $mail)))
+		{
+			$mail = $result[0][1];
+			return intval($result[0][0]);
+		}
+
+		return 0;
 	}
 
 	private function load_user_info()

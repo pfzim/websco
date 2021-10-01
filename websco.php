@@ -225,4 +225,9 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('password_form', 'password_form', TRUE);
 	}
 
+	$core->Router->add_route('form_ask_mail_for_reset', 'form_ask_mail_for_reset', TRUE);
+	$core->Router->add_route('reset_send_mail', 'reset_send_mail', TRUE);
+	$core->Router->add_route('reset_password', 'reset_password');
+	$core->Router->add_route('form_reset_password', 'form_reset_password');
+
 	$core->Router->process($path);

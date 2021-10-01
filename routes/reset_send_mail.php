@@ -1,0 +1,60 @@
+<?php
+
+function reset_send_mail(&$core, $params)
+{
+	$result_json = array(
+		'code' => 0,
+		'message' => '',
+		'errors' => array()
+	);
+
+	$mail = @$_POST['mail'];
+	$user_id = 0;
+
+	if(empty($mail))
+	{
+		$result_json['code'] = 1;
+		$result_json['errors'][] = array('name' => 'mail', 'msg' => LL('ThisFieldRequired'));
+	}
+	else
+	{
+		$user_id = $core->UserAuth->find_user_by_mail($mail);
+	}
+
+	if(!$user_id || !$core->UserAuth->make_reset_token($user_id, $reset_token))
+	{
+		$result_json['code'] = 1;
+		$result_json['errors'][] = array('name' => 'mail', 'msg' => LL('UserNotFound'));
+	}
+
+	$html = <<<'EOT'
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	</head>
+	<body>
+EOT;
+
+	$html .= 'To reset password follow this link: <a href="'.WS_URL.'/form_reset_password/'.$user_id.'/'.$reset_token.'">'.WS_URL.'/form_reset_password/'.$user_id.'/'.$reset_token.'</a>';
+
+	$html .= '</body></html>';
+
+	$plain = 'To reset password follow this link: '.WS_URL.'/form_reset_password/'.$user_id.'/'.$reset_token;
+
+	if($result_json['code'])
+	{
+		$result_json['message'] = LL('NotAllFilled');
+	}
+	elseif($core->Mailer->send_mail(array($mail), LL('ResetPasswordSubject'), $html, $plain))
+	{
+		$result_json['message'] = LL('MailWasSent');
+	}
+	else
+	{
+		$result_json['code'] = 1;
+		$result_json['message'] = LL('UnknownError');
+	}
+
+	//log_file('Password changed: '.json_encode($result_json, JSON_UNESCAPED_UNICODE));
+	echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+}
