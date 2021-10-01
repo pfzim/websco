@@ -365,6 +365,16 @@ function on_received_form(data, form_id)
 					format: 'DD.MM.YYYY'
 				});
 			}
+			else if(data.fields[i].type == 'password')
+			{
+				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="password" value=""/>'
+					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = html;
+				el.appendChild(wrapper);
+			}
 			else
 			{
 				var placeholder = '';

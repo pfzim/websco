@@ -18,4 +18,12 @@
   php -f <?php eh($_SERVER['SCRIPT_FILENAME']); ?> -- --user <?php eh($core->UserAuth->get_login()); ?> --password &lt;password&gt; --path sync
 </pre>
 
+<br />
+<br />
+
+<?php if(!$core->UserAuth->is_ldap_user() && $core->UserAuth->get_id()) { ?>
+<a href="#" onclick="f_show_form('/websco/password_form');"><?php L('ChangePassword') ?></a><br />
+<?php } ?>
+
+<?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>
