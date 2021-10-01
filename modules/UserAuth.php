@@ -318,11 +318,13 @@ class UserAuth
 
 	public function change_password_ex($uid, $passwd)
 	{
+		$affected = 0;
+
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid)))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid), $affected))
 			{
-				return TRUE;
+				return ($affected > 0);
 			}
 		}
 
@@ -349,6 +351,52 @@ class UserAuth
 				{
 					return TRUE;
 				}
+			}
+		}
+
+		return FALSE;
+	}
+
+	/**
+	 *  \brief Update user info
+	 *
+	 *  \param [in] $uid User ID. If 0 then user will be created
+	 *  \param [in] $login User login
+	 *  \param [in] $mail User mail address for send notification
+	 *  \return true - if activated successfully
+	 */
+
+	public function set_user_info_ex($uid, $login, $mail)
+	{
+		$affected = 0;
+
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $login, $mail, $uid), $affected))
+			{
+				return ($affected > 0);
+			}
+		}
+		else
+		{
+			if($this->core->db->put(rpv('INSERT INTO `@users` (`login`, `mail`, `passwd`, `flags`) VALUES (!, !, \'\', 0)', $login, $mail)))
+			{
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
+	public function delete_user_ex($uid)
+	{
+		$affected = 0;
+
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | 0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
+			{
+				return ($affected > 0);
 			}
 		}
 

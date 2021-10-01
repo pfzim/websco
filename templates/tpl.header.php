@@ -17,6 +17,7 @@
 				<li><a href="<?php eh('/websco/list_folder'); ?>"><?php L('Runbooks') ?></a></li>
 				<li><a href="<?php eh('/websco/list_tools'); ?>"><?php L('Tools') ?></a></li>
 				<li><a href="<?php eh('/websco/permissions'); ?>"><?php L('Permissions') ?></a></li>
+				<li><a href="<?php eh('/websco/list_users'); ?>"><?php L('Users') ?></a></li>
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
 				<?php if($core->UserAuth->get_id()) { ?>

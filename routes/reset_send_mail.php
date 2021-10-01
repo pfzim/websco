@@ -47,6 +47,7 @@ EOT;
 	}
 	elseif($core->Mailer->send_mail(array($mail), LL('ResetPasswordSubject'), $html, $plain))
 	{
+		log_db('Send mail to reset password', '{id='.$user_id.'}', 0);
 		$result_json['message'] = LL('MailWasSent');
 	}
 	else

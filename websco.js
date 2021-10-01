@@ -512,6 +512,10 @@ function on_saved(action, data)
 		//f_get_perms(data.pid);
 		window.location = window.location;
 	}
+	else if(action == 'save_user')
+	{
+		window.location = window.location;
+	}
 }
 
 function f_notify(text, type)
@@ -576,6 +580,11 @@ function f_delete(ev, action)
 function f_delete_perm(ev)
 {
 	f_delete(ev, 'delete_permission');
+}
+
+function f_delete_user(ev)
+{
+	f_delete(ev, 'delete_user');
 }
 
 function f_async(a)
