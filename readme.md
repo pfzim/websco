@@ -2,6 +2,15 @@
 
 [:ru:](#description-ru) [:us:](#description)  
 
+## System requirements
+- Apache
+- MariaDB (MySQL)
+- PHP
+- Microsoft System Center Orchestrator
+- Active Directory (optional)
+- memcached (optional)
+- Kerberos (optional)
+
 ## Installation
 
 ```
@@ -58,7 +67,7 @@ Next, you need to run the script http://localhost/websco/install.php through the
 ### Runbook classic form
 ![Runbook input form example](/docs/screenshots/runbook_classic.png "Runbook input form example")
 
-### Some form in WebSCO
+### Same form in WebSCO
 ![Runbook input form example](/docs/screenshots/runbook1.png "Runbook input form example")
 
 ### Result
@@ -93,8 +102,8 @@ Access to runbooks is regulated less conveniently by folders, but also through
 AD groups. When configuring, you need to specify the DN of the groups. There
 is no inheritance, but it is possible to copy the rights to all subfolders.
 
-In order to hide the password from the service account in the config, you can
-configure Kerberos authentication using the keytab file.
+In order to hide the service account password in the config, you can configure
+Kerberos authentication using the keytab file.
 
 In order for the fields to be displayed as a drop-down list, check-box or
 calendar for entering a date, you need to add flags to the field names to the
