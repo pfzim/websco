@@ -277,7 +277,7 @@ class UserAuth
 
 	public function add($login, $passwd, $mail)
 	{
-		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE u.`login`= ! OR u.`mail` = ! LIMIT 1', $login, $mail)))
+		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE (u.`login`= ! OR u.`mail` = !) AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $login, $mail)))
 		{
 			$this->core->error_ex('User already exist!', $this->rise_exception);
 			return 0;
@@ -296,7 +296,7 @@ class UserAuth
 	{
 		$affected = 0;
 
-		if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+		if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
 		{
 			return ($affected > 0);
 		}
@@ -308,7 +308,7 @@ class UserAuth
 	{
 		$token = bin2hex(random_bytes(8));
 
-		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $token, $uid)))
+		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $token, $uid)))
 		{
 			return TRUE;
 		}
@@ -322,7 +322,7 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid), $affected))
 			{
 				return ($affected > 0);
 			}
@@ -345,7 +345,7 @@ class UserAuth
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
 		{
-			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & 0x0002) = 0x0000 LIMIT 1', $this->uid, $passwd.$this->salt)))
+			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $this->uid, $passwd.$this->salt)))
 			{
 				if(intval($user[0][0]) == $this->uid)
 				{
@@ -372,16 +372,19 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & 0x0002) = 0x0000 LIMIT 1', $login, $mail, $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail, $uid), $affected))
 			{
 				return ($affected > 0);
 			}
 		}
 		else
 		{
-			if($this->core->db->put(rpv('INSERT INTO `@users` (`login`, `mail`, `passwd`, `flags`) VALUES (!, !, \'\', 0)', $login, $mail)))
+			if(!$this->core->db->select_ex($users, rpv('SELECT u.`id` FROM `@users` AS u WHERE (u.`login` = ! OR u.`mail` = !) AND (u.`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail)))
 			{
-				return TRUE;
+				if($this->core->db->put(rpv('INSERT INTO `@users` (`login`, `mail`, `passwd`, `flags`) VALUES (!, !, \'\', 0)', $login, $mail)))
+				{
+					return TRUE;
+				}
 			}
 		}
 
@@ -444,7 +447,7 @@ class UserAuth
 
 	public function find_user_by_mail(&$mail)
 	{
-		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! LIMIT 1', $mail)))
+		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! AND (u.`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $mail)))
 		{
 			$mail = $result[0][1];
 			return intval($result[0][0]);
@@ -455,7 +458,7 @@ class UserAuth
 
 	private function load_user_info()
 	{
-		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & 0x0001) = 0x0000 LIMIT 1', $this->uid)))
+		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & 0x0001) = 0 LIMIT 1', $this->uid)))
 		{
 			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return FALSE;
