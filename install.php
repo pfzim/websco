@@ -408,6 +408,7 @@ CREATE TABLE `#DB_NAME#`.`w_users` (
   `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
   `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
   `sid` varchar(16) DEFAULT NULL,
+  `reset_token` varchar(16) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -484,7 +485,7 @@ EOT
 CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
   `pid` int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
-  `value` varchar(512) NOT NULL,
+  `value` varchar(4096) NOT NULL,
   PRIMARY KEY (`pid`,`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
