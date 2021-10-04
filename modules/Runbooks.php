@@ -767,7 +767,7 @@ EOT;
 			$type = 'string';
 
 			$i++;
-			if(preg_match('#[/_]([isdlacmfr]+)$#i', $row['name'], $matches))
+			if(preg_match('#[/_]([isdtlacmfr]+)$#i', $row['name'], $matches))
 			{
 				$suffix = $matches[1];
 
@@ -784,7 +784,24 @@ EOT;
 							$type = 'string';
 							break;
 						case 'd':
-							$type = 'date';
+							if($type == 'time')
+							{
+								$type = 'datetime';
+							}
+							else
+							{
+								$type = 'date';
+							}
+							break;
+						case 't':
+							if($type == 'date')
+							{
+								$type = 'datetime';
+							}
+							else
+							{
+								$type = 'time';
+							}
 							break;
 						case 'l':
 							$type = 'list';
@@ -810,7 +827,7 @@ EOT;
 				}
 			}
 
-			$name = preg_replace('#\s*[/_][isdlacmfr]+$#i', '', $row['name']);
+			$name = preg_replace('#\s*[/_][isdtlacmfr]+$#i', '', $row['name']);
 
 			if(preg_match('/\*\s*:?\s*$/i', $name))
 			{

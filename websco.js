@@ -352,6 +352,47 @@ function on_received_form(data, form_id)
 				wrapper.innerHTML = html;
 				el.appendChild(wrapper);
 			}
+			else if(data.fields[i].type == 'datetime')
+			{
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
+					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+				el.appendChild(wrapper);
+
+				flatpickr(
+					document.getElementById(form_id + data.fields[i].name),
+					{
+						allowInput: true,
+						enableTime: true,
+						time_24hr: true,
+						defaultHour: 0,
+						defaultMinute: 0,
+						dateFormat: "d.m.Y H:i"
+					}
+				);
+			}
+			else if(data.fields[i].type == 'time')
+			{
+				var wrapper = document.createElement('div');
+				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
+					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
+					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
+				el.appendChild(wrapper);
+
+				flatpickr(
+					document.getElementById(form_id + data.fields[i].name),
+					{
+						allowInput: true,
+						enableTime: true,
+					    noCalendar: true,
+						time_24hr: true,
+						defaultHour: 0,
+						defaultMinute: 0,
+						dateFormat: "H:i"
+					}
+				);
+			}
 			else if(data.fields[i].type == 'date')
 			{
 				var wrapper = document.createElement('div');
@@ -360,10 +401,19 @@ function on_received_form(data, form_id)
 					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
 				el.appendChild(wrapper);
 
+				flatpickr(
+					document.getElementById(form_id + data.fields[i].name),
+					{
+						allowInput: true,
+						dateFormat: "d.m.Y"
+					}
+				);
+				/*
 				var picker = new Pikaday({
 					field: document.getElementById(form_id + data.fields[i].name),
 					format: 'DD.MM.YYYY'
 				});
+				*/
 			}
 			else if(data.fields[i].type == 'password')
 			{

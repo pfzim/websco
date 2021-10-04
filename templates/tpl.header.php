@@ -6,11 +6,15 @@
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>WebSCO - System Center Orchestrator web interface</title>
 		<link type="text/css" href="/websco/templates/style.css" rel="stylesheet" />
-		<link type="text/css" href="/websco/templates/pikaday.css" rel="stylesheet" />
+		<link type="text/css" href="/websco/templates/flatpickr.material_red.css" rel="stylesheet" />
 		<script src="<?php eh('/websco/languages/'.APP_LANGUAGE.'.js'); ?>"></script>
 		<script src="/websco/websco.js"></script>
+		<script src="/websco/flatpickr.min.js"></script>
+<!--
+		<link type="text/css" href="/websco/templates/pikaday.css" rel="stylesheet" />
 		<script src="/websco/moment.js"></script>
 		<script src="/websco/pikaday.js"></script>
+-->
 	</head>
 	<body>
 		<ul class="menu-bar">
