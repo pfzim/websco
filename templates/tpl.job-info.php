@@ -17,7 +17,7 @@
 					</tbody>
 				</table>
 
-				</br />
+				<br />
 				<div class="f-right">
 					<button id="job_restart" class="button-other" type="button" onclick=""><?php L('Restart') ?>...</button>
 					&nbsp;<button class="button-accept" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'"><?php L('OK') ?></button>

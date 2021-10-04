@@ -166,14 +166,14 @@ function f_get_job(guid)
 					}
 
 
-					html += '<tr><td>Instance ID: ' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
+					html += '<tr><td>' + LL.InstanceID + ': ' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
 
-					html += '<tr><td colspan="2"><b>Input parameters</b></td></tr>';
+					html += '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_in.length; j++)
 					{
 						html += '<tr><td>' + data.instances[i].params_in[j].name +'</td><td>' + data.instances[i].params_in[j].value +'</td></tr>';
 					}
-					html += '<tr><td colspan="2"><b>Activities</b></td></tr>';
+					html += '<tr><td colspan="2"><b>' + LL.Activities + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].activities.length; j++)
 					{
 						if(data.instances[i].activities[j].status == 'success')
@@ -191,7 +191,7 @@ function f_get_job(guid)
 
 						html += '<tr><td>' + data.instances[i].activities[j].sequence + '. ' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
 					}
-					html += '<tr><td colspan="2"><b>Output parameters</b></td></tr>';
+					html += '<tr><td colspan="2"><b>' + LL.OutputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
 					{
 						html += '<tr><td>' + data.instances[i].params_out[j].name +'</td><td><pre>' + data.instances[i].params_out[j].value +'</pre></td></tr>';
@@ -399,9 +399,9 @@ function on_received_form(data, form_id)
 		}
 
 		html = '<br /><div class="f-right">'
-			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">OK</button>'
+			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">' + LL.OK + '</button>'
 			+ '&nbsp;'
-			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Cancel</button>'
+			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">' + LL.Cancel + '</button>'
 			+ '</div>';
 
 		var wrapper = document.createElement('div');
