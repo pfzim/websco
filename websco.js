@@ -790,7 +790,7 @@ function autocomplete_on_input(ev)
 				var a, b, i;
 				autocomplete_current_focus = -1;
 
-				autocomplete_destroy();
+				autocomplete_destroy(null);
 				a = document.createElement('DIV');
 				a.setAttribute('id', 'autocomplete-container');
 				a.setAttribute('class', 'autocomplete-items');
@@ -825,12 +825,12 @@ function autocomplete_on_keydown(e)
 	if(e.keyCode == 40)
 	{
 		autocomplete_current_focus++;
-		addActive(items);
+		utocomplete_add_active(items);
 	}
 	else if(e.keyCode == 38) //up
 	{
 		autocomplete_current_focus--;
-		addActive(items);
+		utocomplete_add_active(items);
 	}
 	else if (e.keyCode == 13)
 	{
@@ -853,7 +853,7 @@ function autocomplete_create(input, action)
 	input.addEventListener('keydown', autocomplete_on_keydown);
 }
 
-function addActive(items)
+function utocomplete_add_active(items)
 {
 	if(!items) return false;
 
@@ -880,7 +880,7 @@ function autocomplete_remove_active(items)
 	}
 }
 
-function autocomplete_destroy()
+function autocomplete_destroy(e)
 {
 	var el = gi('autocomplete-container');
 	if(el)
@@ -889,8 +889,57 @@ function autocomplete_destroy()
 	}
 }
 
-/*execute a function when someone clicks in the document:*/
-document.addEventListener('click', function (e) {
-		autocomplete_destroy();
-	}
-);
+
+// https://github.com/jfriend00/docReady
+// https://github.com/dmilisic/docReady
+(function() {
+    "use strict";
+    var readyFired = false;
+
+    // call this when the document is ready
+    // this function protects itself against being called more than once
+    function docReady() {
+        if (!readyFired) {
+            // this must be set to true before we start calling callbacks
+            readyFired = true;
+            // TODO: Enter your code here
+
+			/*execute a function when someone clicks in the document:*/
+        	if(document.addEventListener)
+        	{
+				document.addEventListener('click', 	autocomplete_destroy);
+			}
+			else
+			{
+            	document.attachEvent('onclick', autocomplete_destroy);
+			}
+        }
+    }
+    
+    function readyStateChange() {
+        if ( document.readyState === "complete" ) {
+            docReady();
+        }
+    }
+    
+    // if document already ready to go, schedule the docReady function to run
+    // IE only safe when readyState is "complete", others safe when readyState is "interactive"
+    if (document.readyState === "complete" || (!document.attachEvent && document.readyState === "interactive")) {
+        setTimeout(docReady, 1);
+    } else {
+        // otherwise install event handlers
+        if (document.addEventListener) {
+            // first choice is DOMContentLoaded event
+            document.addEventListener("DOMContentLoaded", docReady, false);
+            // backup is window load event
+            window.addEventListener("load", docReady, false);
+        } else {
+            // must be IE
+            document.attachEvent("onreadystatechange", readyStateChange);
+            window.attachEvent("onload", docReady);
+        }
+    }
+})();
+
+
+
