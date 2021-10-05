@@ -23,38 +23,13 @@ Only when using Kerberos:
 sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-kerb libapache2-mod-auth-gssapi libsasl2-2 krb5-clients krb5-user krb5 ldap-utils gss-ntlmssp
 ```
 
-Example Apache config:
+mod_rewrite requires .htaccess to be enabled. Enable Apache .htaccess:
 ```
-<IfModule mod_ssl.c>
-        <VirtualHost *:443>
-                ServerName localhost
-                ServerAdmin webmaster@localhost
-
-                DocumentRoot /var/www/html
-
-                <Directory /var/www/html/websco>
-                        Options Indexes FollowSymLinks
-                        AllowOverride All
-                        Require all granted
-                </Directory>
-
-                ErrorLog ${APACHE_LOG_DIR}/error.log
-                CustomLog ${APACHE_LOG_DIR}/access.log combined
-
-                SSLEngine on
-
-                SSLCertificateFile    /etc/ssl/certs/websco.cer
-                SSLCertificateKeyFile /etc/ssl/private/websco.key
-
-                <FilesMatch "\.(cgi|shtml|phtml|php)$">
-                                SSLOptions +StdEnvVars
-                </FilesMatch>
-                <Directory /usr/lib/cgi-bin>
-                                SSLOptions +StdEnvVars
-                </Directory>
-
-        </VirtualHost>
-</IfModule>
+	<Directory /var/www/html/websco>
+			Options Indexes FollowSymLinks
+			AllowOverride All
+			Require all granted
+	</Directory>
 ```
 
 Next, you need to run the script http://localhost/websco/install.php through the browser and fill in the parameters.
@@ -236,4 +211,38 @@ ORDER BY
 	a.`dn`,
 	f.`name`
 ;
+```
+
+Example Apache config:
+```
+<IfModule mod_ssl.c>
+        <VirtualHost *:443>
+                ServerName localhost
+                ServerAdmin webmaster@localhost
+
+                DocumentRoot /var/www/html
+
+                <Directory /var/www/html/websco>
+                        Options Indexes FollowSymLinks
+                        AllowOverride All
+                        Require all granted
+                </Directory>
+
+                ErrorLog ${APACHE_LOG_DIR}/error.log
+                CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+                SSLEngine on
+
+                SSLCertificateFile    /etc/ssl/certs/websco.cer
+                SSLCertificateKeyFile /etc/ssl/private/websco.key
+
+                <FilesMatch "\.(cgi|shtml|phtml|php)$">
+                                SSLOptions +StdEnvVars
+                </FilesMatch>
+                <Directory /usr/lib/cgi-bin>
+                                SSLOptions +StdEnvVars
+                </Directory>
+
+        </VirtualHost>
+</IfModule>
 ```
