@@ -99,7 +99,7 @@ function save_permission(&$core, $params)
 			$childs = 0;
 
 			log_file('Apply to childs of ID: '.$parent_guid);
-			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE f.`pid` = !', $parent_guid)))
+			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & 0x0001) = 0 AND f.`pid` = !', $parent_guid)))
 			{
 				foreach($folders as &$folder)
 				{
@@ -136,7 +136,7 @@ function save_permission(&$core, $params)
 		{
 			$folder_guid = '00000000-0000-0000-0000-000000000000';
 		}
-		elseif($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE f.`id` = #', $v_pid)))
+		elseif($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & 0x0001) = 0 AND f.`id` = #', $v_pid)))
 		{
 			$folder_guid = $folders[0]['guid'];
 		}
