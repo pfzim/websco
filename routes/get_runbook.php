@@ -91,5 +91,28 @@ function get_runbook(&$core, $params)
 		$result_json['fields'][] = $field;
 	}
 
+	$servers = $core->Runbooks->get_servers();
+
+	$servers_list = array();
+	foreach($servers as $server)
+	{
+		$servers_list[] = $server['name'];
+	}
+
+	$result_json['fields'][] = array(
+		'type' => 'spoiler',
+		'title' => LL('AdvancedSettings'),
+		'fields' => array(
+			array(
+				'type' => 'flags',
+				'name' => 'servers',
+				'title' => LL('SelectRunbookServers'),
+				'value' => '',
+				'list' => $servers_list,
+				'values' => $servers_list
+			)
+		)
+	);
+
 	echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 }

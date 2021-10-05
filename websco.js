@@ -274,6 +274,177 @@ form_data = {
 }
 */
 
+function f_append_fields(el, fields, form_id, spoiler_id)
+{
+	//console.log('f_append_fields' + spoiler_id);
+	for(var i = 0, ec = fields.length; i < ec; i++)
+	{
+		if(fields[i].type == 'hidden')
+		{
+			html = '<input name="' + escapeHtml(fields[i].name) + '" type="hidden" value="' + escapeHtml(fields[i].value) + '" />';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'list' && fields[i].list)
+		{
+			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">'+ escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<select class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '">'
+				+ '<option value=""></option>';
+			for(j = 0; j < fields[i].list.length; j++)
+			{
+				selected = ''
+				if(fields[i].list[j] == fields[i].value)
+				{
+					selected = ' selected="selected"'
+				}
+				html += '<option value="' + escapeHtml(fields[i].list[j]) + '"' + selected + '>' + escapeHtml(fields[i].list[j]) + '</option>';
+			}
+			html += '</select>'
+				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'flags' && fields[i].list)
+		{
+			value = parseInt(fields[i].value, 10);
+
+			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':</div>';
+			for(j = 0; j < fields[i].list.length; j++)
+			{
+				checked = '';
+				if(value & (0x01 << j))
+				{
+					checked = ' checked="checked"';
+				}
+
+				html += '<span><input id="' + escapeHtml(form_id + fields[i].name) + '[' + j +']" name="' + escapeHtml(fields[i].name) + '[' + j +']" type="checkbox" value="' + (fields[i].values?fields[i].values[j]:'1') + '"' + checked + '/><label for="'+ escapeHtml(form_id + fields[i].name) + '[' + j + ']">' + escapeHtml(fields[i].list[j]) + '</label></span>'
+			}
+			html += '<div id="' + escapeHtml(form_id + fields[i].name) + '[0]-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'datetime')
+		{
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+			el.appendChild(wrapper);
+
+			flatpickr(
+				document.getElementById(form_id + fields[i].name),
+				{
+					allowInput: true,
+					enableTime: true,
+					time_24hr: true,
+					defaultHour: 0,
+					defaultMinute: 0,
+					dateFormat: "d.m.Y H:i"
+				}
+			);
+		}
+		else if(fields[i].type == 'time')
+		{
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+			el.appendChild(wrapper);
+
+			flatpickr(
+				document.getElementById(form_id + fields[i].name),
+				{
+					allowInput: true,
+					enableTime: true,
+					noCalendar: true,
+					time_24hr: true,
+					defaultHour: 0,
+					defaultMinute: 0,
+					dateFormat: "H:i"
+				}
+			);
+		}
+		else if(fields[i].type == 'date')
+		{
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+			el.appendChild(wrapper);
+
+			flatpickr(
+				document.getElementById(form_id + fields[i].name),
+				{
+					allowInput: true,
+					dateFormat: "d.m.Y"
+				}
+			);
+			/*
+			var picker = new Pikaday({
+				field: document.getElementById(form_id + fields[i].name),
+				format: 'DD.MM.YYYY'
+			});
+			*/
+		}
+		else if(fields[i].type == 'password')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="password" value=""/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'spoiler')
+		{
+			spoiler_id++;
+
+			var wrapper = document.createElement('div');
+			wrapper.setAttribute('onclick', 'f_toggle_spoiler(\'' + escapeHtml(form_id + '_spoiler_' + spoiler_id) + '\');');
+			wrapper.className = 'spoiler';
+			wrapper.textContent = fields[i].title;
+			el.appendChild(wrapper);
+
+			wrapper = document.createElement('div');
+			wrapper.id = form_id + '_spoiler_' + spoiler_id;
+			wrapper.style.display = 'none';
+			el.appendChild(wrapper);
+
+			spoiler_id = f_append_fields(wrapper, fields[i].fields, form_id, spoiler_id);
+		}
+		else
+		{
+			var placeholder = '';
+			if(fields[i].placeholder)
+			{
+				placeholder = '" placeholder="' + fields[i].placeholder;
+			}
+
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+			
+			if(fields[i].autocomplete)
+			{
+				autocomplete_create(gi(form_id + fields[i].name), fields[i].autocomplete);
+			}
+		}
+	}
+
+	return spoiler_id;
+}
+
 function on_received_form(data, form_id)
 {
 	gi('loading').style.display = 'none';
@@ -300,6 +471,10 @@ function on_received_form(data, form_id)
 		el = gi(form_id + '-fields');
 		el.innerHTML = '';
 		html = '';
+		
+		f_append_fields(el, data.fields, form_id, 0);
+		
+		/*
 		for(i = 0; i < data.fields.length; i++)
 		{
 			if(data.fields[i].type == 'hidden')
@@ -413,7 +588,7 @@ function on_received_form(data, form_id)
 					field: document.getElementById(form_id + data.fields[i].name),
 					format: 'DD.MM.YYYY'
 				});
-				*/
+				* /
 			}
 			else if(data.fields[i].type == 'password')
 			{
@@ -447,6 +622,7 @@ function on_received_form(data, form_id)
 				}
 			}
 		}
+		*/
 
 		html = '<br /><div class="f-right">'
 			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">' + LL.OK + '</button>'
@@ -675,6 +851,21 @@ function f_show_hide(url)
 		},
 		null
 	);
+
+	return false;
+}
+
+function f_toggle_spoiler(id)
+{
+	var el = gi(id);
+	if(el.style.display === 'none')
+	{
+		el.style.display = 'block';
+	}
+	else
+	{
+		el.style.display = 'none';
+	}
 
 	return false;
 }

@@ -92,7 +92,7 @@ class Runbooks
 		\return - created job ID
 	*/
 
-	public function start_runbook($guid, $params)
+	public function start_runbook($guid, $params, $servers = NULL)
 	{
 		$request = <<<'EOT'
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
@@ -101,14 +101,19 @@ class Runbooks
         <m:properties>
 EOT;
 
-		$request .= '<d:RunbookId m:type="Edm.Guid">'.$guid.'</d:RunbookId>';
+		$request .= '<d:RunbookId m:type="Edm.Guid">'.htmlspecialchars($guid).'</d:RunbookId>';
+
+		if(!empty($servers))
+		{
+			$request .= '<d:RunbookServers>'.htmlspecialchars($servers).'</d:RunbookServers>';
+		}
 
 		if(!empty($params))
 		{
 			$request .= '<d:Parameters><![CDATA[<Data>';
 			foreach($params as $key => $value)
 			{
-				$request .= '<Parameter><ID>{'.$key.'}</ID><Value>'.str_replace('\'', '\'\'', $value).'</Value></Parameter>';
+				$request .= '<Parameter><ID>{'.htmlspecialchars($key).'}</ID><Value>'.htmlspecialchars(str_replace('\'', '\'\'', $value)).'</Value></Parameter>';
 			}
 			$request .= '</Data>]]></d:Parameters>';
 		}
@@ -117,6 +122,8 @@ EOT;
     </content>
 </entry>
 EOT;
+
+		log_file($request);
 
 		$ch = curl_init();
 
@@ -311,6 +318,41 @@ EOT;
 		return $folders;
 	}
 
+	public function retrieve_servers()
+	{
+		$servers = array();
+		$skip = 0;
+		$total = 0;
+
+		do
+		{
+			$xml = $this->get_http_xml($this->orchestrator_url.'/RunbookServers?$inlinecount=allpages&$top=50&$skip='.$skip);
+
+			$total = intval($xml->children('m', TRUE)->count);
+
+			foreach($xml->entry as $entry)
+			{
+				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+
+				$server = array(
+					'guid' => (string) $properties->Id,
+					'name' => (string) $properties->Name
+				);
+
+				$servers[] = $server;
+
+				//break;
+				$skip++;
+			}
+		}
+		while($skip < $total);
+
+		//echo $output;
+		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+		return $servers;
+	}
+
 	public function get_jobs($guid)
 	{
 		$jobs = array();
@@ -465,8 +507,52 @@ EOT;
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | 0x0001)"));
 		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | 0x0001)"));
 		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | 0x0001)"));
+		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | 0x0001)"));
 
 		$total = 0;
+
+		$servers = $this->retrieve_servers();
+
+		foreach($servers as &$server)
+		{
+			//echo $folder['guid']."\r\n";
+			$server_id = 0;
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_servers AS f WHERE f.`guid` = ! LIMIT 1", $server['guid'])))
+			{
+				if($this->core->db->put(rpv("
+						INSERT INTO @runbooks_servers (`guid`, `name`, `flags`)
+						VALUES (!, !, #)
+					",
+					$server['guid'],
+					$server['name'],
+					0x0000
+				)))
+				{
+					$server_id = $this->core->db->last_id();
+				}
+			}
+			else
+			{
+				$this->core->db->put(rpv("
+						UPDATE
+							@runbooks_servers
+						SET
+							`name` = !,
+							`flags` = (`flags` & ~0x0001)
+						WHERE
+							`guid` = !
+						LIMIT 1
+					",
+					$server['name'],
+					$res[0][0]
+				));
+
+				$server_id = $res[0][0];
+			}
+		}
+
+		unset($servers);
+
 		$folders = $this->get_folders();
 
 		foreach($folders as &$folder)
@@ -679,6 +765,16 @@ EOT;
 		}
 
 		return $runbook[0];
+	}
+
+	public function get_servers()
+	{
+		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s ORDER BY s.`name`, s.`id`")))
+		{
+			return FALSE;
+		}
+
+		return $servers;
 	}
 
 	public function get_runbook_by_id($id)

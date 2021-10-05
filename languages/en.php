@@ -41,6 +41,8 @@
 		'Permissions'				=> 'Permissions',
 		'ViewJobs'					=> 'View jobs',
 		'UpLevel'					=> 'Up level',
+		'AdvancedSettings'			=> 'Advanced settings',
+		'SelectRunbookServers'		=> 'Select runbook servers (optional)',
 		'Name'						=> 'Name',
 		'CurrentFolder'				=> 'Current folder',
 		'JobsForRunbook'			=> 'Jobs for runbook',

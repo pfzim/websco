@@ -100,11 +100,22 @@ function start_runbook(&$core, $params)
 		exit;
 	}
 
+	$servers_list = '';
+	if(!empty($_POST['servers']))
+	{
+		$delimeter = '';
+		foreach($_POST['servers'] as $value)
+		{
+			$servers_list .= $delimeter.$value;
+			$delimeter = ',';
+		}
+	}
+
 	//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
 
 	log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
 
-	$job_guid = $core->Runbooks->start_runbook($runbook['guid'], $params);
+	$job_guid = $core->Runbooks->start_runbook($runbook['guid'], $params, $servers_list);
 
 	if($job_guid !== FALSE)
 	{

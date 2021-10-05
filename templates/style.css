@@ -345,6 +345,16 @@ body {
     text-decoration-style: dashed;
     background-color: #FAFAFA;
 }
+.spoiler {
+    padding: 10px 0px 10px 0px;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+}
+.spoiler:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: solid;
+}
 .mono {
     font-family: Courier, monospace, fixed;
 }

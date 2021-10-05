@@ -41,6 +41,8 @@
 		'Permissions'				=> 'Разрешения',
 		'ViewJobs'					=> 'Посмотреть задания',
 		'UpLevel'					=> 'Уровень выше',
+		'AdvancedSettings'			=> 'Расширенные настройки',
+		'SelectRunbookServers'		=> 'Выберите серверы для запуска ранбука (не обязательно)',
 		'Name'						=> 'Название',
 		'CurrentFolder'				=> 'Текущая папка',
 		'JobsForRunbook'			=> 'Задания ранбука',
