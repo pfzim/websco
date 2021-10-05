@@ -175,6 +175,22 @@ CREATE TABLE `w_runbooks_params` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `w_runbooks_servers`
+--
+
+DROP TABLE IF EXISTS `w_runbooks_servers`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `w_runbooks_servers` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `w_users`
 --
 
@@ -202,4 +218,4 @@ CREATE TABLE `w_users` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2021-10-01 15:22:09
+-- Dump completed on 2021-10-05 10:36:38

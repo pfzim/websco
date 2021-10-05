@@ -501,6 +501,16 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
 EOT
 ,
 <<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_config` (
   `uid` int(10) unsigned NOT NULL,
   `name` varchar(255) NOT NULL DEFAULT '',
