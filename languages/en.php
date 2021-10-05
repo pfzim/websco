@@ -23,6 +23,7 @@
 		'ResetPasswordBtn'			=> 'Reset password',
 		'MainDescription'			=> 'Alternative web console for Microsoft System Center Orchestrator',
 		'Mail'						=> 'E-Mail address',
+		'FlushMemcached'			=> 'Flush memcached cache table',
 		'AccessRightsManagement'	=> 'Access rights management',
 		'Operations'				=> 'Operations',
 		'Access'					=> 'Access',

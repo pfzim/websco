@@ -23,6 +23,7 @@
 		'ResetPasswordBtn'			=> 'Сбросить пароль',
 		'MainDescription'			=> 'Альтернативный веб интерфейс для Microsoft System Center Orchestrator',
 		'Mail'						=> 'E-Mail адрес',
+		'FlushMemcached'			=> 'Очистить кэш-таблицу memcached',
 		'AccessRightsManagement'	=> 'Управление правами доступа',
 		'Operations'				=> 'Операции',
 		'Access'					=> 'Доступ',

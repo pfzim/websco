@@ -19,7 +19,10 @@
 </pre>
 
 <br />
-<br />
+<?php if(defined('USE_MEMCACHED') && USE_MEMCACHED) { ?>
+<a href="<?php eh('/websco/flush_memcached'); ?>" onclick="return f_async(this);"><?php L('FlushMemcached') ?></a><br />
+<?php } ?>
+
 
 <?php if(!$core->UserAuth->is_ldap_user() && $core->UserAuth->get_id()) { ?>
 <a href="#" onclick="f_show_form('/websco/password_form');"><?php L('ChangePassword') ?></a><br />

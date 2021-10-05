@@ -227,6 +227,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('get_user', 'get_user', TRUE);
 		$core->Router->add_route('save_user', 'save_user', TRUE);
 		$core->Router->add_route('delete_user', 'delete_user', TRUE);
+		$core->Router->add_route('flush_memcached', 'flush_memcached', TRUE);
 	}
 
 	$core->Router->add_route('form_ask_mail_for_reset', 'form_ask_mail_for_reset', TRUE);

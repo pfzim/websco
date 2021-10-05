@@ -4,8 +4,6 @@ function sync_jobs(&$core, $params)
 {
 	$guid = @$params[1];
 
-	header('Content-Type: text/plain; charset=utf-8');
-
 	$runbook_guid = '';
 	if(!empty($guid))
 	{
