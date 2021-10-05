@@ -147,9 +147,9 @@ function f_get_job(guid)
 				el = gi('job_user');
 				el.innerText = data.user;
 				el = gi('job_update');
-				el.setAttribute('onclick', 'f_get_job(\'' + guid + '\');');
+				el.setAttribute('onclick', 'f_get_job(\'' + escapeHtml(guid) + '\');');
 				el = gi('job_restart');
-				el.setAttribute('onclick', 'f_restart_job(\'' + data.runbook_guid + '\', ' + data.id + ');');
+				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_guid) + '\', ' + data.id + ');');
 				gi('job').style.display = 'block';
 				el = gi('job_table_data');
 				el.innerHTML = '';
@@ -165,13 +165,12 @@ function f_get_job(guid)
 						cl = 'status-warn';
 					}
 
-
-					html += '<tr><td>' + LL.InstanceID + ': ' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
+					html += '<tr><td>' + LL.InstanceID + ': ' + escapeHtml(data.instances[i].guid) +'</td><td class="' + cl + '">' + escapeHtml(data.instances[i].status) +'</td></tr>';
 
 					html += '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_in.length; j++)
 					{
-						html += '<tr><td>' + data.instances[i].params_in[j].name +'</td><td>' + data.instances[i].params_in[j].value +'</td></tr>';
+						html += '<tr><td>' + escapeHtml(data.instances[i].params_in[j].name) +'</td><td>' + escapeHtml(data.instances[i].params_in[j].value) +'</td></tr>';
 					}
 					html += '<tr><td colspan="2"><b>' + LL.Activities + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].activities.length; j++)
@@ -189,12 +188,12 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td>' + data.instances[i].activities[j].sequence + '. ' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
+						html += '<tr><td>' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
 					}
 					html += '<tr><td colspan="2"><b>' + LL.OutputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
 					{
-						html += '<tr><td>' + data.instances[i].params_out[j].name +'</td><td><pre>' + data.instances[i].params_out[j].value +'</pre></td></tr>';
+						html += '<tr><td>' + escapeHtml(data.instances[i].params_out[j].name) +'</td><td><pre>' + escapeHtml(data.instances[i].params_out[j].value) +'</pre></td></tr>';
 					}
 				}
 
@@ -474,156 +473,6 @@ function on_received_form(data, form_id)
 		
 		f_append_fields(el, data.fields, form_id, 0);
 		
-		/*
-		for(i = 0; i < data.fields.length; i++)
-		{
-			if(data.fields[i].type == 'hidden')
-			{
-				html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else if(data.fields[i].type == 'list' && data.fields[i].list)
-			{
-				html = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<select class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
-					+ '<option value=""></option>';
-				for(j = 0; j < data.fields[i].list.length; j++)
-				{
-					selected = ''
-					if(data.fields[i].list[j] == data.fields[i].value)
-					{
-						selected = ' selected="selected"'
-					}
-					html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '"' + selected + '>' + escapeHtml(data.fields[i].list[j]) + '</option>';
-				}
-				html += '</select>'
-					+ '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else if(data.fields[i].type == 'flags' && data.fields[i].list)
-			{
-				value = parseInt(data.fields[i].value, 10);
-
-				html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
-				for(j = 0; j < data.fields[i].list.length; j++)
-				{
-					checked = '';
-					if(value & (0x01 << j))
-					{
-						checked = ' checked="checked"';
-					}
-
-					html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"' + checked + '/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
-				}
-				html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else if(data.fields[i].type == 'datetime')
-			{
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-				el.appendChild(wrapper);
-
-				flatpickr(
-					document.getElementById(form_id + data.fields[i].name),
-					{
-						allowInput: true,
-						enableTime: true,
-						time_24hr: true,
-						defaultHour: 0,
-						defaultMinute: 0,
-						dateFormat: "d.m.Y H:i"
-					}
-				);
-			}
-			else if(data.fields[i].type == 'time')
-			{
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-				el.appendChild(wrapper);
-
-				flatpickr(
-					document.getElementById(form_id + data.fields[i].name),
-					{
-						allowInput: true,
-						enableTime: true,
-					    noCalendar: true,
-						time_24hr: true,
-						defaultHour: 0,
-						defaultMinute: 0,
-						dateFormat: "H:i"
-					}
-				);
-			}
-			else if(data.fields[i].type == 'date')
-			{
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-				el.appendChild(wrapper);
-
-				flatpickr(
-					document.getElementById(form_id + data.fields[i].name),
-					{
-						allowInput: true,
-						dateFormat: "d.m.Y"
-					}
-				);
-				/*
-				var picker = new Pikaday({
-					field: document.getElementById(form_id + data.fields[i].name),
-					format: 'DD.MM.YYYY'
-				});
-				* /
-			}
-			else if(data.fields[i].type == 'password')
-			{
-				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="password" value=""/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else
-			{
-				var placeholder = '';
-				if(data.fields[i].placeholder)
-				{
-					placeholder = '" placeholder="' + data.fields[i].placeholder;
-				}
-
-				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + placeholder + '"/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-				
-				if(data.fields[i].autocomplete)
-				{
-					autocomplete_create(gi(form_id + data.fields[i].name), data.fields[i].autocomplete);
-				}
-			}
-		}
-		*/
-
 		html = '<br /><div class="f-right">'
 			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">' + LL.OK + '</button>'
 			+ '&nbsp;'
