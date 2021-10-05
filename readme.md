@@ -14,7 +14,8 @@
 ## Installation
 
 ```
-sudo apt-get install php php-mysql php-ldap php-curl php-xml
+sudo apt-get install apache2 mariadb-server
+sudo apt-get install php php-mysql php-ldap php-curl php-xml libapache2-mod-php
 sudo apt-get install memcached php-memcached
 ```
 
