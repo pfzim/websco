@@ -739,11 +739,14 @@ EOT;
 			{
 				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
 				{
+					$job_date = DateTime::createFromFormat('Y-m-d?H:i:s.v', $job['date'], new DateTimeZone('UTC'));
+					$job_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+
 					$this->core->db->put(rpv("
 							INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
 							VALUES (!, #, !, NULL, 0x0000)
 						",
-						$job['date'],
+						$job_date->format('Y-m-d H:i:s'),
 						$rb[0][0],
 						$job['guid']
 					));
