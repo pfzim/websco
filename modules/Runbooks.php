@@ -656,7 +656,7 @@ EOT;
 					0x0000
 				)))
 				{
-					$folder_id = $core->db->last_id();
+					$folder_id = $this->core->db->last_id();
 				}
 			}
 			else
