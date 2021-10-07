@@ -75,6 +75,10 @@ function get_runbook(&$core, $params)
 		{
 			$field['autocomplete'] = 'complete_mail';
 		}
+		elseif(($param['type'] == 'who'))
+		{
+			continue;
+		}
 
 		if($job_params)
 		{

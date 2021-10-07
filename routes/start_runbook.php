@@ -22,7 +22,12 @@ function start_runbook(&$core, $params)
 	{
 		$value = '';
 
-		if($param['type'] == 'flags')
+		if($param['type'] == 'who')
+		{
+			$params[$param['guid']] = $core->UserAuth->get_login();
+			continue;
+		}
+		elseif($param['type'] == 'flags')
 		{
 			$flags = 0;
 			if(isset($_POST['param'][$param['guid']]))
