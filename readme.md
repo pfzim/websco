@@ -95,6 +95,7 @@ end after / slash:
  - c - field with autocomplete for entering computer name (query LDAP) (computer)
  - m - field with autocomplete for entering e-mail (query LDAP) (mail)
  - f - checkboxes switches (flags)
+ - w - hidden field with login who start runbook in WebSCO (who run)
  - r - the flag means that the parameter is required
 
 You can also use * (asterisk) before the slash to indicate a required parameter.
@@ -162,6 +163,7 @@ AD. При настройке нужно указывать DN групп. Не�
  - a - поле с автодополнением SamAccountName (account)
  - c - поле с автодополнением имени компьютера (computer)
  - m - поле с автодополнением e-mail (mail)
+ - w - скрытое поле будет содержать логин пользователя, который запусил ранбук в WebSCO (who run)
  - r - флаг означает, что параметр обязателен для заполнения (required)
 
 Еще можно использовать * (звёздочку) перед слэшем для обозначения

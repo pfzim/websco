@@ -442,7 +442,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks` (
   `folder_id` int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
-  `description` varchar(1024) NOT NULL,
+  `description` varchar(4096) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`,`guid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
