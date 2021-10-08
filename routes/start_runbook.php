@@ -2,7 +2,7 @@
 
 function start_runbook(&$core, $params, $post_data)
 {
-	$runbook = $core->Runbooks->get_runbook($_POST['guid']);
+	$runbook = $core->Runbooks->get_runbook($post_data['guid']);
 	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
 
 	$result_json = array(
