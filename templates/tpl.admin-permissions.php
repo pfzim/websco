@@ -34,10 +34,10 @@
 						$group_name = &$matches[1];
 					}
 					
-					$group_exist = '<img src="/websco/templates/cross_mark.png" title="Group not found in AD" width="16"/> ';
+					$group_exist = '<img src="/websco/templates/cross_mark.png" title="Group not found in AD" width="13"/> ';
 					if($core->LDAP->search($result, '(&(objectCategory=group)(distinguishedName='.ldap_escape($row['dn'], null, LDAP_ESCAPE_FILTER).'))', array('distinguishedName')) == 1)
 					{
-						$group_exist = '<img src="/websco/templates/check_mark.png" title="Group exists in AD" width="16"/> ';
+						$group_exist = '<img src="/websco/templates/check_mark.png" title="Group exists in AD" width="13"/> ';
 					}
 					?>
 						<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
