@@ -1,6 +1,6 @@
 <?php
 
-function flush_memcached(&$core, $params)
+function flush_memcached(&$core, $params, $post_data)
 {
 	assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// non-priveleged users cannot flush memcached
 

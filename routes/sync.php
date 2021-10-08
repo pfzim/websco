@@ -1,6 +1,6 @@
 <?php
 
-function sync(&$core, $params)
+function sync(&$core, $params, $post_data)
 {
 	header('Content-Type: text/plain; charset=utf-8');
 

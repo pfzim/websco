@@ -1,6 +1,6 @@
 <?php
 
-function list_jobs(&$core, $params)
+function list_jobs(&$core, $params, $post_data)
 {
 	$guid = @$params[1];
 

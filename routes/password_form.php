@@ -1,6 +1,6 @@
 <?php
 
-function password_form(&$core, $params)
+function password_form(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,

@@ -1,6 +1,6 @@
 <?php
 
-function reset_send_mail(&$core, $params)
+function reset_send_mail(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,
@@ -8,7 +8,7 @@ function reset_send_mail(&$core, $params)
 		'errors' => array()
 	);
 
-	$mail = @$_POST['mail'];
+	$mail = @$post_data['mail'];
 	$user_id = 0;
 
 	if(empty($mail))

@@ -1,6 +1,6 @@
 <?php
 
-function expand(&$core, $params)
+function expand(&$core, $params, $post_data)
 {
 	if(!isset($params[1]))
 	{

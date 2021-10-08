@@ -1,6 +1,6 @@
 <?php
 
-function get_permission(&$core, $params)
+function get_permission(&$core, $params, $post_data)
 {
 	$id = @$params[1];
 

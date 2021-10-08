@@ -1,6 +1,6 @@
 <?php
 
-function form_ask_mail_for_reset(&$core, $params)
+function form_ask_mail_for_reset(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,

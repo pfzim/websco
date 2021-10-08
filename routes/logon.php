@@ -1,8 +1,8 @@
 <?php
 
-function logon(&$core, $params)
+function logon(&$core, $params, $post_data)
 {
-	if(!$core->UserAuth->logon(@$_POST['login'], @$_POST['passwd']))
+	if(!$core->UserAuth->logon(@$post_data['login'], @$post_data['passwd']))
 	{
 		$error_msg = LL('InvalidUserPasswd');
 		include(TEMPLATES_DIR.'tpl.login.php');

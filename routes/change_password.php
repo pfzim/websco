@@ -1,6 +1,6 @@
 <?php
 
-function change_password(&$core, $params)
+function change_password(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,
@@ -8,9 +8,9 @@ function change_password(&$core, $params)
 		'errors' => array()
 	);
 
-	$old_password = @$_POST['old_password'];
-	$new_password = @$_POST['new_password'];
-	$new_password2 = @$_POST['new_password2'];
+	$old_password = @$post_data['old_password'];
+	$new_password = @$post_data['new_password'];
+	$new_password2 = @$post_data['new_password2'];
 
 	if($core->UserAuth->is_ldap_user() || !$core->UserAuth->get_id())
 	{

@@ -1,6 +1,6 @@
 <?php
 
-function get_user(&$core, $params)
+function get_user(&$core, $params, $post_data)
 {
 	$user_id = intval(@$params[1]);
 

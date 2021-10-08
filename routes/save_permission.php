@@ -1,6 +1,6 @@
 <?php
 
-function save_permission(&$core, $params)
+function save_permission(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,
@@ -8,16 +8,16 @@ function save_permission(&$core, $params)
 		'errors' => array()
 	);
 
-	$v_id = intval(@$_POST['id']);
-	$v_pid = intval(@$_POST['pid']);
-	$v_dn = trim(@$_POST['dn']);
+	$v_id = intval(@$post_data['id']);
+	$v_pid = intval(@$post_data['pid']);
+	$v_dn = trim(@$post_data['dn']);
 	$v_allow = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0";
-	$v_apply_to_childs = intval(@$_POST['apply_to_childs'][0]) || intval(@$_POST['apply_to_childs'][1]);
-	$v_replace_childs = intval(@$_POST['apply_to_childs'][1]);
+	$v_apply_to_childs = intval(@$post_data['apply_to_childs'][0]) || intval(@$post_data['apply_to_childs'][1]);
+	$v_replace_childs = intval(@$post_data['apply_to_childs'][1]);
 
-	if(isset($_POST['allow_bits']))
+	if(isset($post_data['allow_bits']))
 	{
-		foreach($_POST['allow_bits'] as $bit => $bit_value)
+		foreach($post_data['allow_bits'] as $bit => $bit_value)
 		{
 			if(intval($bit_value))
 			{

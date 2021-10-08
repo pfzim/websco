@@ -122,13 +122,13 @@ function exception_handler_ajax($exception)
 	$core->UserAuth->set_bits_representation('lx');
 
 	$path = '';
+	$data = NULL;
 
 	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
 	{
 		$user = '';
 		$password = '';
 		$token = '';
-		$path = '';
 		
 		$i = 1;
 		while($i < ($argc-1))
@@ -153,6 +153,11 @@ function exception_handler_ajax($exception)
 				case '--path':
 					{
 						$path = $argv[$i+1];
+					}
+					break;
+				case '--data':
+					{
+						parse_str($argv[$i+1], $data);
 					}
 					break;
 				default:
@@ -185,7 +190,8 @@ function exception_handler_ajax($exception)
 	}
 	elseif(isset($_GET['path']))
 	{
-		$path = $_GET['path'];
+		$path = &$_GET['path'];
+		$data = &$_POST;
 	}
 
 	$core->Router->set_exception_handler_regular('exception_handler');
@@ -236,4 +242,4 @@ function exception_handler_ajax($exception)
 	$core->Router->add_route('reset_password', 'reset_password');
 	$core->Router->add_route('form_reset_password', 'form_reset_password');
 
-	$core->Router->process($path);
+	$core->Router->process($path, $data);

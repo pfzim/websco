@@ -1,6 +1,6 @@
 <?php
 
-function sync_jobs(&$core, $params)
+function sync_jobs(&$core, $params, $post_data)
 {
 	$guid = @$params[1];
 

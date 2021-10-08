@@ -1,6 +1,6 @@
 <?php
 
-function list_users(&$core, $params)
+function list_users(&$core, $params, $post_data)
 {
 	if(!$core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE))
 	{

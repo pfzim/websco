@@ -54,7 +54,7 @@ class Router
 		$this->exception_handler_ajax = $function;
 	}
 
-	public function process($uri)
+	public function process($uri, $post_data)
 	{
 		$params = explode('/', $uri);
 
@@ -100,6 +100,6 @@ class Router
 			require_once($filepath);
 		}
 
-		call_user_func_array($route['func'], array(&$this->core, $params));
+		call_user_func_array($route['func'], array(&$this->core, $params, $post_data));
 	}
 }

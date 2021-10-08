@@ -1,6 +1,6 @@
 <?php
 
-function list_folder(&$core, $params)
+function list_folder(&$core, $params, $post_data)
 {
 	if(!empty($params[1]))
 	{

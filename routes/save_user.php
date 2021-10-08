@@ -1,6 +1,6 @@
 <?php
 
-function save_user(&$core, $params)
+function save_user(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,
@@ -10,9 +10,9 @@ function save_user(&$core, $params)
 
 	assert_permission_ajax(0, RB_ACCESS_EXECUTE);
 
-	$user_id = intval(@$_POST['id']);
-	$login = @$_POST['login'];
-	$mail = @$_POST['mail'];
+	$user_id = intval(@$post_data['id']);
+	$login = @$post_data['login'];
+	$mail = @$post_data['mail'];
 
 	if(empty($login))
 	{
@@ -38,7 +38,7 @@ function save_user(&$core, $params)
 	else
 	{
 		$result_json['code'] = 1;
-		$result_json['message'] = LL('UnknownError');
+		$result_json['message'] = LL('Error').': '.$core->get_last_error();
 	}
 
 	//log_file('Password changed: '.json_encode($result_json, JSON_UNESCAPED_UNICODE));

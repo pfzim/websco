@@ -298,7 +298,8 @@ class UserAuth
 
 		if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
 		{
-			return ($affected > 0);
+			//return ($affected > 0);
+			return TRUE;
 		}
 
 		return FALSE;
@@ -324,7 +325,8 @@ class UserAuth
 		{
 			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid), $affected))
 			{
-				return ($affected > 0);
+				//return ($affected > 0);
+				return TRUE;
 			}
 		}
 
@@ -374,7 +376,8 @@ class UserAuth
 		{
 			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail, $uid), $affected))
 			{
-				return ($affected > 0);
+				//return ($affected > 0);
+				return TRUE;
 			}
 		}
 		else
@@ -385,6 +388,10 @@ class UserAuth
 				{
 					return TRUE;
 				}
+			}
+			else
+			{
+				$this->core->error_ex('User or mail already exist!', $this->rise_exception);
 			}
 		}
 
@@ -399,7 +406,8 @@ class UserAuth
 		{
 			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | 0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
 			{
-				return ($affected > 0);
+				//return ($affected > 0);
+				return TRUE;
 			}
 		}
 

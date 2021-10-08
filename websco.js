@@ -637,7 +637,7 @@ function f_delete(ev, action)
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
 	f_http(
-		'/websco/' + action + '/' + id,
+		'/websco/' + action,
 		function(data, el)
 		{
 			gi('loading').style.display = 'none';
@@ -648,7 +648,9 @@ function f_delete(ev, action)
 				row.parentNode.removeChild(row);
 			}
 		},
-		el_src
+		el_src,
+		'application/x-www-form-urlencoded',
+		json2url({id: id})
 	);
 }
 
@@ -684,7 +686,7 @@ function f_async_ex(url)
 	return false;
 }
 
-function f_show_hide(url)
+function f_show_hide(url, id)
 {
 	gi('loading').style.display = 'block';
 	f_http(
@@ -698,7 +700,9 @@ function f_show_hide(url)
 				f_get_perms(data.id);
 			}
 		},
-		null
+		null,
+		'application/x-www-form-urlencoded',
+		json2url({id: id})
 	);
 
 	return false;
@@ -752,12 +756,12 @@ function f_get_perms(id)
 					if(data.flags & 0x0002)
 					{
 						el.innerText = 'Show folder in list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/show_folder/' + data.id + '\');');
+						el.setAttribute('onclick', 'f_show_hide(\'/websco/show_folder\'' + data.id + ');');
 					}
 					else
 					{
 						el.innerText = 'Hide folder from list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/hide_folder/' + data.id + '\');');
+						el.setAttribute('onclick', 'f_show_hide(\'/websco/hide_folder\'' + data.id + ');');
 					}
 					el.style.display = 'inline';
 				}

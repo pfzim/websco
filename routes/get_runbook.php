@@ -1,6 +1,6 @@
 <?php
 
-function get_runbook(&$core, $params)
+function get_runbook(&$core, $params, $post_data)
 {
 	$guid = @$params[1];
 	$job_id = @$params[2];

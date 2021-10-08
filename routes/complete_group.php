@@ -1,8 +1,8 @@
 <?php
 
-function complete_group(&$core, $params)
+function complete_group(&$core, $params, $post_data)
 {
-	$search = @$_POST['search'];
+	$search = @$post_data['search'];
 
 	$result_json = array(
 		'code' => 0,

@@ -1,6 +1,6 @@
 <?php
 
-function start_runbook(&$core, $params)
+function start_runbook(&$core, $params, $post_data)
 {
 	$runbook = $core->Runbooks->get_runbook($_POST['guid']);
 	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
@@ -16,7 +16,7 @@ function start_runbook(&$core, $params)
 
 	$runbook_params = $core->Runbooks->get_runbook_params($runbook['guid']);
 
-	//log_file(json_encode($_POST, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+	//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
 	foreach($runbook_params as &$param)
 	{
@@ -30,9 +30,9 @@ function start_runbook(&$core, $params)
 		elseif($param['type'] == 'flags')
 		{
 			$flags = 0;
-			if(isset($_POST['param'][$param['guid']]))
+			if(isset($post_data['param'][$param['guid']]))
 			{
-				foreach($_POST['param'][$param['guid']] as $bit => $bit_value)
+				foreach($post_data['param'][$param['guid']] as $bit => $bit_value)
 				{
 					if(intval($bit_value))
 					{
@@ -54,9 +54,9 @@ function start_runbook(&$core, $params)
 			//log_file('Value: '.strval($flags));
 			continue;
 		}
-		elseif(isset($_POST['param'][$param['guid']]))
+		elseif(isset($post_data['param'][$param['guid']]))
 		{
-			$value = trim($_POST['param'][$param['guid']]);
+			$value = trim($post_data['param'][$param['guid']]);
 		}
 
 		if($param['required'] && $value == '')
@@ -106,10 +106,10 @@ function start_runbook(&$core, $params)
 	}
 
 	$servers_list = '';
-	if(!empty($_POST['servers']))
+	if(!empty($post_data['servers']))
 	{
 		$delimeter = '';
-		foreach($_POST['servers'] as $value)
+		foreach($post_data['servers'] as $value)
 		{
 			$servers_list .= $delimeter.$value;
 			$delimeter = ',';

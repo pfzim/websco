@@ -1,11 +1,11 @@
 <?php
 
-function reset_password(&$core, $params)
+function reset_password(&$core, $params, $post_data)
 {
-	$new_password = @$_POST['new_password'];
-	$new_password2 = @$_POST['new_password2'];
-	$user_id = intval(@$_POST['uid']);
-	$reset_token = @$_POST['reset_token'];
+	$new_password = @$post_data['new_password'];
+	$new_password2 = @$post_data['new_password2'];
+	$user_id = intval(@$post_data['uid']);
+	$reset_token = @$post_data['reset_token'];
 
 	if(empty($reset_token))
 	{
