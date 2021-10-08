@@ -33,10 +33,16 @@
 					{
 						$group_name = &$matches[1];
 					}
+					
+					$group_exist = '<img src="/websco/templates/cross_mark.png" title="Group not found in AD" width="16"/> ';
+					if($core->LDAP->search($result, '(&(objectCategory=group)(distinguishedName='.ldap_escape($row['dn'], null, LDAP_ESCAPE_FILTER).'))', array('distinguishedName')) == 1)
+					{
+						$group_exist = '<img src="/websco/templates/check_mark.png" title="Group exists in AD" width="16"/> ';
+					}
 					?>
 						<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
 							<td><?php eh($row['id']); ?></td>
-							<td><?php eh($group_name); ?></td>
+							<td><?php echo $group_exist; eh($group_name); ?></td>
 							<td class="mono"><?php eh($core->UserAuth->permissions_to_string($row['allow_bits'])); ?></td>
 							<td>
 								<span class="command" onclick="f_show_form('<?php eh('/websco/get_permission/'.$row['id']); ?>');"><?php L('Edit') ?></span>

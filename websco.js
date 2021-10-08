@@ -756,12 +756,12 @@ function f_get_perms(id)
 					if(data.flags & 0x0002)
 					{
 						el.innerText = 'Show folder in list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/show_folder\'' + data.id + ');');
+						el.setAttribute('onclick', 'f_show_hide(\'/websco/show_folder\', ' + data.id + ');');
 					}
 					else
 					{
 						el.innerText = 'Hide folder from list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/hide_folder\'' + data.id + ');');
+						el.setAttribute('onclick', 'f_show_hide(\'/websco/hide_folder\', ' + data.id + ');');
 					}
 					el.style.display = 'inline';
 				}
