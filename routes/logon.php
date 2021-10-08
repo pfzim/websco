@@ -19,5 +19,12 @@ function logon(&$core, $params, $post_data)
 	}
 	*/
 
-	header('Location: /websco/');
+	if(!empty($post_data['return']))
+	{
+		header('Location: '.$post_data['return']);
+	}
+	else
+	{
+		header('Location: /websco/');
+	}
 }

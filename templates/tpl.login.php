@@ -2,6 +2,7 @@
 			<div class="login-block">
 				<h1><?php L('LoginHdr') ?></h1>
 				<form action="<?php eh('/websco/logon'); ?>" method="post">
+					<input name="return" type="hidden" value="<?php eh($_SERVER['REQUEST_URI']); ?>"/><br />
 					<?php L('UserName') ?>
 					<input name="login" type="text" autofocus="autofocus" placeholder="domain\user_name"/><br />
 					<?php L('Password') ?>
