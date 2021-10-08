@@ -28,6 +28,7 @@ function new_permission(&$core, $params)
 				'title' => LL('GroupDN').'*',
 				'value' => '',
 				'placeholder' => 'CN=WebSCO access group,OU=Access groups,DC=domain,DC=local',
+				'autocomplete' => 'complete_group'
 			),
 			array(
 				'type' => 'flags',

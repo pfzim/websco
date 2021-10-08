@@ -221,6 +221,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('complete_account', 'complete_account', TRUE);
 		$core->Router->add_route('complete_computer', 'complete_computer', TRUE);
 		$core->Router->add_route('complete_mail', 'complete_mail', TRUE);
+		$core->Router->add_route('complete_group', 'complete_group', TRUE);
 		$core->Router->add_route('change_password', 'change_password', TRUE);
 		$core->Router->add_route('password_form', 'password_form', TRUE);
 		$core->Router->add_route('list_users', 'list_users');
