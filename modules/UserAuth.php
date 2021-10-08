@@ -42,7 +42,7 @@ class UserAuth
 	private $login = NULL;				/// sAMAccountName, zl cookie
 	private $token = NULL;				/// zh cookie
 	private $flags = 0;
-	
+
 	private $salt = 'UserAuth';
 
 	private $ldap = NULL;
@@ -254,13 +254,13 @@ class UserAuth
 			// Extend cookie life time
 			setcookie('zh', $this->token, time() + 2592000, '/');
 			setcookie('zl', $this->login, time() + 2592000, '/');
-			
+
 			return TRUE;
 		}
 
 		return FALSE;
 	}
-	
+
 	public function logoff()
 	{
 		$_SESSION['uid'] = 0;
@@ -608,6 +608,8 @@ class UserAuth
 				if($this->ldap->search($records, '(&(objectClass=user)(objectCategory=person)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
 				{
 					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[1]);
+
+					//log_file('Object: '.$object_id.', Group: '.$row[0].', Perm: '.$this->permissions_to_string($this->rights[$object_id]));
 					/*
 					for($i = 0; $i <= ((int) ($this->max_bits / 8)); $i++)
 					{
@@ -660,6 +662,8 @@ class UserAuth
 		}
 
 		$level--;
+
+		//log_file('Object: '.$object_id.', Level: '.$level.', Perm: '.$this->permissions_to_string($this->rights[$object_id]).', Result: '.((ord($this->rights[$object_id][(int) ($level / 8)]) >> ($level % 8)) & 0x01).': '.(($level % 8)));
 		return ((ord($this->rights[$object_id][(int) ($level / 8)]) >> ($level % 8)) & 0x01);
 	}
 
