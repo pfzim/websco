@@ -33,7 +33,7 @@ function get_permission(&$core, $params)
 				'name' => 'dn',
 				'title' => LL('GroupDN').'*',
 				'value' => $permission[0]['dn'],
-				'placeholder' => 'CN=WebSCO access group,OU=Access groups,DC=domain,DC=local'
+				'placeholder' => 'CN=WebSCO access group,OU=Access groups,DC=domain,DC=local',
 				'autocomplete' => 'complete_group'
 			),
 			array(
