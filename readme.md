@@ -126,6 +126,15 @@ the download to finish without interrupting or restarting it.
 
 ###Access rights management
 
+Local users are administrators and have access to all sections, can run all
+runbooks and manage access rights.
+
+Domain users who have access to the Root level with Execute rights are
+administrators of access rights.
+
+Local Administrators and Users with access to Root Level with Execute rights
+see hidden folders.
+
 ## Description (RU)
 
 Плюсы по сравнению со стандартной консолью:
