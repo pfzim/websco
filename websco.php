@@ -100,6 +100,22 @@ function L($key)
 	eh(LL($key));
 }
 
+if(function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+{
+	$g_link_prefix = '/websco/';
+}
+else
+{
+	$g_link_prefix = 'websco.php?path=';
+}
+
+function ln($path)
+{
+	global $g_link_prefix;
+
+	eh($g_link_prefix.$path);
+}
+
 function exception_handler($exception)
 {
 	$error_msg = 'Exception: File: '.$exception->getFile().'['.$exception->getLine().']: '.$exception->getMessage().' Trace: '.$exception->getTraceAsString();

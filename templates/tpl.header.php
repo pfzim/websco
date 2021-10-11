@@ -19,16 +19,16 @@
 	<body>
 		<ul class="menu-bar">
 			<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="<?php eh('/websco/list_folder'); ?>"><?php L('Runbooks') ?></a></li>
-				<li><a href="<?php eh('/websco/list_tools'); ?>"><?php L('Tools') ?></a></li>
-				<li><a href="<?php eh('/websco/permissions'); ?>"><?php L('Permissions') ?></a></li>
-				<li><a href="<?php eh('/websco/list_users'); ?>"><?php L('Users') ?></a></li>
+				<li><a href="<?php ln('list_folder'); ?>"><?php L('Runbooks') ?></a></li>
+				<li><a href="<?php ln('list_tools'); ?>"><?php L('Tools') ?></a></li>
+				<li><a href="<?php ln('permissions'); ?>"><?php L('Permissions') ?></a></li>
+				<li><a href="<?php ln('list_users'); ?>"><?php L('Users') ?></a></li>
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
 				<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="/websco/logoff"><?php L('Logout') ?></a></li>
+				<li><a href="<?php ln('logoff'); ?>"><?php L('Logout') ?></a></li>
 				<?php } else { ?>
-				<li><a href="/websco/login"><?php L('LoginBtn') ?></a></li>
+				<li><a href="<?php ln('login'); ?>"><?php L('LoginBtn') ?></a></li>
 				<?php } ?>
 			</ul>
 		</ul>
