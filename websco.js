@@ -591,6 +591,10 @@ function on_saved(action, data)
 	{
 		window.location = window.location;
 	}
+	else if(action == 'register_user')
+	{
+		f_msg(data.message);
+	}
 }
 
 function f_notify(text, type)

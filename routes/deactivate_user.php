@@ -18,6 +18,6 @@ function deactivate_user(&$core, $params, $post_data)
 		return;
 	}
 
-	log_db('Deleted user', '{id='.$user_id.'}', 0);
+	log_db('Deactivated user', '{id='.$user_id.'}', 0);
 	echo '{"code": 0, "id": '.$user_id.', "message": "'.LL('UserDeactivated').'"}';
 }
