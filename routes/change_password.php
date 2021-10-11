@@ -14,7 +14,7 @@ function change_password(&$core, $params, $post_data)
 
 	if($core->UserAuth->is_ldap_user() || !$core->UserAuth->get_id())
 	{
-		throw new Exception('Something gone wrong. User in not logging in or user not local!');
+		throw new Exception('Something gone wrong. User is not logging in or user not local!');
 	}
 
 	if(empty($old_password))

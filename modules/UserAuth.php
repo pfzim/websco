@@ -648,6 +648,11 @@ class UserAuth
 	{
 		$object_id = intval($object_id);
 
+		if(!$this->uid)
+		{
+			return FALSE;  /// Not logged in user always return FALSE
+		}
+
 		if($this->uid && !$this->is_ldap_user())
 		{
 			return TRUE;  /// Internal user is always admin
