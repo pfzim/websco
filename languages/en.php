@@ -86,5 +86,15 @@
 		'forUser'					=> 'for user',
 		'CreatedJob'				=> 'Created job',
 		'AddPermission'				=> 'Add permission group',
+		'ApproveNewUser'			=> 'Approve new registered user',
+		'Approve'					=> 'Approve',
+		'UserApproved'				=> 'User approved!',
+		'ApproveRequestSubject'		=> 'New user approve request',
+		'UserRegistered'			=> 'Request was registered. Please wait for approve',
+		'Activate'					=> 'Activate',
+		'Deactivate'				=> 'Deactivate',
+		'UserActivated'				=> 'User activated',
+		'UserDeactivated'			=> 'User deactivated',
+		'WelcomeSubject'			=> 'Welcome to WebSCO',
 		'Loading'					=> 'Loading, please wait...'
 	);

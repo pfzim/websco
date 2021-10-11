@@ -217,7 +217,6 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('hide_folder', 'hide_folder', TRUE);
 		$core->Router->add_route('list_jobs', 'list_jobs');
 		$core->Router->add_route('list_tools', 'list_tools');
-		$core->Router->add_route('logoff', 'logoff');
 		$core->Router->add_route('permissions', 'permissions');
 		$core->Router->add_route('save_permission', 'save_permission', TRUE);
 		$core->Router->add_route('show_folder', 'show_folder', TRUE);
@@ -233,13 +232,19 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('list_users', 'list_users');
 		$core->Router->add_route('get_user', 'get_user', TRUE);
 		$core->Router->add_route('save_user', 'save_user', TRUE);
-		$core->Router->add_route('delete_user', 'delete_user', TRUE);
+		$core->Router->add_route('deactivate_user', 'deactivate_user', TRUE);
+		$core->Router->add_route('activate_user', 'activate_user', TRUE);
+		$core->Router->add_route('approve', 'approve');
+		$core->Router->add_route('form_approve', 'form_approve');
 		$core->Router->add_route('flush_memcached', 'flush_memcached', TRUE);
 	}
 
+	$core->Router->add_route('logoff', 'logoff');
 	$core->Router->add_route('form_ask_mail_for_reset', 'form_ask_mail_for_reset', TRUE);
 	$core->Router->add_route('reset_send_mail', 'reset_send_mail', TRUE);
 	$core->Router->add_route('reset_password', 'reset_password');
 	$core->Router->add_route('form_reset_password', 'form_reset_password');
+	$core->Router->add_route('form_register', 'form_register');
+	$core->Router->add_route('register_user', 'register_user');
 
 	$core->Router->process($path, $data);

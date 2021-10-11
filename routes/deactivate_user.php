@@ -1,6 +1,6 @@
 <?php
 
-function delete_user(&$core, $params, $post_data)
+function deactivate_user(&$core, $params, $post_data)
 {
 	$user_id = intval(@$post_data['id']);
 
@@ -12,12 +12,12 @@ function delete_user(&$core, $params, $post_data)
 		return;
 	}
 
-	if(!$core->UserAuth->delete_user_ex($user_id))
+	if(!$core->UserAuth->deactivate_user_ex($user_id))
 	{
-		echo '{"code": 1, "message": "Failed delete"}';
+		echo '{"code": 1, "message": "Failed deactivate"}';
 		return;
 	}
 
 	log_db('Deleted user', '{id='.$user_id.'}', 0);
-	echo '{"code": 0, "id": '.$user_id.', "message": "'.LL('UserDeleted').'"}';
+	echo '{"code": 0, "id": '.$user_id.', "message": "'.LL('UserDeactivated').'"}';
 }

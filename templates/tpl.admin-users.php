@@ -23,7 +23,11 @@
 					<td><?php eh($row['mail']); ?></td>
 					<td>
 						<span class="command" onclick="f_show_form('<?php eh('/websco/get_user/'.$row['id']); ?>');"><?php L('Edit') ?></span>
-						<span class="command" onclick="f_delete_user(event);"><?php L('Delete') ?></span>
+						<?php if($row['flags'] & 0x0001) { ?>
+						<span class="command" onclick="f_activate_user(event);"><?php L('Activate') ?></span>
+						<?php } else { ?>
+						<span class="command" onclick="f_deactivate_user(event);"><?php L('Deactivate') ?></span>
+						<?php } ?>
 					</td>
 				</tr>
 			<?php } ?>

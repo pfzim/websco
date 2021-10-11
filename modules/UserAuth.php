@@ -114,6 +114,8 @@ class UserAuth
 
 	public function logon($login, $passwd)
 	{
+		$this->logoff();
+
 		if(empty($login) || empty($passwd))
 		{
 			$this->core->error_ex('Empty login or password!', $this->rise_exception);
@@ -263,12 +265,16 @@ class UserAuth
 
 	public function logoff()
 	{
+		if($this->uid)
+		{
+			$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->uid));
+		}
+
 		$_SESSION['uid'] = 0;
 		setcookie('zh', NULL, time() - 60, '/');
 		setcookie('zl', NULL, time() - 60, '/');
 
 		$this->loaded = FALSE;
-		$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->uid));
 		$this->uid = 0;
 		$this->flags = 0;
 		$this->login = NULL;
@@ -398,13 +404,29 @@ class UserAuth
 		return FALSE;
 	}
 
-	public function delete_user_ex($uid)
+	public function deactivate_user_ex($uid)
 	{
 		$affected = 0;
 
 		if($uid)
 		{
 			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | 0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
+			{
+				//return ($affected > 0);
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
+	public function activate_user_ex($uid)
+	{
+		$affected = 0;
+
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` & ~0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
 			{
 				//return ($affected > 0);
 				return TRUE;
@@ -478,6 +500,22 @@ class UserAuth
 		$this->flags = intval($result[0][2]);
 
 		return TRUE;
+	}
+
+	public function get_user_info_ex($uid)
+	{
+		if(!$this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`login`, u.`sid`, u.`mail`, u.`flags` FROM @users AS u WHERE u.`id` = # LIMIT 1', $uid)))
+		{
+			return FALSE;
+		}
+
+		return array(
+			'id' => $result[0][0],
+			'login' => $result[0][1],
+			'sid' => $result[0][2],
+			'mail' => $result[0][3],
+			'flags' => intval($result[0][4])
+		);
 	}
 
 	public function get_id()

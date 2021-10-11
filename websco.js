@@ -631,24 +631,40 @@ function f_msg(text)
 	return false;
 }
 
-function f_delete(ev, action)
+function on_action_success(el, action, data)
+{
+	if(action == 'deactivate_user')
+	{
+		window.location = window.location;
+	}
+	else if(action == 'activate_user')
+	{
+		window.location = window.location;
+	}
+	else
+	{
+		var row = el.parentNode.parentNode;
+		row.parentNode.removeChild(row);
+	}
+}
+
+function f_call_action(ev, action)
 {
 	gi('loading').style.display = 'block';
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
 	f_http(
 		'/websco/' + action,
-		function(data, el)
+		function(data, params)
 		{
 			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
-				var row = el.parentNode.parentNode;
-				row.parentNode.removeChild(row);
+				on_action_success(params.el, params.action, data);
 			}
 		},
-		el_src,
+		{el: el_src, action: action},
 		'application/x-www-form-urlencoded',
 		json2url({id: id})
 	);
@@ -656,12 +672,17 @@ function f_delete(ev, action)
 
 function f_delete_perm(ev)
 {
-	f_delete(ev, 'delete_permission');
+	f_call_action(ev, 'delete_permission');
 }
 
-function f_delete_user(ev)
+function f_deactivate_user(ev)
 {
-	f_delete(ev, 'delete_user');
+	f_call_action(ev, 'deactivate_user');
+}
+
+function f_activate_user(ev)
+{
+	f_call_action(ev, 'activate_user');
 }
 
 function f_async(a)
