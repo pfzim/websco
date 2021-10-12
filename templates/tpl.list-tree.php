@@ -21,7 +21,7 @@ function print_folders_tree($location, &$current_folder_guid, $folders, $is_admi
 	}
 }
 
-function print_folders_tree_id($location, &$current_folder_id, $folders)
+function print_folders_tree_id($location, &$current_folder_id, $folders, $is_admin = FALSE)
 {
 	if($folders)
 	{
@@ -29,10 +29,13 @@ function print_folders_tree_id($location, &$current_folder_id, $folders)
 
 		foreach($folders as &$folder)
 		{
-			?><li><a<?php if($folder['id'] === $current_folder_id) { echo ' class="active"'; } else if($folder['flags'] & 0x0002) { echo ' class="disabled"'; } ?> href="/websco/<?php eh($location); ?>/<?php eh($folder['id']); ?>"><?php eh($folder['name']); ?></a><?php
-			print_folders_tree_id($location, $current_folder_id, $folder['childs']);
+			if((($folder['flags'] & 0x0002) == 0) || $is_admin)
+			{
+				?><li><a<?php if($folder['id'] === $current_folder_id) { echo ' class="active"'; } else if($folder['flags'] & 0x0002) { echo ' class="disabled"'; } ?> href="/websco/<?php eh($location); ?>/<?php eh($folder['id']); ?>"><?php eh($folder['name']); ?></a><?php
+				print_folders_tree_id($location, $current_folder_id, $folder['childs'], $is_admin);
 
-			echo '</li>';
+				echo '</li>';
+			}
 		}
 
 		echo '</ul>';

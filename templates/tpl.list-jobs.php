@@ -3,7 +3,7 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree('list_folder', $current_folder['guid'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
+		<?php print_folders_tree_id('list_folder', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php eh('/websco/sync_jobs/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
@@ -23,7 +23,7 @@
 					<tr>
 						<td><?php eh($i); ?>.</td>
 						<td><?php eh($row['run_date']); ?></td>
-						<td><a href="<?php eh('/websco/get_job'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a></td>
+						<td><a href="<?php eh('/websco/get_job/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a></td>
 						<td><?php eh($row['login']); ?></td>
 						<td><a href="<?php eh('/websco/get_runbook/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a></td>
 					</tr>

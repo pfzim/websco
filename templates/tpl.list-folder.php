@@ -3,7 +3,7 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree('list_folder', $current_folder['guid'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
+		<?php print_folders_tree_id('list_folder', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder['name']); ?></h3>
@@ -22,7 +22,7 @@
 						<td><?php eh($i); ?>.</td>
 						<td><a href="<?php eh('/websco/get_runbook/'.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
 						<td>
-							<a href="<?php eh('/websco/list_jobs/'.$row['guid']); ?>"><?php L('ViewJobs') ?></a>
+							<a href="<?php eh('/websco/list_jobs/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
 						</td>
 					</tr>
 				<?php } ?>

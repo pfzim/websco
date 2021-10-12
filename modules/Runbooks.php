@@ -759,6 +759,17 @@ EOT;
 		return $total;
 	}
 
+	public function get_runbook_by_id($id)
+	{
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
+		{
+			$this->core->error('Runbook '.$guid.' not found!');
+			return FALSE;
+		}
+
+		return $runbook[0];
+	}
+
 	public function get_runbook($guid)
 	{
 		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $guid)))
@@ -778,17 +789,6 @@ EOT;
 		}
 
 		return $servers;
-	}
-
-	public function get_runbook_by_id($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, r.`name`, r.`description` FROM @runbooks AS r WHERE r.`id` = ! LIMIT 1", $id)))
-		{
-			$this->core->error('Runbook '.$guid.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
 	}
 
 	public function get_job($guid)

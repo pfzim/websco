@@ -3,7 +3,7 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree_id('permissions', $current_folder['id'], $folders_tree) ?>
+		<?php print_folders_tree_id('permissions', $current_folder['id'], $folders_tree, TRUE) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>

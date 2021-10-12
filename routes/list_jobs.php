@@ -2,7 +2,7 @@
 
 function list_jobs(&$core, $params, $post_data)
 {
-	$guid = @$params[1];
+	$id = @$params[1];
 
 	if(isset($params[2]))
 	{
@@ -13,7 +13,7 @@ function list_jobs(&$core, $params, $post_data)
 		$offset = 0;
 	}
 	
-	$runbook = $core->Runbooks->get_runbook($guid);
+	$runbook = $core->Runbooks->get_runbook_by_id($id);
 
 	if(!$core->UserAuth->check_permission($runbook['folder_id'], RB_ACCESS_EXECUTE))
 	{
@@ -23,6 +23,7 @@ function list_jobs(&$core, $params, $post_data)
 	}
 
 	$current_folder = array(
+		'id' => $runbook['folder_id'],
 		'guid' => $runbook['folder_guid']
 	);
 
