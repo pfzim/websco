@@ -12,7 +12,7 @@
 					<?php } ?>
 					<input type="submit" value="<?php L('LoginBtn') ?>" /><br />
 				</form>
-				<a href="<?php ln('form_register') ?>" onclick="return f_show_form(this.href);"><?php L('Register') ?></a> &VerticalSeparator; <a href="<?php ln('form_ask_mail_for_reset') ?>" onclick="return f_show_form(this.href);"><?php L('ResetPasswordBtn') ?></a><br />
+				<a href="<?php ln('register_form') ?>" onclick="return f_show_form(this.href);"><?php L('Register') ?></a> &VerticalSeparator; <a href="<?php ln('reset_password_send_form') ?>" onclick="return f_show_form(this.href);"><?php L('ResetPasswordBtn') ?></a><br />
 			</div>
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

@@ -231,45 +231,55 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
-		$core->Router->add_route('list_folder', 'list_folder');						// default route
-		$core->Router->add_route('delete_permission', 'delete_permission', TRUE);
-		$core->Router->add_route('expand', 'expand', TRUE);
-		$core->Router->add_route('get_job', 'get_job', TRUE);
-		$core->Router->add_route('get_permission', 'get_permission', TRUE);
-		$core->Router->add_route('new_permission', 'new_permission', TRUE);
-		$core->Router->add_route('get_permissions', 'get_permissions');
-		$core->Router->add_route('get_runbook', 'get_runbook', TRUE);
-		$core->Router->add_route('hide_folder', 'hide_folder', TRUE);
-		$core->Router->add_route('list_jobs', 'list_jobs');
-		$core->Router->add_route('list_tools', 'list_tools');
-		$core->Router->add_route('permissions', 'permissions');
-		$core->Router->add_route('save_permission', 'save_permission', TRUE);
-		$core->Router->add_route('show_folder', 'show_folder', TRUE);
-		$core->Router->add_route('start_runbook', 'start_runbook', TRUE);
-		$core->Router->add_route('sync', 'sync', TRUE);
-		$core->Router->add_route('sync_jobs', 'sync_jobs', TRUE);
+		$core->Router->add_route('runbooks_list', 'runbooks_list');						// default route
+		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
+		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
+		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
+
+		$core->Router->add_route('jobs_list', 'jobs_list');
+		$core->Router->add_route('jobs_sync', 'jobs_sync', TRUE);
+		$core->Router->add_route('job_get', 'job_get', TRUE);
+
 		$core->Router->add_route('complete_account', 'complete_account', TRUE);
 		$core->Router->add_route('complete_computer', 'complete_computer', TRUE);
 		$core->Router->add_route('complete_mail', 'complete_mail', TRUE);
 		$core->Router->add_route('complete_group', 'complete_group', TRUE);
-		$core->Router->add_route('change_password', 'change_password', TRUE);
-		$core->Router->add_route('password_form', 'password_form', TRUE);
-		$core->Router->add_route('list_users', 'list_users');
-		$core->Router->add_route('get_user', 'get_user', TRUE);
-		$core->Router->add_route('save_user', 'save_user', TRUE);
-		$core->Router->add_route('deactivate_user', 'deactivate_user', TRUE);
-		$core->Router->add_route('activate_user', 'activate_user', TRUE);
-		$core->Router->add_route('approve', 'approve');
-		$core->Router->add_route('form_approve', 'form_approve');
-		$core->Router->add_route('flush_memcached', 'flush_memcached', TRUE);
+
+		$core->Router->add_route('tools_list', 'tools_list');
+
+		$core->Router->add_route('folder_hide', 'folder_hide', TRUE);
+		$core->Router->add_route('folder_show', 'folder_show', TRUE);
+
+		$core->Router->add_route('permissions_list', 'permissions_list');
+		$core->Router->add_route('permissions_get', 'permissions_get', TRUE);
+		$core->Router->add_route('permission_delete', 'permission_delete', TRUE);
+		$core->Router->add_route('permission_get', 'permission_get', TRUE);
+		$core->Router->add_route('permission_new', 'permission_new', TRUE);
+		$core->Router->add_route('permission_save', 'permission_save', TRUE);
+
+		$core->Router->add_route('users_list', 'users_list');
+		$core->Router->add_route('user_get', 'user_get', TRUE);
+		$core->Router->add_route('user_save', 'user_save', TRUE);
+		$core->Router->add_route('user_deactivate', 'user_deactivate', TRUE);
+		$core->Router->add_route('user_activate', 'user_activate', TRUE);
+
+		$core->Router->add_route('password_change', 'password_change', TRUE);
+		$core->Router->add_route('password_change_form', 'password_change_form', TRUE);
+
+		$core->Router->add_route('register_approve_form', 'register_approve_form');
+		$core->Router->add_route('register_approve', 'register_approve');
+
+		$core->Router->add_route('memcached_flush', 'memcached_flush', TRUE);
 	}
 
 	$core->Router->add_route('logoff', 'logoff');
-	$core->Router->add_route('form_ask_mail_for_reset', 'form_ask_mail_for_reset', TRUE);
-	$core->Router->add_route('reset_send_mail', 'reset_send_mail', TRUE);
-	$core->Router->add_route('reset_password', 'reset_password');
-	$core->Router->add_route('form_reset_password', 'form_reset_password');
-	$core->Router->add_route('form_register', 'form_register');
-	$core->Router->add_route('register_user', 'register_user');
+	
+	$core->Router->add_route('password_reset_send_form', 'password_reset_send_form', TRUE);
+	$core->Router->add_route('password_reset_send', 'password_reset_send', TRUE);
+	$core->Router->add_route('password_reset_form', 'password_reset_form', TRUE);
+	$core->Router->add_route('password_reset', 'password_reset');
+
+	$core->Router->add_route('register_form', 'register_form');
+	$core->Router->add_route('register', 'register');
 
 	$core->Router->process($path, $data);

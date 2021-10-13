@@ -1,5 +1,5 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
-<?php include(TEMPLATES_DIR.'tpl.list-tree.php'); ?>
+<?php include(TEMPLATES_DIR.'tpl.tree-list.php'); ?>
 
 <div>
 	<div class="tree-menu">

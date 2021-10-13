@@ -110,14 +110,14 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 function f_restart_job(rb_guid, job_id)
 {
 	gi('job').style.display = 'none';
-	f_show_form(g_link_prefix + 'get_runbook/' + rb_guid + '/' + job_id);
+	f_show_form(g_link_prefix + 'runbook_get/' + rb_guid + '/' + job_id);
 }
 
 function f_get_job(guid)
 {
 	gi('loading').style.display = 'block';
 	f_http(
-		g_link_prefix + 'get_job/' + guid,
+		g_link_prefix + 'job_get/' + guid,
 		function(data, guid)
 		{
 			gi('loading').style.display = 'none';
@@ -578,20 +578,20 @@ function f_send_form(action)
 
 function on_saved(action, data)
 {
-	if(action == 'start_runbook')
+	if(action == 'runbook_start')
 	{
 		f_get_job(data.guid);
 	}
-	else if(action == 'save_permission')
+	else if(action == 'permission_save')
 	{
 		//f_get_perms(data.pid);
 		window.location = window.location;
 	}
-	else if(action == 'save_user')
+	else if(action == 'user_save')
 	{
 		window.location = window.location;
 	}
-	else if(action == 'register_user')
+	else if(action == 'register')
 	{
 		f_msg(data.message);
 	}
@@ -637,11 +637,11 @@ function f_msg(text)
 
 function on_action_success(el, action, data)
 {
-	if(action == 'deactivate_user')
+	if(action == 'user_deactivate')
 	{
 		window.location = window.location;
 	}
-	else if(action == 'activate_user')
+	else if(action == 'user_activate')
 	{
 		window.location = window.location;
 	}
@@ -676,17 +676,17 @@ function f_call_action(ev, action)
 
 function f_delete_perm(ev)
 {
-	f_call_action(ev, 'delete_permission');
+	f_call_action(ev, 'permission_delete');
 }
 
 function f_deactivate_user(ev)
 {
-	f_call_action(ev, 'deactivate_user');
+	f_call_action(ev, 'user_deactivate');
 }
 
 function f_activate_user(ev)
 {
-	f_call_action(ev, 'activate_user');
+	f_call_action(ev, 'user_activate');
 }
 
 function f_async(a)
@@ -781,12 +781,12 @@ function f_get_perms(id)
 					if(data.flags & 0x0002)
 					{
 						el.innerText = 'Show folder in list';
-						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'show_folder\', ' + data.id + ');');
+						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'folder_show\', ' + data.id + ');');
 					}
 					else
 					{
 						el.innerText = 'Hide folder from list';
-						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'hide_folder\', ' + data.id + ');');
+						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'folder_hide\', ' + data.id + ');');
 					}
 					el.style.display = 'inline';
 				}
@@ -797,7 +797,7 @@ function f_get_perms(id)
 				for(i = 0; i < data.permissions.length; i++)
 				{
 					html = '<td>' + data.permissions[i].id + '</td><td>' + data.permissions[i].group + '</td><td>' + data.permissions[i].perms + '</td>'
-						+ '<td><span class="command" onclick="return f_show_form(\'' + g_link_prefix + 'get_permission/' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
+						+ '<td><span class="command" onclick="return f_show_form(\'' + g_link_prefix + 'permission_get/' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
 
 					var tr = document.createElement('tr');
 					tr.setAttribute("data-id", data.permissions[i].id);
@@ -811,70 +811,6 @@ function f_get_perms(id)
 		'table-data'
 	);
 
-	return false;
-}
-
-function f_expand(self, _pid)
-{
-	var pid = _pid;
-	var el = gi('expand'+pid);
-	if(el)
-	{
-		el.parentNode.removeChild(el);
-		self.innerText = '+';
-	}
-	else
-	{
-		var xhr = f_xhr();
-		if(xhr)
-		{
-			xhr.open('get', g_link_prefix + 'expand/' + pid, true);
-			xhr.onreadystatechange = function()
-			{
-				if(xhr.readyState == 4)
-				{
-					var result;
-					if(xhr.status == 200)
-					{
-						try
-						{
-							result = JSON.parse(xhr.responseText);
-						}
-						catch(e)
-						{
-							result = {code: 1, status: "Response: "+xhr.responseText};
-						}
-					}
-					else
-					{
-						result = {code: 1, status: "AJAX error code: "+xhr.status};
-					}
-					if(result.code)
-					{
-						f_notify(result.status, 'error');
-					}
-					else
-					{
-						var text = '<ul>';
-						for(var i = 0; i < result.list.length; i++)
-						{
-							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="' + g_link_prefix + 'get_permissions/' + result.list[i].id + '" onclick="return f_get_perms(' + result.list[i].id + ');">'+escapeHtml(result.list[i].name)+'</a></li>';
-						}
-						text += '</ul>';
-						var div = document.createElement('div');
-						div.id = 'expand' + pid;
-						//div.className = 'expand-list';
-						div.innerHTML = text;
-						//gi("row"+id).cells[0].appendChild(div);
-						self.parentNode.appendChild(div);
-						//self.parentNode.insertBefore(div, self.nextSibling);
-						self.innerText = '-';
-					}
-				}
-			};
-			xhr.send(null);
-		}
-	}
 	return false;
 }
 
