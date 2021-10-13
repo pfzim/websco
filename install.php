@@ -23,7 +23,7 @@ if (!defined('ROOT_DIR'))
 {
 	define('ROOT_DIR', dirname(__FILE__).DIRECTORY_SEPARATOR);
 }
-	
+
 if(file_exists(ROOT_DIR.'inc.config.php'))
 {
 	header('Content-Type: text/plain; charset=utf-8');
@@ -147,6 +147,11 @@ class MySQLDB
 		//$this->error_msg = $str;
 		throw new Exception($str); //__CLASS__.": ".$str
 	}
+}
+
+function eh($str)
+{
+	echo htmlspecialchars($str);
 }
 
 function json_escape($value) //json_escape
@@ -1383,6 +1388,7 @@ input:checked + .slider:after
 		<div class="container">
 		<div class="form-horizontal">
 		<form id="uform-fields" action="?action=download_config" method="post" target="_blank">
+			<?php $n = 1 ?>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Language settings</h3>
@@ -1428,7 +1434,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_db_conn');">1. Check DB connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_db_conn');"><?php eh($n++); ?>. Check DB connection</button>
 					<div id="result_check_db_conn" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1440,13 +1446,13 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db');">2. Create database</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db');"><?php eh($n++); ?>. Create database</button>
 					<div id="result_create_db" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_tables');">3. Create tables</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_tables');"><?php eh($n++); ?>. Create tables</button>
 					<div id="result_create_tables" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1469,13 +1475,13 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db_user');">4. Create DB user</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db_user');"><?php eh($n++); ?>. Create DB user</button>
 					<div id="result_create_db_user" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('grant_access');">5. Grant access to database</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('grant_access');"><?php eh($n++); ?>. Grant access to database</button>
 					<div id="result_grant_access" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1521,7 +1527,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_ldap');">6. Check LDAP connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_ldap');"><?php eh($n++); ?>. Check LDAP connection</button>
 					<div id="result_check_ldap" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1550,7 +1556,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');">7. Check SCORCH connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++); ?>. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1619,26 +1625,26 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_memcached" class="control-label col-sm-2">Verify peer:</label>
+				<label for="mail_verify_peer" class="control-label col-sm-2">Verify peer:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="mail_verify_peer" name="mail_verify_peer" class="form-control" type="checkbox" value="1" checked="checked"/><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_memcached" class="control-label col-sm-2">Verify peer name:</label>
+				<label for="mail_verify_peer_name" class="control-label col-sm-2">Verify peer name:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="mail_verify_peer_name" name="mail_verify_peer_name" class="form-control" type="checkbox" value="1" checked="checked" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_memcached" class="control-label col-sm-2">Allow self signed certificate:</label>
+				<label for="mail_allow_self_signed" class="control-label col-sm-2">Allow self signed certificate:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="mail_allow_self_signed" name="mail_allow_self_signed" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');">8. Check mail connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');"><?php eh($n++); ?>. Check mail connection</button>
 					<div id="result_check_mail" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1662,7 +1668,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');">9. Create admin account</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');"><?php eh($n++); ?>. Create admin account</button>
 					<div id="result_create_admin_account" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1685,7 +1691,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');">10. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');"><?php eh($n++); ?>. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
 					<div id="result_save_config" class="alert alert-danger" style="display: none"></div>
 					<div id="result_download_config" class="alert alert-danger" style="display: none"></div>
 				</div>
