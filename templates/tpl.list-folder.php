@@ -20,9 +20,9 @@
 				<?php $i = 0; if(isset($runbooks)) foreach($runbooks as &$row) { $i++; ?>
 					<tr>
 						<td><?php eh($i); ?>.</td>
-						<td><a href="<?php eh('/websco/get_runbook/'.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
+						<td><a href="<?php ln('get_runbook/'.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
 						<td>
-							<a href="<?php eh('/websco/list_jobs/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
+							<a href="<?php ln('list_jobs/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
 						</td>
 					</tr>
 				<?php } ?>

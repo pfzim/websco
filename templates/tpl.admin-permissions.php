@@ -7,11 +7,11 @@
 	</div>
 	<div class="content-box">
 		<h3><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
-		<span id="add_new_permission" class="command" onclick="f_show_form('<?php eh('/websco/new_permission/'.$current_folder['id']); ?>');"><?php L('AddPermission') ?></span>
+		<span id="add_new_permission" class="command" onclick="f_show_form('<?php ln('new_permission/'.$current_folder['id']) ?>');"><?php L('AddPermission') ?></span>
 		<?php if($current_folder['id'] != 0) { if($current_folder['flags'] & 0x0002) { ?>
-			<span id="show_hide" class="command" onclick="f_show_hide('/websco/show_folder', <?php eh($current_folder['id']); ?>);"><?php L('ShowFolder') ?></span>
+			<span id="show_hide" class="command" onclick="f_show_hide('<?php ln('show_folder') ?>', <?php eh($current_folder['id']) ?>);"><?php L('ShowFolder') ?></span>
 		<?php } else { ?>
-			<span id="show_hide" class="command" onclick="f_show_hide('/websco/hide_folder', <?php eh($current_folder['id']); ?>);"><?php L('HideFolder') ?></span>
+			<span id="show_hide" class="command" onclick="f_show_hide('<?php ln('hide_folder') ?>', <?php eh($current_folder['id']) ?>);"><?php L('HideFolder') ?></span>
 		<?php } } ?>
 		<table id="table" class="main-table" width="100%">
 			<thead>
@@ -34,18 +34,23 @@
 						$group_name = &$matches[1];
 					}
 					
-					$group_exist = '<img src="/websco/templates/cross_mark.png" title="Group not found in AD" width="13"/> ';
 					if($core->LDAP->search($result, '(&(objectCategory=group)(distinguishedName='.ldap_escape($row['dn'], null, LDAP_ESCAPE_FILTER).'))', array('distinguishedName')) == 1)
 					{
-						$group_exist = '<img src="/websco/templates/check_mark.png" title="Group exists in AD" width="13"/> ';
+						$icon_title = 'Group exists in AD';
+						$icon_path = 'templates/check_mark.png';
+					}
+					else
+					{
+						$icon_title = 'Group not found in AD';
+						$icon_path = 'templates/cross_mark.png';
 					}
 					?>
 						<tr id="<?php eh("row".$row['id']); ?>" data-id=<?php eh($row['id']);?>>
 							<td><?php eh($row['id']); ?></td>
-							<td><?php echo $group_exist; eh($group_name); ?></td>
+							<td><img src="<?php ls($icon_path) ?>" title="<?php eh($icon_title); ?>" width="13"/> <?php eh($group_name); ?></td>
 							<td class="mono"><?php eh($core->UserAuth->permissions_to_string($row['allow_bits'])); ?></td>
 							<td>
-								<span class="command" onclick="f_show_form('<?php eh('/websco/get_permission/'.$row['id']); ?>');"><?php L('Edit') ?></span>
+								<span class="command" onclick="f_show_form('<?php ln('get_permission/'.$row['id']) ?>');"><?php L('Edit') ?></span>
 								<span class="command" onclick="f_delete_perm(event);"><?php L('Delete') ?></span>
 							</td>
 						</tr>

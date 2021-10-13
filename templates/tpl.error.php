@@ -5,7 +5,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title>ERROR</title>
-		<link type="text/css" href="/websco/templates/style.css" rel="stylesheet" />
+		<link type="text/css" href="<?php ls('templates/style.css') ?>" rel="stylesheet" />
 	</head>
 	<body>
 		<h3 align="center"><?php L('Error') ?>:</h3>

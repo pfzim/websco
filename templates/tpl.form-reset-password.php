@@ -1,7 +1,7 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
 			<div class="login-block">
 				<h1><?php L('ResetPassword') ?></h1>
-				<form action="<?php eh('/websco/reset_password'); ?>" method="post">
+				<form action="<?php ln('reset_password') ?>" method="post">
 					<input type="hidden" name="uid" value="<?php eh($user_id); ?>"/>
 					<input type="hidden" name="reset_token" value="<?php eh($reset_token); ?>"/>
 					<?php L('NewPassword') ?>

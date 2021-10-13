@@ -18,6 +18,8 @@ function logon(&$core, $params, $post_data)
 		exit;
 	}
 	*/
+	
+	global $g_link_prefix;
 
 	if(!empty($post_data['return']))
 	{
@@ -25,6 +27,6 @@ function logon(&$core, $params, $post_data)
 	}
 	else
 	{
-		header('Location: /websco/');
+		header('Location: '.$g_link_prefix);
 	}
 }

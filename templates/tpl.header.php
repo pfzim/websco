@@ -4,12 +4,16 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<title>WebSCO - System Center Orchestrator web interface</title>
-		<link type="text/css" href="/websco/templates/style.css" rel="stylesheet" />
-		<link type="text/css" href="/websco/templates/flatpickr.material_red.css" rel="stylesheet" />
-		<script src="<?php eh('/websco/languages/'.APP_LANGUAGE.'.js'); ?>"></script>
-		<script src="/websco/websco.js"></script>
-		<script src="/websco/flatpickr.min.js"></script>
+		<title><?php L('Title') ?></title>
+		<link type="text/css" href="<?php ls('templates/style.css') ?>" rel="stylesheet" />
+		<link type="text/css" href="<?php ls('templates/flatpickr.material_red.css') ?>" rel="stylesheet" />
+		<script>
+			g_link_prefix = '<?php global $g_link_prefix; echo $g_link_prefix; ?>';
+			g_link_static_prefix = '<?php global $g_link_static_prefix; echo $g_link_static_prefix; ?>';
+		</script>
+		<script src="<?php ls('languages/'.APP_LANGUAGE.'.js') ?>"></script>
+		<script src="<?php ls('websco.js') ?>"></script>
+		<script src="<?php ls('flatpickr.min.js') ?>"></script>
 <!--
 		<link type="text/css" href="/websco/templates/pikaday.css" rel="stylesheet" />
 		<script src="/websco/moment.js"></script>
@@ -19,16 +23,16 @@
 	<body>
 		<ul class="menu-bar">
 			<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="<?php ln('list_folder'); ?>"><?php L('Runbooks') ?></a></li>
-				<li><a href="<?php ln('list_tools'); ?>"><?php L('Tools') ?></a></li>
-				<li><a href="<?php ln('permissions'); ?>"><?php L('Permissions') ?></a></li>
-				<li><a href="<?php ln('list_users'); ?>"><?php L('Users') ?></a></li>
+				<li><a href="<?php ln('list_folder') ?>"><?php L('Runbooks') ?></a></li>
+				<li><a href="<?php ln('list_tools') ?>"><?php L('Tools') ?></a></li>
+				<li><a href="<?php ln('permissions') ?>"><?php L('Permissions') ?></a></li>
+				<li><a href="<?php ln('list_users') ?>"><?php L('Users') ?></a></li>
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
 				<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="<?php ln('logoff'); ?>"><?php L('Logout') ?></a></li>
+				<li><a href="<?php ln('logoff') ?>"><?php L('Logout') ?></a></li>
 				<?php } else { ?>
-				<li><a href="<?php ln('login'); ?>"><?php L('LoginBtn') ?></a></li>
+				<li><a href="<?php ln('login') ?>"><?php L('LoginBtn') ?></a></li>
 				<?php } ?>
 			</ul>
 		</ul>

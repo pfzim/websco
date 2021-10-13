@@ -100,10 +100,10 @@ function L($key)
 	eh(LL($key));
 }
 
-if(definde('USE_PRETTY_LINKS') && USE_PRETTY_LINKS && function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+if(defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS && function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
 {
 	$g_link_prefix = '/websco/';
-	$g_link_static_prefix = '/pb/';
+	$g_link_static_prefix = '/websco/';
 }
 else
 {

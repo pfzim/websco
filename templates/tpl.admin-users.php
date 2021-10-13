@@ -4,7 +4,7 @@
 <div>
 	<div class="content-box">
 		<h3><?php L('UsersManagement') ?></h3>
-		<span id="add_new_user" class="command" onclick="f_show_form('/websco/get_user/0');"><?php L('AddUser') ?></span>
+		<span id="add_new_user" class="command" onclick="f_show_form('<?php ln('get_user/0') ?>');"><?php L('AddUser') ?></span>
 
 		<table id="table" class="main-table" width="100%">
 			<thead>
@@ -22,7 +22,7 @@
 					<td><?php eh($row['login']); ?></td>
 					<td><?php eh($row['mail']); ?></td>
 					<td>
-						<span class="command" onclick="f_show_form('<?php eh('/websco/get_user/'.$row['id']); ?>');"><?php L('Edit') ?></span>
+						<span class="command" onclick="f_show_form('<?php ln('get_user/'.$row['id']) ?>');"><?php L('Edit') ?></span>
 						<?php if($row['flags'] & 0x0001) { ?>
 						<span class="command" onclick="f_activate_user(event);"><?php L('Activate') ?></span>
 						<?php } else { ?>

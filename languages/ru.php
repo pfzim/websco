@@ -1,5 +1,6 @@
 <?php
 	$lang = array(
+		'Title'						=> 'WebSCO - System Center Orchestrator web interface',
 		'Home'						=> 'Главная',
 		'Logout'					=> 'Выход',
 		'Login'						=> 'Логин',

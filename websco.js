@@ -110,14 +110,14 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 function f_restart_job(rb_guid, job_id)
 {
 	gi('job').style.display = 'none';
-	f_show_form('/websco/get_runbook/' + rb_guid + '/' + job_id);
+	f_show_form(g_link_prefix + 'get_runbook/' + rb_guid + '/' + job_id);
 }
 
 function f_get_job(guid)
 {
 	gi('loading').style.display = 'block';
 	f_http(
-		'/websco/get_job/' + guid,
+		g_link_prefix + 'get_job/' + guid,
 		function(data, guid)
 		{
 			gi('loading').style.display = 'none';
@@ -541,7 +541,7 @@ function f_send_form(action)
 
 	gi('loading').style.display = 'block';
 	f_http(
-		'/websco/' + action,
+		g_link_prefix + action,
 		function(data, form_id)
 		{
 			gi('loading').style.display = 'none';
@@ -658,7 +658,7 @@ function f_call_action(ev, action)
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
 	f_http(
-		'/websco/' + action,
+		g_link_prefix + action,
 		function(data, params)
 		{
 			gi('loading').style.display = 'none';
@@ -769,7 +769,7 @@ function f_get_perms(id)
 				g_pid = data.id;
 
 				el = gi('add_new_permission');
-				el.setAttribute('onclick', 'f_new_permission(' + data.id + ');');
+				el.setAttribute('onclick', 'f_show_form(\'new_permission/' + data.id + '\');');
 
 				el = gi('show_hide');
 				if(id == 0)
@@ -781,12 +781,12 @@ function f_get_perms(id)
 					if(data.flags & 0x0002)
 					{
 						el.innerText = 'Show folder in list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/show_folder\', ' + data.id + ');');
+						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'show_folder\', ' + data.id + ');');
 					}
 					else
 					{
 						el.innerText = 'Hide folder from list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/hide_folder\', ' + data.id + ');');
+						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'hide_folder\', ' + data.id + ');');
 					}
 					el.style.display = 'inline';
 				}
@@ -797,7 +797,7 @@ function f_get_perms(id)
 				for(i = 0; i < data.permissions.length; i++)
 				{
 					html = '<td>' + data.permissions[i].id + '</td><td>' + data.permissions[i].group + '</td><td>' + data.permissions[i].perms + '</td>'
-						+ '<td><span class="command" onclick="return f_show_form(\'/websco/get_permission/' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
+						+ '<td><span class="command" onclick="return f_show_form(\'' + g_link_prefix + 'get_permission/' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
 
 					var tr = document.createElement('tr');
 					tr.setAttribute("data-id", data.permissions[i].id);
@@ -828,7 +828,7 @@ function f_expand(self, _pid)
 		var xhr = f_xhr();
 		if(xhr)
 		{
-			xhr.open('get', '/websco/expand/' + pid, true);
+			xhr.open('get', g_link_prefix + 'expand/' + pid, true);
 			xhr.onreadystatechange = function()
 			{
 				if(xhr.readyState == 4)
@@ -858,7 +858,7 @@ function f_expand(self, _pid)
 						var text = '<ul>';
 						for(var i = 0; i < result.list.length; i++)
 						{
-							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="/websco/get_permissions/' + result.list[i].id + '" onclick="return f_get_perms(' + result.list[i].id + ');">'+escapeHtml(result.list[i].name)+'</a></li>';
+							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="' + g_link_prefix + 'get_permissions/' + result.list[i].id + '" onclick="return f_get_perms(' + result.list[i].id + ');">'+escapeHtml(result.list[i].name)+'</a></li>';
 						}
 						text += '</ul>';
 						var div = document.createElement('div');
@@ -896,7 +896,7 @@ function autocomplete_on_input(ev)
 	action = el.getAttribute('data-action');
 
 	f_http(
-		'/websco/' + action,
+		g_link_prefix + action,
 		function(data, el)
 		{
 			gi('loading').style.display = 'none';
