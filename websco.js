@@ -754,7 +754,7 @@ function f_get_perms(id)
 	//a.parentNode.classList.add('active');
 
 	f_http(
-		'/websco/get_permissions/' + id,
+		g_link_prefix + 'permissions_get/' + id,
 		function(data, params)
 		{
 			gi('loading').style.display = 'none';
