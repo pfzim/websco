@@ -1,6 +1,6 @@
 <?php
 
-function sync(&$core, $params, $post_data)
+function runbooks_sync(&$core, $params, $post_data)
 {
 	assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// level 0 having Write access mean admin
 

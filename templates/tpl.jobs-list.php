@@ -23,15 +23,15 @@
 					<tr>
 						<td><?php eh($i); ?>.</td>
 						<td><?php eh($row['run_date']); ?></td>
-						<td><a href="<?php ln('get_job/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a></td>
+						<td><a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a></td>
 						<td><?php eh($row['login']); ?></td>
-						<td><a href="<?php ln('get_runbook/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a></td>
+						<td><a href="<?php ln('runbook_get/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a></td>
 					</tr>
 				<?php } ?>
 			</tbody>
 		</table>
 
-		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('list_jobs/'.$runbook['guid'].'/0'); ?>">1</a>
+		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('jobs_list/'.$runbook['guid'].'/0'); ?>">1</a>
 		<?php 
 			$min = max(100, $offset - 1000);
 			$max = min($offset + 1000, $total - ($total % 100));
@@ -41,7 +41,7 @@
 			for($i = $min; $i <= $max; $i += 100)
 			{
 			?>
-				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('list_jobs/'.$runbook['guid'].'/'.$i); ?>"><?php eh($i/100 + 1); ?></a>
+				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('jobs_list/'.$runbook['guid'].'/'.$i); ?>"><?php eh($i/100 + 1); ?></a>
 			<?php
 			}
 
@@ -49,7 +49,7 @@
 			if($i < $max)
 			{
 			?>
-				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('list_jobs/'.$runbook['guid'].'/'.$max); ?>"><?php eh($max/100 + 1); ?></a>
+				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('jobs_list/'.$runbook['guid'].'/'.$max); ?>"><?php eh($max/100 + 1); ?></a>
 			<?php
 			}
 		?>

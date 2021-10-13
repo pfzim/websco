@@ -572,6 +572,7 @@ $config = <<<'EOT'
 
 	define('USE_MEMCACHED', #use_memcached#);
 	define('USE_PRETTY_LINKS', #use_pretty_links#);
+	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');
 
 EOT;
 
