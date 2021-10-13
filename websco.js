@@ -188,7 +188,7 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td>' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
+						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.instances[i].activities[j].id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
 					}
 					html += '<tr><td colspan="2"><b>' + LL.OutputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
@@ -201,6 +201,41 @@ function f_get_job(guid)
 			}
 		},
 		guid
+	);
+
+	return false;
+}
+
+function f_get_activity(url)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		url,
+		function(data, guid)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				//var el = gi('activity_title');
+				//el.innerText = data.guid;
+
+				gi('activity').style.display = 'block';
+				var el = gi('activity_table_data');
+				el.innerHTML = '';
+				html = '';
+				for(j = 0; j < data.params.length; j++)
+				{
+					html += '<tr><td>' + escapeHtml(data.params[j].name) +'</td><td><pre>' + escapeHtml(data.params[j].value) +'</pre></td></tr>';
+				}
+
+				el.innerHTML = html;
+			}
+		},
+		'guid'
 	);
 
 	return false;

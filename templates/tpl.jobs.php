@@ -6,7 +6,7 @@
 		<?php print_folders_tree_id('runbooks', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
-		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php ln('sync_jobs/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
+		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php ln('jobs_sync/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
 
 		<table id="table" class="main-table">
 			<thead>
@@ -31,7 +31,7 @@
 			</tbody>
 		</table>
 
-		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['guid'].'/0'); ?>">1</a>
+		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/0'); ?>">1</a>
 		<?php 
 			$min = max(100, $offset - 1000);
 			$max = min($offset + 1000, $total - ($total % 100));
@@ -41,7 +41,7 @@
 			for($i = $min; $i <= $max; $i += 100)
 			{
 			?>
-				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['guid'].'/'.$i); ?>"><?php eh($i/100 + 1); ?></a>
+				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/'.$i); ?>"><?php eh($i/100 + 1); ?></a>
 			<?php
 			}
 
@@ -49,7 +49,7 @@
 			if($i < $max)
 			{
 			?>
-				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['guid'].'/'.$max); ?>"><?php eh($max/100 + 1); ?></a>
+				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/'.$max); ?>"><?php eh($max/100 + 1); ?></a>
 			<?php
 			}
 		?>

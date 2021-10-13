@@ -182,7 +182,7 @@ EOT;
 		\return - array of job instances ID and it statuses
 	*/
 
-	public function get_job_instances($guid)
+	public function retrieve_job_instances($guid)
 	{
 		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
 
@@ -228,13 +228,14 @@ EOT;
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
 
 				$activity = array(
+					'id' =>  (string) $properties->Id,
 					'guid' => (string) $properties->ActivityId,
 					'name' => '',
 					'sequence' => (string) $properties->SequenceNumber,
 					'status' => (string) $properties->Status
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! LIMIT 1', (string) $properties->ActivityId)))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & 0x0001) = 0 LIMIT 1', (string) $properties->ActivityId)))
 				{
 					$activity['name'] = $name[0][0];
 				}
@@ -251,7 +252,7 @@ EOT;
 		return $instances;
 	}
 
-	public function get_job_first_instance_input_params($guid)
+	public function retrieve_job_first_instance_input_params($guid)
 	{
 		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
 
@@ -263,9 +264,9 @@ EOT;
 
 			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.((string) $properties->Id).'\')/Parameters');
 
-			foreach($sub_xml->entry as $entry)
+			foreach($sub_xml->entry as $sub_entry)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+				$properties = $sub_entry->content->children('m', TRUE)->properties->children('d', TRUE);
 
 				if(((string) $properties->Direction) == 'In')
 				{
@@ -278,11 +279,30 @@ EOT;
 
 			break;
 		}
-		
+
 		return $params_in;
 	}
-	
-	public function get_folders()
+
+	public function retrieve_activity_data($guid)
+	{
+		$xml = $this->get_http_xml($this->orchestrator_url.'/ActivityInstances(guid\''.$guid.'\')/Data');
+
+		$params = array();
+
+		foreach($xml->entry as $entry)
+		{
+			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+
+			$params[] = array(
+				'name' => (string) $properties->Name,
+				'value' => (string) $properties->Value
+			);
+		}
+
+		return $params;
+	}
+
+	public function retrieve_folders()
 	{
 		$folders = array();
 		$skip = 0;
@@ -353,7 +373,7 @@ EOT;
 		return $servers;
 	}
 
-	public function get_jobs($guid)
+	public function retrieve_jobs($guid)
 	{
 		$jobs = array();
 		$skip = 0;
@@ -397,7 +417,7 @@ EOT;
 		return $jobs;
 	}
 
-	public function get_activities()
+	public function retrieve_activities()
 	{
 		$activities = array();
 		$skip = 0;
@@ -445,7 +465,7 @@ EOT;
 		return $activities;
 	}
 
-	public function get_runbooks()
+	public function retrieve_runbooks()
 	{
 		$runbooks = array();
 		$skip = 0;
@@ -553,7 +573,7 @@ EOT;
 
 		unset($servers);
 
-		$folders = $this->get_folders();
+		$folders = $this->retrieve_folders();
 
 		foreach($folders as &$folder)
 		{
@@ -598,7 +618,7 @@ EOT;
 
 		unset($folders);
 
-		$activities = $this->get_activities();
+		$activities = $this->retrieve_activities();
 
 		foreach($activities as &$activity)
 		{
@@ -639,7 +659,7 @@ EOT;
 
 		unset($activities);
 
-		$runbooks = $this->get_runbooks();
+		$runbooks = $this->retrieve_runbooks();
 
 		foreach($runbooks as &$runbook)
 		{
@@ -731,29 +751,30 @@ EOT;
 	public function sync_jobs($guid)
 	{
 		$total = 0;
-		$jobs = $this->get_jobs($guid);
+		$jobs = $this->retrieve_jobs($guid);
 
 		foreach($jobs as &$job)
 		{
 			if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
 			{
 				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
-				{					
+				{
 					$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
 					if($job_date === FALSE)
 					{
-						$job_date = new DateTime('0001-01-01 00:00:00');
+						$job_date = '0000-00-00 00:00:00';
 					}
 					else
 					{
 						$job_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+						$job_date = $job_date->format('Y-m-d H:i:s');
 					}
 
 					$this->core->db->put(rpv("
 							INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
 							VALUES (!, #, !, NULL, 0x0000)
 						",
-						$job_date->format('Y-m-d H:i:s'),
+						$job_date,
 						$rb[0][0],
 						$job['guid']
 					));
@@ -816,7 +837,7 @@ EOT;
 			LIMIT 1
 		', $guid)))
 		{
-			$this->core->error('Job '.$guid.' not found!');
+			$this->core->error('Job '.$guid.' not found! Try to sync jobs.');
 			return FALSE;
 		}
 
@@ -825,7 +846,7 @@ EOT;
 		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
 
 		$properties = $xml->content->children('m', TRUE)->properties->children('d', TRUE);
-		
+
 		$sid = (string) $properties->CreatedBy;
 		$sid_name = '';
 		if(defined('USE_LDAP') && USE_LDAP && !empty($sid))
@@ -850,7 +871,7 @@ EOT;
 			'instances' => array()
 		);
 
-		$instances = $this->get_job_instances($guid);
+		$instances = $this->retrieve_job_instances($guid);
 
 		if($instances !== FALSE)
 		{
@@ -858,6 +879,40 @@ EOT;
 		}
 
 		return $job_info;
+	}
+
+	public function get_activity($guid)
+	{
+		/*
+		if(!$this->core->db->select_assoc_ex($activity, rpv('SELECT a.`id`, a.`guid`, a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & 0x0001) = 0 LIMIT 1', $guid)))
+		{
+			$this->core->error('Activity '.$guid.' not found! Try to sync runbooks.');
+			return FALSE;
+		}
+
+		$activity = &$activity[0];
+
+		$activity_info = array(
+			'id' => $activity['id'],
+			'guid' => $activity['guid'],
+			'name' => $activity['name'],
+			'params' => array()
+		);
+		*/
+
+		$activity_info = array(
+			'guid' => $guid,
+			'params' => array()
+		);
+
+		$params = $this->retrieve_activity_data($guid);
+
+		if($params !== FALSE)
+		{
+			$activity_info['params'] = &$params;
+		}
+
+		return $activity_info;
 	}
 
 	public function get_runbook_params($guid)
