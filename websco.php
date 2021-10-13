@@ -100,13 +100,15 @@ function L($key)
 	eh(LL($key));
 }
 
-if(function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+if(definde('USE_PRETTY_LINKS') && USE_PRETTY_LINKS && function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
 {
 	$g_link_prefix = '/websco/';
+	$g_link_static_prefix = '/pb/';
 }
 else
 {
 	$g_link_prefix = 'websco.php?path=';
+	$g_link_static_prefix = '';
 }
 
 function ln($path)
@@ -114,6 +116,13 @@ function ln($path)
 	global $g_link_prefix;
 
 	eh($g_link_prefix.$path);
+}
+
+function ls($path)
+{
+	global $g_link_static_prefix;
+
+	eh($g_link_static_prefix.$path);
 }
 
 function exception_handler($exception)
