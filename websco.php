@@ -279,7 +279,7 @@ function exception_handler_ajax($exception)
 	$core->Router->add_route('password_reset_form', 'password_reset_form', TRUE);
 	$core->Router->add_route('password_reset', 'password_reset');
 
-	$core->Router->add_route('register_form', 'register_form');
-	$core->Router->add_route('register', 'register');
+	$core->Router->add_route('register_form', 'register_form', TRUE);
+	$core->Router->add_route('register', 'register', TRUE);
 
 	$core->Router->process($path, $data);
