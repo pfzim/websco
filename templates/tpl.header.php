@@ -23,10 +23,10 @@
 	<body>
 		<ul class="menu-bar">
 			<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="<?php ln('runbooks_list') ?>"><?php L('Runbooks') ?></a></li>
-				<li><a href="<?php ln('tools_list') ?>"><?php L('Tools') ?></a></li>
-				<li><a href="<?php ln('permissions_list') ?>"><?php L('Permissions') ?></a></li>
-				<li><a href="<?php ln('users_list') ?>"><?php L('Users') ?></a></li>
+				<li><a href="<?php ln('runbooks') ?>"><?php L('Runbooks') ?></a></li>
+				<li><a href="<?php ln('tools') ?>"><?php L('Tools') ?></a></li>
+				<li><a href="<?php ln('permissions') ?>"><?php L('Permissions') ?></a></li>
+				<li><a href="<?php ln('users') ?>"><?php L('Users') ?></a></li>
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
 				<?php if($core->UserAuth->get_id()) { ?>

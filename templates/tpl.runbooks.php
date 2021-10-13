@@ -3,7 +3,7 @@
 
 <div>
 	<div class="tree-menu">
-		<?php print_folders_tree_id('runbooks_list', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
+		<?php print_folders_tree_id('runbooks', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
 		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder['name']); ?></h3>
@@ -22,7 +22,7 @@
 						<td><?php eh($i); ?>.</td>
 						<td><a href="<?php ln('runbook_get/'.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
 						<td>
-							<a href="<?php ln('jobs_list/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
+							<a href="<?php ln('jobs/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
 						</td>
 					</tr>
 				<?php } ?>

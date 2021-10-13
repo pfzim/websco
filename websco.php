@@ -231,12 +231,12 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
-		$core->Router->add_route('runbooks_list', 'runbooks_list');						// default route
+		$core->Router->add_route('runbooks', 'runbooks');						// default route
 		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
 		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
 
-		$core->Router->add_route('jobs_list', 'jobs_list');
+		$core->Router->add_route('jobs', 'jobs');
 		$core->Router->add_route('jobs_sync', 'jobs_sync', TRUE);
 		$core->Router->add_route('job_get', 'job_get', TRUE);
 
@@ -245,19 +245,19 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('complete_mail', 'complete_mail', TRUE);
 		$core->Router->add_route('complete_group', 'complete_group', TRUE);
 
-		$core->Router->add_route('tools_list', 'tools_list');
+		$core->Router->add_route('tools', 'tools');
 
 		$core->Router->add_route('folder_hide', 'folder_hide', TRUE);
 		$core->Router->add_route('folder_show', 'folder_show', TRUE);
 
-		$core->Router->add_route('permissions_list', 'permissions_list');
+		$core->Router->add_route('permissions', 'permissions');
 		$core->Router->add_route('permissions_get', 'permissions_get', TRUE);
 		$core->Router->add_route('permission_delete', 'permission_delete', TRUE);
 		$core->Router->add_route('permission_get', 'permission_get', TRUE);
 		$core->Router->add_route('permission_new', 'permission_new', TRUE);
 		$core->Router->add_route('permission_save', 'permission_save', TRUE);
 
-		$core->Router->add_route('users_list', 'users_list');
+		$core->Router->add_route('users', 'users');
 		$core->Router->add_route('user_get', 'user_get', TRUE);
 		$core->Router->add_route('user_save', 'user_save', TRUE);
 		$core->Router->add_route('user_deactivate', 'user_deactivate', TRUE);

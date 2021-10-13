@@ -1,6 +1,6 @@
 <?php
 
-function permissions_list(&$core, $params, $post_data)
+function permissions(&$core, $params, $post_data)
 {
 	$id = @$params[1];
 
@@ -40,5 +40,5 @@ function permissions_list(&$core, $params, $post_data)
 
 	$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`oid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_folder['id']));
 
-	include(TEMPLATES_DIR.'tpl.permissions-list.php');
+	include(TEMPLATES_DIR.'tpl.permissions.php');
 }

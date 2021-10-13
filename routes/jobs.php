@@ -1,6 +1,6 @@
 <?php
 
-function jobs_list(&$core, $params, $post_data)
+function jobs(&$core, $params, $post_data)
 {
 	$id = @$params[1];
 
@@ -52,5 +52,5 @@ function jobs_list(&$core, $params, $post_data)
 		$offset
 	));
 
-	include(TEMPLATES_DIR.'tpl.jobs-list.php');
+	include(TEMPLATES_DIR.'tpl.jobs.php');
 }

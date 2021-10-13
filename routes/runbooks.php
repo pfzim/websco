@@ -1,6 +1,6 @@
 <?php
 
-function runbooks_list(&$core, $params, $post_data)
+function runbooks(&$core, $params, $post_data)
 {
 	if(!empty($params[1]))
 	{
@@ -37,5 +37,5 @@ function runbooks_list(&$core, $params, $post_data)
 
 	$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`id`, r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = {s0} AND (r.`flags` & (0x0001)) = 0 ORDER BY r.`name`', $current_folder['id']));
 
-	include(TEMPLATES_DIR.'tpl.runbooks-list.php');
+	include(TEMPLATES_DIR.'tpl.runbooks.php');
 }
