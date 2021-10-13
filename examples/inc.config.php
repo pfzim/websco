@@ -70,9 +70,12 @@
 	define('MAIL_VERIFY_PEER_NAME', TRUE);
 	define('MAIL_ALLOW_SELF_SIGNED', FALSE);
 
-	define('WS_URL', 'https://websco.contoso.com/websco');
 	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');
 
 	define('USE_MEMCACHED', TRUE);
+
+	define('WS_URL', 'https://websco.contoso.com/websco');
+	define('USE_PRETTY_LINKS', FALSE);
+	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');

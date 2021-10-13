@@ -568,9 +568,9 @@ $config = <<<'EOT'
 	define('ORCHESTRATOR_USER', '#scorch_user#');
 	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
 
-	define('WS_URL', '#web_url#');
-
 	define('USE_MEMCACHED', #use_memcached#);
+
+	define('WS_URL', '#web_url#');
 	define('USE_PRETTY_LINKS', #use_pretty_links#);
 	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');
 
