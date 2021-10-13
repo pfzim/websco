@@ -1,6 +1,6 @@
 <?php
 
-function password_reset_send_mail(&$core, $params, $post_data)
+function password_reset_send(&$core, $params, $post_data)
 {
 	$result_json = array(
 		'code' => 0,
@@ -35,11 +35,11 @@ function password_reset_send_mail(&$core, $params, $post_data)
 	<body>
 EOT;
 
-	$html .= 'To reset password follow this link: <a href="'.WS_URL.'/password_reset_form/'.$user_id.'/'.$reset_token.'">'.WS_URL.'/password_reset_form/'.$user_id.'/'.$reset_token.'</a>';
+	$html .= 'To reset password follow this link: <a href="'.APP_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token.'">'.APP_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token.'</a>';
 
 	$html .= '</body></html>';
 
-	$plain = 'To reset password follow this link: '.WS_URL.'/password_reset_form/'.$user_id.'/'.$reset_token;
+	$plain = 'To reset password follow this link: '.APP_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token;
 
 	if($result_json['code'])
 	{

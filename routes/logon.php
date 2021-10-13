@@ -4,6 +4,7 @@ function logon(&$core, $params, $post_data)
 {
 	if(!$core->UserAuth->logon(@$post_data['login'], @$post_data['passwd']))
 	{
+		$return_url = @$post_data['return'];
 		$error_msg = LL('InvalidUserPasswd');
 		include(TEMPLATES_DIR.'tpl.login.php');
 		exit;
@@ -19,14 +20,12 @@ function logon(&$core, $params, $post_data)
 	}
 	*/
 	
-	global $g_link_prefix;
-
 	if(!empty($post_data['return']))
 	{
 		header('Location: '.$post_data['return']);
 	}
 	else
 	{
-		header('Location: '.$g_link_prefix);
+		header('Location: '.APP_LINK_PREFIX);
 	}
 }

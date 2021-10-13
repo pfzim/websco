@@ -2,6 +2,8 @@
 
 function password_reset(&$core, $params, $post_data)
 {
+	$core->UserAuth->logoff();
+
 	$new_password = @$post_data['new_password'];
 	$new_password2 = @$post_data['new_password2'];
 	$user_id = intval(@$post_data['uid']);
@@ -40,5 +42,5 @@ function password_reset(&$core, $params, $post_data)
 		return;
 	}
 
-	header('Location: '.WS_URL);
+	header('Location: '.APP_LINK_PREFIX);
 }

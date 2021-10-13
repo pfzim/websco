@@ -102,27 +102,25 @@ function L($key)
 
 if(defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS && function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
 {
-	$g_link_prefix = USE_PRETTY_LINKS_BASE_PATH;
-	$g_link_static_prefix = USE_PRETTY_LINKS_BASE_PATH;
+	define('APP_LINK_PREFIX', USE_PRETTY_LINKS_BASE_PATH);			// '/websco/'
+	define('APP_LINK_STATIC_PREFIX', USE_PRETTY_LINKS_BASE_PATH);
+	define('APP_LINK_EXTERNAL', APP_URL);
 }
 else
 {
-	$g_link_prefix = 'websco.php?path=';
-	$g_link_static_prefix = '';
+	define('APP_LINK_PREFIX', basename(__FILE__).'?path=');
+	define('APP_LINK_STATIC_PREFIX', '');
+	define('APP_LINK_EXTERNAL', APP_URL.APP_LINK_PREFIX);
 }
 
 function ln($path)
 {
-	global $g_link_prefix;
-
-	eh($g_link_prefix.$path);
+	eh(APP_LINK_PREFIX.$path);
 }
 
 function ls($path)
 {
-	global $g_link_static_prefix;
-
-	eh($g_link_static_prefix.$path);
+	eh(APP_LINK_STATIC_PREFIX.$path);
 }
 
 function exception_handler($exception)
@@ -231,7 +229,7 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
-		$core->Router->add_route('runbooks', 'runbooks');						// default route
+		$core->Router->add_route('runbooks', 'runbooks');							// default route
 		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
 		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
@@ -264,8 +262,8 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('user_deactivate', 'user_deactivate', TRUE);
 		$core->Router->add_route('user_activate', 'user_activate', TRUE);
 
-		$core->Router->add_route('password_change', 'password_change', TRUE);
 		$core->Router->add_route('password_change_form', 'password_change_form', TRUE);
+		$core->Router->add_route('password_change', 'password_change', TRUE);
 
 		$core->Router->add_route('register_approve_form', 'register_approve_form');
 		$core->Router->add_route('register_approve', 'register_approve');
@@ -277,7 +275,7 @@ function exception_handler_ajax($exception)
 	
 	$core->Router->add_route('password_reset_send_form', 'password_reset_send_form', TRUE);
 	$core->Router->add_route('password_reset_send', 'password_reset_send', TRUE);
-	$core->Router->add_route('password_reset_form', 'password_reset_form', TRUE);
+	$core->Router->add_route('password_reset_form', 'password_reset_form');
 	$core->Router->add_route('password_reset', 'password_reset');
 
 	$core->Router->add_route('register_form', 'register_form', TRUE);

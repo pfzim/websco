@@ -570,7 +570,7 @@ $config = <<<'EOT'
 
 	define('USE_MEMCACHED', #use_memcached#);
 
-	define('WS_URL', '#web_url#');
+	define('APP_URL', '#web_url#');
 	define('USE_PRETTY_LINKS', #use_pretty_links#);
 	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');
 
@@ -1682,9 +1682,9 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="web_url" class="control-label col-sm-2">WebSCO URL:</label>
+				<label for="web_url" class="control-label col-sm-2">WebSCO URL (with trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="web_url" name="web_url" class="form-control" type="text" value="https://websco.contoso.com" />
+					<input id="web_url" name="web_url" class="form-control" type="text" value="https://websco.contoso.com/" />
 				</div>
 			</div>
 			<div class="form-group">

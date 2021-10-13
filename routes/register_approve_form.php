@@ -13,5 +13,5 @@ function register_approve_form(&$core, $params, $post_data)
 	
 	$user_info = $core->UserAuth->get_user_info_ex($user_id);
 
-	include(TEMPLATES_DIR.'tpl.approve-form.php');
+	include(TEMPLATES_DIR.'tpl.register-approve-form.php');
 }

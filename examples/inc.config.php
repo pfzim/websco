@@ -76,6 +76,6 @@
 
 	define('USE_MEMCACHED', TRUE);
 
-	define('WS_URL', 'https://websco.contoso.com/websco');
+	define('APP_URL', 'https://websco.contoso.com/websco/');
 	define('USE_PRETTY_LINKS', FALSE);
 	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');

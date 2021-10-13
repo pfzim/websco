@@ -49,8 +49,6 @@ function register(&$core, $params, $post_data)
 	}
 	elseif($user_id = $core->UserAuth->add($login, $new_password, $mail))
 	{
-		global $g_link_prefix;
-
 		$html = <<<'EOT'
 			<html>
 			<head>
@@ -59,11 +57,11 @@ function register(&$core, $params, $post_data)
 				<body>
 EOT;
 
-		$html .= 'To approve new registered user follow this link: <a href="'.WS_URL.'/approve_form/'.$user_id.'">'.WS_URL.'/approve_form/'.$user_id.'</a>';
+		$html .= 'To approve new registered user follow this link: <a href="'.APP_LINK_EXTERNAL.'register_approve_form/'.$user_id.'">'.APP_LINK_EXTERNAL.'register_approve_form/'.$user_id.'</a>';
 
 		$html .= '</body></html>';
 
-		$plain = 'To approve new registered user follow this link: '.WS_URL.'/approve_form/'.$user_id;
+		$plain = 'To approve new registered user follow this link: '.APP_LINK_EXTERNAL.'register_approve_form/'.$user_id;
 
 		$core->Mailer->send_mail(array(MAIL_TO_ADMIN), LL('ApproveRequestSubject'), $html, $plain);
 

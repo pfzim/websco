@@ -302,10 +302,13 @@ class UserAuth
 	{
 		$affected = 0;
 
-		if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE u.`id` = # AND u.`reset_token` = ! AND (u.`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $uid, $token)))
 		{
-			//return ($affected > 0);
-			return TRUE;
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+			{
+				//return ($affected > 0);
+				return TRUE;
+			}
 		}
 
 		return FALSE;

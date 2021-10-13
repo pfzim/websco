@@ -26,7 +26,7 @@
 
 
 <?php if(!$core->UserAuth->is_ldap_user() && $core->UserAuth->get_id()) { ?>
-<a href="<?php ln('password_change_form'); ?>" onclick="f_show_form(this.href);"><?php L('ChangePassword') ?></a><br />
+<a href="<?php ln('password_change_form'); ?>" onclick="return f_show_form(this.href);"><?php L('ChangePassword') ?></a><br />
 <?php } ?>
 
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
