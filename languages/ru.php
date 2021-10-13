@@ -97,5 +97,6 @@
 		'UserActivated'				=> 'Пользователь активирован',
 		'UserDeactivated'			=> 'Пользователь деакивирован',
 		'WelcomeSubject'			=> 'Добро пожаловать в WebSCO',
+		'ActivityData'				=> 'Данные активити',
 		'Loading'					=> 'Подождите, идет загрузка...'
 	);

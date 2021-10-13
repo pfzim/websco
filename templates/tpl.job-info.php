@@ -25,3 +25,21 @@
 				</div>
 			</div>
 		</div>
+
+		<div id="activity" class="modal-container" style="display: none">
+			<span class="close white" onclick="this.parentNode.style.display='none'">&times;</span>
+			<div class="modal-content">
+				<span class="close" onclick="this.parentNode.parentNode.style.display='none'">&times;</span>
+				<h3 id="activity_title"><?php L('ActivityData') ?></h3>
+
+				<table id="activity_table">
+					<tbody id="activity_table_data">
+					</tbody>
+				</table>
+
+				<br />
+				<div class="f-right">
+					<button class="button-accept" type="button" onclick="this.parentNode.parentNode.parentNode.style.display='none'"><?php L('OK') ?></button>
+				</div>
+			</div>
+		</div>

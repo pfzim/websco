@@ -97,5 +97,6 @@
 		'UserActivated'				=> 'User activated',
 		'UserDeactivated'			=> 'User deactivated',
 		'WelcomeSubject'			=> 'Welcome to WebSCO',
+		'ActivityData'				=> 'Activity data',
 		'Loading'					=> 'Loading, please wait...'
 	);

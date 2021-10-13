@@ -40,7 +40,7 @@ function runbook_get(&$core, $params, $post_data)
 		{
 			if($core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
 			{
-				$job_params = $core->Runbooks->get_job_first_instance_input_params($job[0]['guid']);
+				$job_params = $core->Runbooks->retrieve_job_first_instance_input_params($job[0]['guid']);
 
 				foreach($job_params as $param)
 				{

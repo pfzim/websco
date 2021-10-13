@@ -402,6 +402,8 @@ body {
     border-radius: 4px;
     transform: translate(-50%, -50%);
 	overflow-y: auto;
+	max-width: 1200px;
+	max-height: 920px;
 }
 .form-header {
     width: 500px;
@@ -678,9 +680,22 @@ body {
 }
 
 #job_table td {
+	vertical-align: top;
 	border-bottom: thin solid lightgrey;
 }
 
+#job_table a {
+    text-decoration: none;
+}
+
+#job_table a:hover {
+    text-decoration: underline;
+}
+
+#activity_table td {
+	vertical-align: top;
+	border-bottom: thin solid lightgrey;
+}
 
 .tree-menu
 {

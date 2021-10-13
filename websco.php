@@ -239,6 +239,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('jobs', 'jobs');
 		$core->Router->add_route('jobs_sync', 'jobs_sync', TRUE);
 		$core->Router->add_route('job_get', 'job_get', TRUE);
+		$core->Router->add_route('job_activity_get', 'job_activity_get', TRUE);
 
 		$core->Router->add_route('complete_account', 'complete_account', TRUE);
 		$core->Router->add_route('complete_computer', 'complete_computer', TRUE);
