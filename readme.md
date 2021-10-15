@@ -26,7 +26,7 @@ sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-
 ```
 
 If you want to use pretty links, then `mod_rewrite` is required.
-Enable Apache .htaccess:
+By default, the .htaccess file is not enabled. Enable it in Apache config (`AllowOverride All`):
 ```
 	<Directory /var/www/html/websco>
 			Options Indexes FollowSymLinks
