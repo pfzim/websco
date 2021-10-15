@@ -367,6 +367,7 @@ function build_config($config, $params)
 			'#scorch_user#',
 			'#scorch_passwd#',
 			'#web_url#',
+			'#pretty_links_base_path#',
 			'#mail_auth#',
 			'#use_memcached#',
 			'#use_pretty_links#',
@@ -398,6 +399,7 @@ function build_config($config, $params)
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
 			sql_escape(@$params['web_url']),
+			sql_escape(@$params['pretty_links_base_path']),
 			empty($params['mail_user'])?'FALSE':'TRUE',
 			intval(@$params['use_memcached'])?'TRUE':'FALSE',
 			intval(@$params['use_pretty_links'])?'TRUE':'FALSE',
@@ -572,7 +574,7 @@ $config = <<<'EOT'
 
 	define('APP_URL', '#web_url#');
 	define('USE_PRETTY_LINKS', #use_pretty_links#);
-	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');
+	define('PRETTY_LINKS_BASE_PATH', '#pretty_links_base_path#');
 
 EOT;
 
@@ -855,6 +857,9 @@ EOT;
 	}
 
 	header("Content-Type: text/html; charset=utf-8");
+	
+	$pretty_links_base_path = preg_replace('#/[^/]+$#', '/', $_SERVER['REQUEST_URI']);
+	$web_url = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].$pretty_links_base_path;
 ?>
 <!DOCTYPE html>
 <html>
@@ -1438,7 +1443,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_db_conn');"><?php eh($n++); ?>. Check DB connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_db_conn');"><?php eh($n++) ?>. Check DB connection</button>
 					<div id="result_check_db_conn" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1450,13 +1455,13 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db');"><?php eh($n++); ?>. Create database</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db');"><?php eh($n++) ?>. Create database</button>
 					<div id="result_create_db" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_tables');"><?php eh($n++); ?>. Create tables</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_tables');"><?php eh($n++) ?>. Create tables</button>
 					<div id="result_create_tables" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1479,13 +1484,13 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db_user');"><?php eh($n++); ?>. Create DB user</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db_user');"><?php eh($n++) ?>. Create DB user</button>
 					<div id="result_create_db_user" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('grant_access');"><?php eh($n++); ?>. Grant access to database</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('grant_access');"><?php eh($n++) ?>. Grant access to database</button>
 					<div id="result_grant_access" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1531,7 +1536,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_ldap');"><?php eh($n++); ?>. Check LDAP connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_ldap');"><?php eh($n++) ?>. Check LDAP connection</button>
 					<div id="result_check_ldap" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1560,7 +1565,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++); ?>. Check SCORCH connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++) ?>. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1648,7 +1653,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');"><?php eh($n++); ?>. Check mail connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');"><?php eh($n++) ?>. Check mail connection</button>
 					<div id="result_check_mail" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1672,7 +1677,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');"><?php eh($n++); ?>. Create admin account</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');"><?php eh($n++) ?>. Create admin account</button>
 					<div id="result_create_admin_account" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1684,13 +1689,19 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="web_url" class="control-label col-sm-2">WebSCO URL (with trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="web_url" name="web_url" class="form-control" type="text" value="https://websco.contoso.com/" />
+					<input id="web_url" name="web_url" class="form-control" type="text" value="<?php eh($web_url) ?>" />
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="use_pretty_links" class="control-label col-sm-2">Use pretty links (mod_rewrite required):</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="use_pretty_links" name="use_pretty_links" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="pretty_links_base_path" class="control-label col-sm-2">Pretty links base path:</label>
+				<div class="col-sm-5">
+					<input id="pretty_links_base_path" name="pretty_links_base_path" class="form-control" type="text" value="<?php eh($pretty_links_base_path) ?>" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1701,7 +1712,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');"><?php eh($n++); ?>. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');"><?php eh($n++) ?>. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
 					<div id="result_save_config" class="alert alert-danger" style="display: none"></div>
 					<div id="result_download_config" class="alert alert-danger" style="display: none"></div>
 				</div>

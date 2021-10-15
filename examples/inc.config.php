@@ -78,4 +78,4 @@
 
 	define('APP_URL', 'https://websco.contoso.com/websco/');
 	define('USE_PRETTY_LINKS', FALSE);
-	define('USE_PRETTY_LINKS_BASE_PATH', '/websco/');
+	define('PRETTY_LINKS_BASE_PATH', '/websco/');

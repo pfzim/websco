@@ -10,6 +10,7 @@
 - Active Directory (optional)
 - memcached (optional)
 - Kerberos (optional)
+- mod_rewrite (optional)
 
 ## Installation
 
@@ -24,7 +25,8 @@ Only when using Kerberos:
 sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-kerb libapache2-mod-auth-gssapi libsasl2-2 krb5-clients krb5-user krb5 ldap-utils gss-ntlmssp
 ```
 
-mod_rewrite requires .htaccess to be enabled. Enable Apache .htaccess:
+If you want to use pretty links, then `mod_rewrite` is required.
+Enable Apache .htaccess:
 ```
 	<Directory /var/www/html/websco>
 			Options Indexes FollowSymLinks
