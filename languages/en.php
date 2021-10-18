@@ -98,5 +98,6 @@
 		'UserDeactivated'			=> 'User deactivated',
 		'WelcomeSubject'			=> 'Welcome to WebSCO',
 		'ActivityData'				=> 'Activity data',
+		'FileTooLarge'				=> 'The file is too large',
 		'Loading'					=> 'Loading, please wait...'
 	);
