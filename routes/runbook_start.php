@@ -54,6 +54,26 @@ function runbook_start(&$core, $params, $post_data)
 			//log_file('Value: '.strval($flags));
 			continue;
 		}
+		elseif($param['type'] == 'upload')
+		{
+			if(isset($_FILES['param_'.$param['guid']]['tmp_name']) && file_exists($_FILES['param_'.$param['guid']]['tmp_name']))
+			{
+				if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > 500000)
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge'));
+					continue;
+				}
+
+				$value = base64_encode(file_get_contents($_FILES['param_'.$param['guid']]['tmp_name']));
+			}
+			elseif($param['required'])
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('ThisFieldRequired'));
+				continue;
+			}
+		}
 		elseif(isset($post_data['param'][$param['guid']]))
 		{
 			$value = trim($post_data['param'][$param['guid']]);
@@ -130,6 +150,10 @@ function runbook_start(&$core, $params, $post_data)
 
 			foreach($params as $key => $value)
 			{
+				if(strlen($value) > 4096)
+				{
+					$value = substr($value, 0, 4093).'...';
+				}
 				$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $key, $value));
 			}
 		}

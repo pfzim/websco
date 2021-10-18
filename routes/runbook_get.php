@@ -75,6 +75,11 @@ function runbook_get(&$core, $params, $post_data)
 		{
 			$field['autocomplete'] = 'complete_mail';
 		}
+		elseif(($param['type'] == 'upload'))
+		{
+			$field['name'] = 'param_'.$param['guid'];
+			$field['maxsize'] = 2000;
+		}
 		elseif(($param['type'] == 'who'))
 		{
 			continue;

@@ -403,7 +403,7 @@ body {
     transform: translate(-50%, -50%);
 	overflow-y: auto;
 	max-width: 1200px;
-	max-height: 920px;
+	max-height: 900px;
 }
 .form-header {
     width: 500px;
@@ -418,6 +418,15 @@ body {
     padding: 6px;
     margin-bottom: 5px;
     width: 500px;
+}
+.form-upload {
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 6px;
+    margin-bottom: 5px;
+    width: 380px;
+    height: 17px;
+	display: inline-block;
 }
 .form-button {
     background-color: #d3f2bf;

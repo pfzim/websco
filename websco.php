@@ -70,6 +70,11 @@ function log_db($operation, $params, $flags)
 {
 	global $core;
 
+	if(strlen($params) > 4096)
+	{
+		$params = substr($params, 0, 4093).'...';
+	}
+
 	$core->db->put(rpv('INSERT INTO @logs (`date`, `uid`, `operation`, `params`, `flags`) VALUES (NOW(), #, !, !, #)',
 		$core->UserAuth->get_id(),
 		$operation,

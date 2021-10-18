@@ -329,11 +329,18 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			for(j = 0; j < fields[i].list.length; j++)
 			{
 				selected = ''
-				if(fields[i].list[j] == fields[i].value)
+				if(fields[i].values)
+				{
+					if(fields[i].values[j] == fields[i].value)
+					{
+						selected = ' selected="selected"'
+					}
+				}
+				else if(fields[i].list[j] == fields[i].value)
 				{
 					selected = ' selected="selected"'
 				}
-				html += '<option value="' + escapeHtml(fields[i].list[j]) + '"' + selected + '>' + escapeHtml(fields[i].list[j]) + '</option>';
+				html += '<option value="' + escapeHtml(fields[i].values ? fields[i].values[j] : fields[i].list[j]) + '"' + selected + '>' + escapeHtml(fields[i].list[j]) + '</option>';
 			}
 			html += '</select>'
 				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
@@ -372,7 +379,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			el.appendChild(wrapper);
 
 			flatpickr(
-				document.getElementById(form_id + fields[i].name),
+				gi(form_id + fields[i].name),
 				{
 					allowInput: true,
 					enableTime: true,
@@ -392,7 +399,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			el.appendChild(wrapper);
 
 			flatpickr(
-				document.getElementById(form_id + fields[i].name),
+				gi(form_id + fields[i].name),
 				{
 					allowInput: true,
 					enableTime: true,
@@ -413,7 +420,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			el.appendChild(wrapper);
 
 			flatpickr(
-				document.getElementById(form_id + fields[i].name),
+				gi(form_id + fields[i].name),
 				{
 					allowInput: true,
 					dateFormat: "d.m.Y"
@@ -421,7 +428,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			);
 			/*
 			var picker = new Pikaday({
-				field: document.getElementById(form_id + fields[i].name),
+				field: gi(form_id + fields[i].name),
 				format: 'DD.MM.YYYY'
 			});
 			*/
@@ -435,6 +442,23 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			var wrapper = document.createElement('div');
 			wrapper.innerHTML = html;
 			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'upload')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<span class="form-upload" id="' + escapeHtml(form_id + fields[i].name) + '-file">&nbsp;</span> <a href="#" onclick="gi(\'' + escapeHtml(form_id + fields[i].name) + '\').click(); return false;"/>' + LL.SelectFile + '</a>'
+				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="file" style="display: none"/>'
+				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+
+			gi(form_id + fields[i].name).onchange = function(name) {
+				return function() {
+					gi(name + '-file').textContent = this.files.item(0).name;
+				}
+			}(form_id + fields[i].name);
 		}
 		else if(fields[i].type == 'spoiler')
 		{
@@ -550,6 +574,7 @@ function f_send_form(action)
 				err.style.display = 'none';
 			}
 
+			/*
 			if(el.elements[i].type == 'checkbox')
 			{
 				if(el.elements[i].checked)
@@ -568,6 +593,7 @@ function f_send_form(action)
 			{
 				form_data[el.elements[i].name] = el.elements[i].value;
 			}
+			*/
 		}
 	}
 
@@ -604,8 +630,8 @@ function f_send_form(action)
 			}
 		},
 		form_id,
-		'application/x-www-form-urlencoded',
-		json2url(form_data)
+		null,                                    //'application/x-www-form-urlencoded',
+		new FormData(gi(form_id + '-fields'))    //json2url(form_data)
 	);
 
 	return false;
