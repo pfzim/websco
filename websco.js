@@ -8,7 +8,7 @@ function gi(name)
 
 function escapeHtml(text)
 {
-  return (text+'')
+  return (''+text)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")

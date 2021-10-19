@@ -105,7 +105,11 @@ function L($key)
 	eh(LL($key));
 }
 
-if(defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS && function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+if (defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS
+	&& (
+		(defined('USE_PRETTY_LINKS_FORCE') && (USE_PRETTY_LINKS_FORCE))
+		|| (function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+	))
 {
 	define('APP_LINK_PREFIX', PRETTY_LINKS_BASE_PATH);			// '/websco/'
 	define('APP_LINK_STATIC_PREFIX', PRETTY_LINKS_BASE_PATH);

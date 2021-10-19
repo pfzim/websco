@@ -371,6 +371,7 @@ function build_config($config, $params)
 			'#mail_auth#',
 			'#use_memcached#',
 			'#use_pretty_links#',
+			'#use_pretty_links_force#',
 			'#language#'
 		),
 		array(
@@ -403,6 +404,7 @@ function build_config($config, $params)
 			empty($params['mail_user'])?'FALSE':'TRUE',
 			intval(@$params['use_memcached'])?'TRUE':'FALSE',
 			intval(@$params['use_pretty_links'])?'TRUE':'FALSE',
+			intval(@$params['use_pretty_links_force'])?'TRUE':'FALSE',
 			sql_escape(@$params['language'])
 		),
 		$config
@@ -574,6 +576,7 @@ $config = <<<'EOT'
 
 	define('APP_URL', '#web_url#');
 	define('USE_PRETTY_LINKS', #use_pretty_links#);
+	define('USE_PRETTY_LINKS_FORCE', #use_pretty_links_force#);
 	define('PRETTY_LINKS_BASE_PATH', '#pretty_links_base_path#');
 
 EOT;
@@ -1696,6 +1699,12 @@ input:checked + .slider:after
 				<label for="use_pretty_links" class="control-label col-sm-2">Use pretty links (mod_rewrite required):</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="use_pretty_links" name="use_pretty_links" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_pretty_links_force" class="control-label col-sm-2">Use pretty links force (if used nginx rewrite):</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="use_pretty_links_force" name="use_pretty_links_force" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">

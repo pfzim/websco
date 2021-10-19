@@ -3,7 +3,7 @@
 [:ru:](#description-ru) [:us:](#description)  
 
 ## System requirements
-- Apache
+- Apache or Nginx
 - MariaDB (MySQL)
 - PHP
 - Microsoft System Center Orchestrator
@@ -289,4 +289,54 @@ Example Apache config:
 
         </VirtualHost>
 </IfModule>
+```
+
+Example Nginx config:
+```
+        location /websco/ {
+                index index.php index.html index.htm;
+          if (!-e $request_filename){
+            rewrite ^/websco/(.*)$ /websco/websco.php?path=$1 last;
+          }
+        }
+```
+
+Increase IIS request limit (HTTP error 413): system.webServer/serverRuntime/uploadReadAheadSize = 10485760
+C:\Program Files (x86)\Microsoft System Center\Orchestrator\Web Service\web.config
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <system.web>
+        <httpRuntime maxRequestLength="10485760" />
+    </system.web>
+    <location path="Orchestrator2012">
+        <system.web>
+            <httpRuntime maxRequestLength="10485760" />
+        </system.web>
+        <system.webServer>
+            <httpErrors errorMode="DetailedLocalOnly" />
+        </system.webServer>
+    </location>
+</configuration>
+```
+
+C:\Program Files (x86)\Microsoft System Center\Orchestrator\Web Service\Orchestrator2012\web.config
+```
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+	<system.web>
+		<httpRuntime maxRequestLength="10485760" maxQueryStringLength="5000" />
+		...
+	</system.web>
+	<system.serviceModel>
+		<bindings>
+		   <webHttpBinding>
+			<binding 
+			  maxReceivedMessageSize="10485760" >
+			</binding>  
+		   </webHttpBinding>
+		</bindings>
+		...
+	</system.serviceModel>
+	...
 ```
