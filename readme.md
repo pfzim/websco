@@ -100,6 +100,7 @@ end after / slash:
  - m - field with autocomplete for entering e-mail (query LDAP) (mail)
  - f - checkboxes switches (flags)
  - w - hidden field with login who start runbook in WebSCO (who run)
+ - u - field for select file, the file will be transferred as a base64 string (upload)
  - r - the flag means that the parameter is required
 
 You can also use * (asterisk) before the slash to indicate a required parameter.
@@ -178,6 +179,7 @@ AD. При настройке нужно указывать DN групп. Не�
  - a - поле с автодополнением SamAccountName (account)
  - c - поле с автодополнением имени компьютера (computer)
  - m - поле с автодополнением e-mail (mail)
+ - u - поле с для загрузки файлов, файл будет передан в ранбук как base64 строка (upload)
  - w - скрытое поле будет содержать логин пользователя, который запусил ранбук в WebSCO (who run)
  - r - флаг означает, что параметр обязателен для заполнения (required)
 
