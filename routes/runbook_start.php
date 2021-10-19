@@ -58,7 +58,7 @@ function runbook_start(&$core, $params, $post_data)
 		{
 			if(isset($_FILES['param_'.$param['guid']]['tmp_name']) && file_exists($_FILES['param_'.$param['guid']]['tmp_name']))
 			{
-				if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > 500000)
+				if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > 512000)
 				{
 					$result_json['code'] = 1;
 					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge'));
