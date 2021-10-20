@@ -2,7 +2,14 @@
 
 function login(&$core, $params, $post_data)
 {
-	$return_url = $_SERVER['REQUEST_URI'];
+	if(!empty($params[0]) && $params[0] == 'login')
+	{
+		$return_url = '';
+	}
+	else
+	{
+		$return_url = $_SERVER['REQUEST_URI'];
+	}
 
 	$core->UserAuth->logoff();
 
