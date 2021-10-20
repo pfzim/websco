@@ -123,7 +123,7 @@ standard console if, for some reason, you have to run the runbook from it.
 
 After completing the configuration, you need to load the list of runbooks into
 the database by running Sync. And download every time after adding new and
-changing existing runbooks (do not forget about the Orchestrator glitch, when
+changing existing runbooks (do not forget about the [Orchestrator glitch](https://wiki.it-kb.ru/microsoft-system-center/orchestrator/new-orchestrator-runbook-not-shown-on-scorch-orchestration-console-and-web-rest-api), when
 the user does not immediately see the new runbook and needs to clear the cache).
 Loading Jobs is not necessary and takes a long time (I have ~ 20,000 jobs loaded
 for about 30 minutes), if they have already started, then you need to wait for
@@ -204,7 +204,7 @@ AD. При настройке нужно указывать DN групп. Не�
 
 После завершения настройки нужно загрузить список ранбуков в БД выполнив Sync.
 И выполнять загрузку каждый раз после добавления новых и изменения
-существующих ранбуков (не забываем про глюк Оркестратора, когда пользователь
+существующих ранбуков (не забываем про [глюк Оркестратора](https://wiki.it-kb.ru/microsoft-system-center/orchestrator/new-orchestrator-runbook-not-shown-on-scorch-orchestration-console-and-web-rest-api), когда пользователь
 не сразу видит новый ранбук и нужно очищать кэш). Загрузка Job'ов не обязательна
 и занимает продолжительное время (~20 000 джобов загружаютя около 30 минут),
 если уж запустили, то надо дождаться окончания загрузки не прерывая и не
