@@ -16,7 +16,7 @@
 				</tr>
 			</thead>
 			<tbody id="table-data">
-				<?php $i = $offset; foreach($runbooks as &$row) { $i++; ?>
+				<?php $i = $offset; foreach($runbooks as &$row) { ?>
 					<?php if($core->UserAuth->check_permission($row['folder_id'], RB_ACCESS_EXECUTE)) { $i++; ?>
 						<tr>
 							<td><?php eh($i); ?>.</td>
