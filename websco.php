@@ -146,6 +146,9 @@ function exception_handler_ajax($exception)
 	log_file($error_msg);
 }
 
+	define('RBF_DELETED', 0x0001);
+	define('RBF_HIDED', 0x0002);
+
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
 	
@@ -239,6 +242,7 @@ function exception_handler_ajax($exception)
 	else
 	{
 		$core->Router->add_route('runbooks', 'runbooks');							// default route
+		$core->Router->add_route('runbooks_search', 'runbooks_search');
 		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
 		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);

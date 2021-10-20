@@ -99,5 +99,11 @@
 		'WelcomeSubject'			=> 'Добро пожаловать в WebSCO',
 		'ActivityData'				=> 'Данные активити',
 		'FileTooLarge'				=> 'Файл слишком большой',
+		'Search'					=> 'Найти',
+		'FindRunbook'				=> 'Поиск ранбука',
+		'RunbookName'				=> 'Название ранбука',
+		'FolderName'				=> 'Название папки',
+		'SearchResult'				=> 'Результат поиска',
+		'NothingFound'				=> 'Ничего не найдено',
 		'Loading'					=> 'Подождите, идет загрузка...'
 	);

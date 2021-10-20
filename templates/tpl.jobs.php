@@ -1,4 +1,5 @@
 <?php include(TEMPLATES_DIR.'tpl.header.php'); ?>
+<?php include(TEMPLATES_DIR.'tpl.search-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.tree-list.php'); ?>
 
 <div>

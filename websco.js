@@ -492,7 +492,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			var wrapper = document.createElement('div');
 			wrapper.innerHTML = html;
 			el.appendChild(wrapper);
-			
+
 			if(fields[i].autocomplete)
 			{
 				autocomplete_create(gi(form_id + fields[i].name), fields[i].autocomplete);
@@ -529,9 +529,9 @@ function on_received_form(data, form_id)
 		el = gi(form_id + '-fields');
 		el.innerHTML = '';
 		html = '';
-		
+
 		f_append_fields(el, data.fields, form_id, 0);
-		
+
 		html = '<br /><div class="f-right">'
 			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">' + LL.OK + '</button>'
 			+ '&nbsp;'
@@ -794,6 +794,29 @@ function f_show_hide(url, id)
 	return false;
 }
 
+function f_search(url, query)
+{
+	//var fd = new FormData()
+	//fd.append('search', query);
+
+    var form = document.createElement('form');
+    var search = document.createElement('input');
+
+    form.method = 'POST';
+    form.action = url;
+
+    search.type = 'hidden';
+    search.name = 'search';
+    search.value = query;
+    form.appendChild(search);
+
+    document.body.appendChild(form);
+
+    form.submit();
+
+	return false;
+}
+
 function f_toggle_spoiler(id)
 {
 	var el = gi(id);
@@ -960,7 +983,7 @@ function autocomplete_on_keydown(e)
 		}
 	}
 }
-  
+
 function autocomplete_create(input, action)
 {
 	input.setAttribute('data-action', action);
@@ -979,12 +1002,12 @@ function utocomplete_add_active(items)
 	{
 		autocomplete_current_focus = 0;
 	}
-	
+
 	if(autocomplete_current_focus < 0)
 	{
 		autocomplete_current_focus = (items.length - 1);
 	}
-	
+
 	items[autocomplete_current_focus].classList.add('autocomplete-active');
 }
 
@@ -1031,13 +1054,13 @@ function autocomplete_destroy(e)
 			}
         }
     }
-    
+
     function readyStateChange() {
         if ( document.readyState === "complete" ) {
             docReady();
         }
     }
-    
+
     // if document already ready to go, schedule the docReady function to run
     // IE only safe when readyState is "complete", others safe when readyState is "interactive"
     if (document.readyState === "complete" || (!document.attachEvent && document.readyState === "interactive")) {

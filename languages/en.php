@@ -99,5 +99,11 @@
 		'WelcomeSubject'			=> 'Welcome to WebSCO',
 		'ActivityData'				=> 'Activity data',
 		'FileTooLarge'				=> 'The file is too large',
+		'Search'					=> 'Search',
+		'FindRunbook'				=> 'Find runbook',
+		'RunbookName'				=> 'Runbook name',
+		'FolderName'				=> 'Folder name',
+		'SearchResult'				=> 'Search result',
+		'NothingFound'				=> 'Nothing found',
 		'Loading'					=> 'Loading, please wait...'
 	);
