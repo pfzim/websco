@@ -31,6 +31,187 @@ if(file_exists(ROOT_DIR.'inc.config.php'))
 	exit;
 }
 
+$modules = array(
+	'ldap',
+	'SimpleXML',
+	'memcached',
+	'json',
+	'curl',
+	'pcre',
+	//'gd',
+	'mysqli'
+);
+
+$sql = array(
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `login` varchar(255) NOT NULL,
+  `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
+  `sid` varchar(16) DEFAULT NULL,
+  `reset_token` varchar(16) DEFAULT NULL,
+  `flags` int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_access` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `dn` varchar(1024) NOT NULL DEFAULT '',
+  `oid` int(10) unsigned NOT NULL DEFAULT 0,
+  `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `date` datetime NOT NULL,
+  `uid` int(10) unsigned NOT NULL,
+  `operation` varchar(1024) NOT NULL,
+  `params` varchar(4096) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `folder_id` int(10) unsigned NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(4096) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `pid` varchar(36) NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `date` datetime NOT NULL,
+  `pid` int(10) unsigned NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `uid` int(10) unsigned DEFAULT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
+  `pid` int(10) unsigned NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`pid`,`guid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
+  `pid` varchar(36) NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`guid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_config` (
+  `uid` int(10) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `value` varchar(8192) NOT NULL DEFAULT '',
+  PRIMARY KEY (`name`,`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 1);
+EOT
+);
+
+$config = <<<'EOT'
+<?php
+	define('DB_HOST', '#db_host#');
+	define('DB_USER', '#db_user#');
+	define('DB_PASSWD', '#db_passwd#');
+	define('DB_NAME', '#db_name#');
+	define('DB_CPAGE', 'utf8');
+	define('DB_PREFIX', 'w_');
+
+	define('APP_LANGUAGE', '#language#');
+
+	define('USE_GSSAPI', #use_gssapi#);
+
+	define('USE_LDAP', TRUE);
+	define('LDAP_URI', '#ldap_uri#');
+	define('LDAP_USER', '#ldap_user#');
+	define('LDAP_PASSWD', '#ldap_passwd#');
+	define('LDAP_BASE_DN', '#ldap_base#');
+
+	define('MAIL_HOST', '#mail_host#');
+	define('MAIL_FROM', '#mail_from#');
+	define('MAIL_FROM_NAME', '#mail_from_name#');
+	define('MAIL_ADMIN', '#mail_admin#');
+	define('MAIL_ADMIN_NAME', '#mail_admin_name#');
+	define('MAIL_AUTH', #mail_auth#);
+	define('MAIL_LOGIN', '#mail_user#');
+	define('MAIL_PASSWD', '#mail_passwd#');
+	define('MAIL_SECURE', '#mail_secure#');
+	define('MAIL_PORT', #mail_port#);
+	define('MAIL_VERIFY_PEER', #mail_verify_peer#);
+	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
+	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
+
+	define('ORCHESTRATOR_URL', '#scorch_url#');
+	define('ORCHESTRATOR_USER', '#scorch_user#');
+	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
+
+	define('USE_MEMCACHED', #use_memcached#);
+
+	define('APP_URL', '#web_url#');
+	define('USE_PRETTY_LINKS', #use_pretty_links#);
+	define('USE_PRETTY_LINKS_FORCE', #use_pretty_links_force#);
+	define('PRETTY_LINKS_BASE_PATH', '#pretty_links_base_path#');
+
+EOT;
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
@@ -411,177 +592,6 @@ function build_config($config, $params)
 	);
 }
 
-$sql = array(
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_users` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `login` varchar(255) NOT NULL,
-  `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
-  `sid` varchar(16) DEFAULT NULL,
-  `reset_token` varchar(16) DEFAULT NULL,
-  `flags` int(10) unsigned NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_access` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `dn` varchar(1024) NOT NULL DEFAULT '',
-  `oid` int(10) unsigned NOT NULL DEFAULT 0,
-  `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_logs` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `date` datetime NOT NULL,
-  `uid` int(10) unsigned NOT NULL,
-  `operation` varchar(1024) NOT NULL,
-  `params` varchar(4096) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `folder_id` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` varchar(4096) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `pid` varchar(36) NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `date` datetime NOT NULL,
-  `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `uid` int(10) unsigned DEFAULT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
-  `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `value` varchar(4096) NOT NULL,
-  PRIMARY KEY (`pid`,`guid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
-  `pid` varchar(36) NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`guid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_config` (
-  `uid` int(10) unsigned NOT NULL,
-  `name` varchar(255) NOT NULL DEFAULT '',
-  `value` varchar(8192) NOT NULL DEFAULT '',
-  PRIMARY KEY (`name`,`uid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 1);
-EOT
-);
-
-$config = <<<'EOT'
-<?php
-	define('DB_HOST', '#db_host#');
-	define('DB_USER', '#db_user#');
-	define('DB_PASSWD', '#db_passwd#');
-	define('DB_NAME', '#db_name#');
-	define('DB_CPAGE', 'utf8');
-	define('DB_PREFIX', 'w_');
-
-	define('APP_LANGUAGE', '#language#');
-
-	define('USE_GSSAPI', #use_gssapi#);
-
-	define('USE_LDAP', TRUE);
-	define('LDAP_URI', '#ldap_uri#');
-	define('LDAP_USER', '#ldap_user#');
-	define('LDAP_PASSWD', '#ldap_passwd#');
-	define('LDAP_BASE_DN', '#ldap_base#');
-
-	define('MAIL_HOST', '#mail_host#');
-	define('MAIL_FROM', '#mail_from#');
-	define('MAIL_FROM_NAME', '#mail_from_name#');
-	define('MAIL_ADMIN', '#mail_admin#');
-	define('MAIL_ADMIN_NAME', '#mail_admin_name#');
-	define('MAIL_AUTH', #mail_auth#);
-	define('MAIL_LOGIN', '#mail_user#');
-	define('MAIL_PASSWD', '#mail_passwd#');
-	define('MAIL_SECURE', '#mail_secure#');
-	define('MAIL_PORT', #mail_port#);
-	define('MAIL_VERIFY_PEER', #mail_verify_peer#);
-	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
-	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
-
-	define('ORCHESTRATOR_URL', '#scorch_url#');
-	define('ORCHESTRATOR_USER', '#scorch_user#');
-	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
-
-	define('USE_MEMCACHED', #use_memcached#);
-
-	define('APP_URL', '#web_url#');
-	define('USE_PRETTY_LINKS', #use_pretty_links#);
-	define('USE_PRETTY_LINKS_FORCE', #use_pretty_links_force#);
-	define('PRETTY_LINKS_BASE_PATH', '#pretty_links_base_path#');
-
-EOT;
-
-
 	//error_reporting(0);
 
 	if(isset($_GET['action']))
@@ -593,6 +603,29 @@ EOT;
 
 			switch($action)
 			{
+				case 'check_modules':
+				{
+					$result_json = array(
+						'code' => 0,
+						'message' => '',
+					);
+
+					foreach($modules as $module)
+					{
+						if(extension_loaded($module))
+						{
+							$result_json['message'] .= $module." - OK\n";
+						}
+						else
+						{
+							$result_json['code'] = 1;
+							$result_json['message'] .= $module." - missing\n";
+						}
+					}
+
+					echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+				}
+				exit;
 				case 'check_db_conn':
 				{
 					if(empty($_POST['db_host'])) throw new Exception('Host value not defined!');
@@ -1401,6 +1434,18 @@ input:checked + .slider:after
 		<div class="form-horizontal">
 		<form id="uform-fields" action="?action=download_config" method="post" target="_blank">
 			<?php $n = 1 ?>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<h3>Requirements</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_modules');"><?php eh($n++) ?>. Check loaded PHP modules</button>
+					<pre id="result_check_modules" class="alert alert-danger" style="display: none"></pre>
+				</div>
+			</div>
+
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Language settings</h3>
