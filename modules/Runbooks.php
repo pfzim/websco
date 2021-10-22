@@ -1010,16 +1010,25 @@ EOT;
 				'guid' => $row['guid']
 			);
 
-			if((($type == 'list') || ($type == 'flags')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
+			if($type == 'upload')
+			{
+				$form_field['accept'] = '';
+				$form_field['max_size'] = 102400;
+			}
+
+			if((($type == 'list') || ($type == 'flags') || ($type == 'upload')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
 			{
 				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*?)/i', '\2', $name);
 				$list = preg_split('/\s*[,;]\s*/', $matches[1]);
 
-				$form_field['list'] = $list;
-			}
-			elseif($type == 'upload')
-			{
-				$form_field['max_size'] = 102400;
+				if($type == 'upload')
+				{
+					$form_field['accept'] = $list;
+				}
+				else
+				{
+					$form_field['list'] = $list;
+				}
 			}
 
 			$form_fields[] = $form_field;

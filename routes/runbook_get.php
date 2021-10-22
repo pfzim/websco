@@ -78,7 +78,8 @@ function runbook_get(&$core, $params, $post_data)
 		elseif(($param['type'] == 'upload'))
 		{
 			$field['name'] = 'param_'.$param['guid'];
-			$field['maxsize'] = 2000;
+			$field['max_size'] = $param['max_size'];
+			$field['accept'] = $param['accept'];
 		}
 		elseif(($param['type'] == 'who'))
 		{
