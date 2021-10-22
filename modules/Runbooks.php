@@ -1003,28 +1003,26 @@ EOT;
 
 			$name = preg_replace('/\s*:\s*$/i', '', $name);
 
+			$form_field = array(
+				'type' => $type,
+				'required' => $required,
+				'name' => $name,
+				'guid' => $row['guid']
+			);
+
 			if((($type == 'list') || ($type == 'flags')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
 			{
 				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*?)/i', '\2', $name);
 				$list = preg_split('/\s*[,;]\s*/', $matches[1]);
 
-				$form_fields[] = array(
-					'type' => $type,
-					'required' => $required,
-					'name' => $name,
-					'guid' => $row['guid'],
-					'list' => $list
-				);
+				$form_field['list'] = $list;
 			}
-			else
+			elseif($type == 'upload')
 			{
-				$form_fields[] = array(
-					'type' => $type,
-					'required' => $required,
-					'name' => $name,
-					'guid' => $row['guid']
-				);
+				$form_field['max_size'] = 102400;
 			}
+
+			$form_fields[] = $form_field;
 		}
 
 		return $form_fields;
