@@ -61,7 +61,7 @@ function runbook_start(&$core, $params, $post_data)
 				if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > $param['max_size'])
 				{
 					$result_json['code'] = 1;
-					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge'));
+					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge').' (max '.$param['max_size'].' bytes)');
 					continue;
 				}
 
