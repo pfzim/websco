@@ -7,7 +7,7 @@
 		<?php print_folders_tree_id('runbooks', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
-		<h3><?php L('CurrentFolder') ?>: <?php eh($current_folder['name']); ?></h3>
+		<h3><?php eh($current_folder['name']); ?></h3>
 
 		<table id="table" class="main-table">
 			<thead>
