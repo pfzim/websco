@@ -8,5 +8,9 @@
 					<input type="hidden" name="uid" value="<?php eh($user_id); ?>"/>
 					<input type="submit" value="<?php L('Approve') ?>" /><br />
 				</form>
+				<form action="<?php ln('register_decline') ?>" method="post">
+					<input type="hidden" name="uid" value="<?php eh($user_id); ?>"/>
+					<input type="submit" value="<?php L('Decline') ?>" /><br />
+				</form>
 			</div>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

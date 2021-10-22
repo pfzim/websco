@@ -737,7 +737,12 @@ function f_call_action(ev, action)
 
 function f_delete_perm(ev)
 {
-	f_call_action(ev, 'permission_delete');
+	if(window.confirm(LL.ConfirmDelete))
+	{
+		f_call_action(ev, 'permission_delete');
+	}
+
+	return false;
 }
 
 function f_deactivate_user(ev)
@@ -745,9 +750,27 @@ function f_deactivate_user(ev)
 	f_call_action(ev, 'user_deactivate');
 }
 
+function f_delete_user(ev)
+{
+	if(window.confirm(LL.ConfirmDelete))
+	{
+		f_call_action(ev, 'user_delete');
+	}
+}
+
 function f_activate_user(ev)
 {
 	f_call_action(ev, 'user_activate');
+}
+
+function f_confirm_async(a)
+{
+	if(window.confirm(LL.ConfirmOperation))
+	{
+		return f_async_ex(a.href);
+	}
+
+	return false;
 }
 
 function f_async(a)

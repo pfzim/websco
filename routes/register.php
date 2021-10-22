@@ -57,11 +57,16 @@ function register(&$core, $params, $post_data)
 				<body>
 EOT;
 
-		$html .= 'To approve new registered user follow this link: <a href="'.APP_LINK_EXTERNAL.'register_approve_form/'.$user_id.'">'.APP_LINK_EXTERNAL.'register_approve_form/'.$user_id.'</a>';
+		$html .= 'New request to register an administrator.<br />';
+		$html .= '<br />';
+		$html .= 'Login: '.htmlspecialchars($login).'<br />';
+		$html .= 'E-Mail: '.htmlspecialchars($mail).'<br />';
+		$html .= '<br />';
+		$html .= 'To approve new registered user follow this link: <a href="'.WEB_LINK_EXTERNAL.'register_approve_form/'.$user_id.'">'.WEB_LINK_EXTERNAL.'register_approve_form/'.$user_id.'</a>';
 
 		$html .= '</body></html>';
 
-		$plain = 'To approve new registered user follow this link: '.APP_LINK_EXTERNAL.'register_approve_form/'.$user_id;
+		$plain = 'To approve new registered user follow this link: '.WEB_LINK_EXTERNAL.'register_approve_form/'.$user_id;
 
 		$core->Mailer->send_mail(array(MAIL_TO_ADMIN), LL('ApproveRequestSubject'), $html, $plain);
 

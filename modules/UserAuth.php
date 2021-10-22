@@ -33,6 +33,7 @@
 
 define('UA_DISABLED',	0x0001);  /// Ignored for LDAP user
 define('UA_LDAP',		0x0002);  /// Is a LDAP user (overwise is internal user)
+define('UA_DELETED',	0x0004);  /// User is deleted
 
 class UserAuth
 {
@@ -156,7 +157,7 @@ class UserAuth
 						`@users` AS m
 					WHERE
 						m.`login` = !
-						AND (m.`flags` & (0x0002)) = 0x0002
+						AND (m.`flags` & ({%UA_LDAP})) = {%UA_LDAP}
 					LIMIT 1
 				", $sam_account_name
 			)))
@@ -194,7 +195,7 @@ class UserAuth
 					WHERE
 						m.`login` = !
 						AND m.`passwd` = MD5(!)
-						AND (m.`flags` & (0x0001 | 0x0002)) = 0x0000
+						AND (m.`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0x0000
 					LIMIT 1
 				", $login, $passwd.$this->salt
 			)))
@@ -242,7 +243,7 @@ class UserAuth
 				m.`login` = !
 				AND m.`sid` IS NOT NULL
 				AND m.`sid` = !
-				AND (m.`flags` & 0x0001) = 0
+				AND (m.`flags` & ({%UA_DISABLED} | {%UA_DELETED})) = 0
 			LIMIT 1
 		", $login, $token)))
 		{
@@ -283,13 +284,13 @@ class UserAuth
 
 	public function add($login, $passwd, $mail)
 	{
-		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE (u.`login`= ! OR u.`mail` = !) AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $login, $mail)))
+		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE (u.`login`= ! OR u.`mail` = !) AND (`flags` & ({%UA_DELETED} | {%UA_LDAP})) = 0 LIMIT 1', $login, $mail)))
 		{
 			$this->core->error_ex('User already exist!', $this->rise_exception);
 			return 0;
 		}
 
-		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, 0x0001)', $login, $passwd.$this->salt, $mail)))
+		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, {%UA_DISABLED})', $login, $passwd.$this->salt, $mail)))
 		{
 			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return 0;
@@ -302,9 +303,9 @@ class UserAuth
 	{
 		$affected = 0;
 
-		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE u.`id` = # AND u.`reset_token` = ! AND (u.`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $uid, $token)))
+		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE u.`id` = # AND u.`reset_token` = ! AND (u.`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $uid, $token)))
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
 			{
 				//return ($affected > 0);
 				return TRUE;
@@ -318,7 +319,7 @@ class UserAuth
 	{
 		$token = bin2hex(random_bytes(8));
 
-		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $token, $uid)))
+		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $token, $uid)))
 		{
 			return TRUE;
 		}
@@ -332,7 +333,7 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $passwd.$this->salt, $uid), $affected))
 			{
 				//return ($affected > 0);
 				return TRUE;
@@ -356,7 +357,7 @@ class UserAuth
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
 		{
-			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $this->uid, $passwd.$this->salt)))
+			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $this->uid, $passwd.$this->salt)))
 			{
 				if(intval($user[0][0]) == $this->uid)
 				{
@@ -383,7 +384,7 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail, $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & ({%UA_LDAP})) = 0 LIMIT 1', $login, $mail, $uid), $affected))
 			{
 				//return ($affected > 0);
 				return TRUE;
@@ -391,7 +392,7 @@ class UserAuth
 		}
 		else
 		{
-			if(!$this->core->db->select_ex($users, rpv('SELECT u.`id` FROM `@users` AS u WHERE (u.`login` = ! OR u.`mail` = !) AND (u.`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail)))
+			if(!$this->core->db->select_ex($users, rpv('SELECT u.`id` FROM `@users` AS u WHERE (u.`login` = ! OR u.`mail` = !) AND (u.`flags` & ({%UA_DELETED} | {%UA_LDAP})) = 0 LIMIT 1', $login, $mail)))
 			{
 				if($this->core->db->put(rpv('INSERT INTO `@users` (`login`, `mail`, `passwd`, `flags`) VALUES (!, !, \'\', 0)', $login, $mail)))
 				{
@@ -407,13 +408,29 @@ class UserAuth
 		return FALSE;
 	}
 
+	public function delete_user_ex($uid)
+	{
+		$affected = 0;
+
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | {%UA_DELETED}) WHERE `id` = # AND (`flags` & ({%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $uid), $affected))
+			{
+				//return ($affected > 0);
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
 	public function deactivate_user_ex($uid)
 	{
 		$affected = 0;
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | 0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | {%UA_DISABLED}) WHERE `id` = # AND (`flags` & {%UA_LDAP}) = 0 LIMIT 1', $uid), $affected))
 			{
 				//return ($affected > 0);
 				return TRUE;
@@ -429,7 +446,7 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` & ~0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` & ~{%UA_DISABLED}) WHERE `id` = # AND (`flags` & {%UA_LDAP}) = 0 LIMIT 1', $uid), $affected))
 			{
 				//return ($affected > 0);
 				return TRUE;
@@ -452,7 +469,7 @@ class UserAuth
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can activate
 		{
-			if($this->core->db->put(rpv('UPDATE @users SET `flags` = (`flags` & ~0x0001) WHERE `login` = ! AND `id` = #', $login, $id)))
+			if($this->core->db->put(rpv('UPDATE @users SET `flags` = (`flags` & ~{%UA_DISABLED}) WHERE `login` = ! AND `id` = #', $login, $id)))
 			{
 				//$this->core->db->put(rpv('INSERT INTO `@log` (`date`, `uid`, `type`, `p1`, `ip`) VALUES (NOW(), #, #, #, !)', 0, LOG_LOGIN_ACTIVATE, $id, $ip));
 				$mail = FALSE;
@@ -480,7 +497,7 @@ class UserAuth
 
 	public function find_user_by_mail(&$mail)
 	{
-		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! AND (u.`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $mail)))
+		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! AND (u.`flags` & ({%UA_DISABLED} | {%UA_LDAP})) = 0 LIMIT 1', $mail)))
 		{
 			$mail = $result[0][1];
 			return intval($result[0][0]);
@@ -491,7 +508,7 @@ class UserAuth
 
 	private function load_user_info()
 	{
-		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & 0x0001) = 0 LIMIT 1', $this->uid)))
+		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & ({%UA_DISABLED} | {%UA_DELETED})) = 0 LIMIT 1', $this->uid)))
 		{
 			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return FALSE;

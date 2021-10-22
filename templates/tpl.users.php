@@ -28,6 +28,7 @@
 						<?php } else { ?>
 						<span class="command" onclick="f_deactivate_user(event);"><?php L('Deactivate') ?></span>
 						<?php } ?>
+						<span class="command" onclick="f_delete_user(event);"><?php L('Delete') ?></span>
 					</td>
 				</tr>
 			<?php } ?>

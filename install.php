@@ -205,7 +205,7 @@ $config = <<<'EOT'
 
 	define('USE_MEMCACHED', #use_memcached#);
 
-	define('APP_URL', '#web_url#');
+	define('WEB_URL', '#web_url#');
 	define('USE_PRETTY_LINKS', #use_pretty_links#);
 	define('USE_PRETTY_LINKS_FORCE', #use_pretty_links_force#);
 	define('PRETTY_LINKS_BASE_PATH', '#pretty_links_base_path#');

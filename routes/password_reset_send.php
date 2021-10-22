@@ -35,11 +35,11 @@ function password_reset_send(&$core, $params, $post_data)
 	<body>
 EOT;
 
-	$html .= 'To reset password follow this link: <a href="'.APP_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token.'">'.APP_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token.'</a>';
+	$html .= 'To reset password follow this link: <a href="'.WEB_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token.'">'.WEB_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token.'</a>';
 
 	$html .= '</body></html>';
 
-	$plain = 'To reset password follow this link: '.APP_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token;
+	$plain = 'To reset password follow this link: '.WEB_LINK_EXTERNAL.'password_reset_form/'.$user_id.'/'.$reset_token;
 
 	if($result_json['code'])
 	{

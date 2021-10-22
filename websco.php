@@ -111,25 +111,25 @@ if (defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS
 		|| (function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
 	))
 {
-	define('APP_LINK_PREFIX', PRETTY_LINKS_BASE_PATH);			// '/websco/'
-	define('APP_LINK_STATIC_PREFIX', PRETTY_LINKS_BASE_PATH);
-	define('APP_LINK_EXTERNAL', APP_URL);
+	define('WEB_LINK_PREFIX', PRETTY_LINKS_BASE_PATH);			// '/websco/'
+	define('WEB_LINK_STATIC_PREFIX', PRETTY_LINKS_BASE_PATH);
+	define('WEB_LINK_EXTERNAL', WEB_URL);
 }
 else
 {
-	define('APP_LINK_PREFIX', basename(__FILE__).'?path=');
-	define('APP_LINK_STATIC_PREFIX', '');
-	define('APP_LINK_EXTERNAL', APP_URL.APP_LINK_PREFIX);
+	define('WEB_LINK_PREFIX', basename(__FILE__).'?path=');
+	define('WEB_LINK_STATIC_PREFIX', '');
+	define('WEB_LINK_EXTERNAL', WEB_URL.WEB_LINK_PREFIX);
 }
 
 function ln($path)
 {
-	eh(APP_LINK_PREFIX.$path);
+	eh(WEB_LINK_PREFIX.$path);
 }
 
 function ls($path)
 {
-	eh(APP_LINK_STATIC_PREFIX.$path);
+	eh(WEB_LINK_STATIC_PREFIX.$path);
 }
 
 function exception_handler($exception)
@@ -272,14 +272,16 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('users', 'users');
 		$core->Router->add_route('user_get', 'user_get', TRUE);
 		$core->Router->add_route('user_save', 'user_save', TRUE);
-		$core->Router->add_route('user_deactivate', 'user_deactivate', TRUE);
 		$core->Router->add_route('user_activate', 'user_activate', TRUE);
+		$core->Router->add_route('user_deactivate', 'user_deactivate', TRUE);
+		$core->Router->add_route('user_delete', 'user_delete', TRUE);
 
 		$core->Router->add_route('password_change_form', 'password_change_form', TRUE);
 		$core->Router->add_route('password_change', 'password_change', TRUE);
 
 		$core->Router->add_route('register_approve_form', 'register_approve_form');
 		$core->Router->add_route('register_approve', 'register_approve');
+		$core->Router->add_route('register_decline', 'register_decline');
 
 		$core->Router->add_route('memcached_flush', 'memcached_flush', TRUE);
 	}

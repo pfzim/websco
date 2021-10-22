@@ -26,6 +26,6 @@ function logon(&$core, $params, $post_data)
 	}
 	else
 	{
-		header('Location: '.APP_LINK_PREFIX);
+		header('Location: '.WEB_LINK_PREFIX);
 	}
 }

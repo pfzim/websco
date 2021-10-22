@@ -9,7 +9,17 @@ function users(&$core, $params, $post_data)
 		exit;
 	}
 
-	$core->db->select_assoc_ex($users, rpv('SELECT u.`id`, u.`login`, u.`mail`, u.`flags` FROM @users AS u WHERE (u.`flags` & (0x0002)) = 0x0000 ORDER BY u.`login`'));
+	$core->db->select_assoc_ex($users, rpv('
+		SELECT
+			u.`id`,
+			u.`login`,
+			u.`mail`,
+			u.`flags`
+		FROM @users AS u
+		WHERE
+			(u.`flags` & ({%UA_LDAP} | {%UA_DELETED})) = 0
+		ORDER BY u.`login`
+	'));
 
 	include(TEMPLATES_DIR.'tpl.users.php');
 }

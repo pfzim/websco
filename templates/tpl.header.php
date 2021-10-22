@@ -8,8 +8,8 @@
 		<link type="text/css" href="<?php ls('templates/style.css') ?>" rel="stylesheet" />
 		<link type="text/css" href="<?php ls('templates/flatpickr.material_red.css') ?>" rel="stylesheet" />
 		<script>
-			g_link_prefix = '<?php echo APP_LINK_PREFIX; ?>';
-			g_link_static_prefix = '<?php echo APP_LINK_STATIC_PREFIX; ?>';
+			g_link_prefix = '<?php echo WEB_LINK_PREFIX; ?>';
+			g_link_static_prefix = '<?php echo WEB_LINK_STATIC_PREFIX; ?>';
 		</script>
 		<script src="<?php ls('languages/'.APP_LANGUAGE.'.js') ?>"></script>
 		<script src="<?php ls('websco.js') ?>"></script>
