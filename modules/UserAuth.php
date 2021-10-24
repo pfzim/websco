@@ -640,7 +640,7 @@ class UserAuth
 		if(	$this->uid
 			&& $this->is_ldap_user()
 			&& $link
-			&& $this->core->db->select_ex($result, rpv("SELECT `dn`, `allow_bits` FROM @access WHERE `oid` = #", $object_id))
+			&& $this->core->db->select_ex($result, rpv("SELECT `sid`, `dn`, `allow_bits` FROM @access WHERE `oid` = #", $object_id))
 		)
 		{
 			foreach($result as &$row)
@@ -663,9 +663,24 @@ class UserAuth
 				}
 				ldap_free_result($sr);
 				*/
-				if($this->ldap->search($records, '(&(objectClass=user)(objectCategory=person)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
+				
+				if(defined('LDAP_USE_SID') && LDAP_USE_SID)
 				{
-					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[1]);
+					if($this->ldap->search($records, '(&(objectCategory=group)(objectSID='.$row[0].'))', array('distinguishedName')) != 1)
+					{
+						continue;
+					}
+
+					$group_dn = $records[0]['distinguishedName'][0];
+				}
+				else
+				{
+					$group_dn = $row[1];
+				}
+				
+				if($this->ldap->search($records, '(&(objectClass=user)(objectCategory=person)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$group_dn.'))', array('samaccountname', 'objectsid')) == 1)
+				{
+					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[2]);
 
 					//log_file('Object: '.$object_id.', Group: '.$row[0].', Perm: '.$this->permissions_to_string($this->rights[$object_id]));
 					/*
@@ -779,4 +794,44 @@ function unset_permission_bit(&$bits, $bit)
 {
 	$bit--;
 	$bits[(int) ($bit / 8)] = chr(ord($bits[(int) ($bit / 8)]) & ((0x1 << ($bit % 8)) ^ 0xF));
+}
+
+
+// https://stackoverflow.com/questions/39533560/php-ldap-get-user-sid
+function bin_to_str_sid($binary_sid) {
+
+    $sid = NULL;
+    /* 64bt PHP */
+    if(strlen(decbin(~0)) == 64)
+    {
+        // Get revision, indentifier, authority 
+        $parts = unpack('Crev/x/nidhigh/Nidlow', $binary_sid);
+        // Set revision, indentifier, authority 
+        $sid = sprintf('S-%u-%d',  $parts['rev'], ($parts['idhigh']<<32) + $parts['idlow']);
+        // Translate domain
+        $parts = unpack('x8/V*', $binary_sid);
+        // Append if parts exists
+        if ($parts) $sid .= '-';
+        // Join all
+        $sid.= join('-', $parts);
+    }
+    /* 32bit PHP */
+    else
+    {   
+        $sid = 'S-';
+        $sidinhex = str_split(bin2hex($binary_sid), 2);
+        // Byte 0 = Revision Level
+        $sid = $sid.hexdec($sidinhex[0]).'-';
+        // Byte 1-7 = 48 Bit Authority
+        $sid = $sid.hexdec($sidinhex[6].$sidinhex[5].$sidinhex[4].$sidinhex[3].$sidinhex[2].$sidinhex[1]);
+        // Byte 8 count of sub authorities - Get number of sub-authorities
+        $subauths = hexdec($sidinhex[7]);
+        //Loop through Sub Authorities
+        for($i = 0; $i < $subauths; $i++) {
+            $start = 8 + (4 * $i);
+            // X amount of 32Bit (4 Byte) Sub Authorities
+            $sid = $sid.'-'.hexdec($sidinhex[$start+3].$sidinhex[$start+2].$sidinhex[$start+1].$sidinhex[$start]);
+        }
+    }
+    return $sid;
 }

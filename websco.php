@@ -264,6 +264,7 @@ function exception_handler_ajax($exception)
 
 		$core->Router->add_route('permissions', 'permissions');
 		$core->Router->add_route('permissions_get', 'permissions_get', TRUE);
+		//$core->Router->add_route('permissions_convert', 'permissions_convert', TRUE);
 		$core->Router->add_route('permission_delete', 'permission_delete', TRUE);
 		$core->Router->add_route('permission_get', 'permission_get', TRUE);
 		$core->Router->add_route('permission_new', 'permission_new', TRUE);

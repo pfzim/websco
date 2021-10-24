@@ -184,6 +184,7 @@ $config = <<<'EOT'
 	define('LDAP_USER', '#ldap_user#');
 	define('LDAP_PASSWD', '#ldap_passwd#');
 	define('LDAP_BASE_DN', '#ldap_base#');
+	define('LDAP_USE_SID', #ldap_use_sid#);
 
 	define('MAIL_HOST', '#mail_host#');
 	define('MAIL_FROM', '#mail_from#');
@@ -532,6 +533,7 @@ function build_config($config, $params)
 			'#ldap_user#',
 			'#ldap_passwd#',
 			'#ldap_base#',
+			'#ldap_use_sid#',
 			'#mail_host#',
 			'#mail_port#',
 			'#mail_user#',
@@ -565,6 +567,7 @@ function build_config($config, $params)
 			sql_escape(@$params['ldap_user']),
 			sql_escape(@$params['ldap_passwd']),
 			sql_escape(@$params['ldap_base']),
+			intval(@$params['ldap_use_sid'])?'TRUE':'FALSE',
 			sql_escape(@$params['mail_host']),
 			sql_escape(@$params['mail_port']),
 			sql_escape(@$params['mail_user']),
@@ -1762,6 +1765,12 @@ input:checked + .slider:after
 				<label for="use_memcached" class="control-label col-sm-2">Use memcached:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="use_memcached" name="use_memcached" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="ldap_use_sid" class="control-label col-sm-2">LDAP use SID for access groups (otherwise DN):</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="ldap_use_sid" name="ldap_use_sid" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">

@@ -52,6 +52,7 @@
 	define('LDAP_USER', 'domain\\websco');
 	define('LDAP_PASSWD', '');
 	define('LDAP_BASE_DN', 'DC=contoso,DC=local');
+	define('LDAP_USE_SID', TRUE);
 
 	define('APP_LANGUAGE', 'en');
 

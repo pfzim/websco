@@ -20,7 +20,7 @@ function permissions_get(&$core, $params, $post_data)
 		$current_section = &$folder[0];
 	}
 
-	$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_section['id']));
+	$core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`sid`, a.`dn`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # ORDER BY a.`dn`', $current_section['id']));
 
 	$result_json = array(
 		'code' => 0,

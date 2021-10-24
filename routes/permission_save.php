@@ -41,17 +41,24 @@ function permission_save(&$core, $params, $post_data)
 		exit;
 	}
 
+	if($core->LDAP->search($result, '(&(objectCategory=group)(distinguishedName='.ldap_escape($v_dn, null, LDAP_ESCAPE_FILTER).'))', array('distinguishedName', 'objectSID')) == 1)
+	{
+		$v_sid = bin_to_str_sid($result[0]['objectSid'][0]);
+		//log_file(print_r($result, true));
+	}
+
 	if(!$v_id)
 	{
-		if($core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)",
+		if($core->db->put(rpv("INSERT INTO `@access` (`oid`, `sid`, `dn`, `allow_bits`) VALUES (#, !, !, !)",
 			$v_pid,
+			$v_sid,
 			$v_dn,
 			$v_allow
 		)))
 		{
 			$v_id = $core->db->last_id();
 
-			log_db('Added permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
+			log_db('Added permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';sid='.$v_sid.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
 
 			$result_json['id'] = $v_id;
 			$result_json['pid'] = $v_pid;
@@ -65,14 +72,15 @@ function permission_save(&$core, $params, $post_data)
 	}
 	else
 	{
-		if($core->db->put(rpv("UPDATE `@access` SET `dn` = !, `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1",
+		if($core->db->put(rpv("UPDATE `@access` SET `sid` = !, `dn` = !, `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1",
+			$v_sid,
 			$v_dn,
 			$v_allow,
 			$v_id,
 			$v_pid
 		)))
 		{
-			log_db('Updated permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
+			log_db('Updated permission', 'id='.$v_id.';oid='.$v_pid.';dn='.$v_dn.';sid='.$v_sid.';perms='.$core->UserAuth->permissions_to_string($v_allow), 0);
 
 			$result_json['id'] = $v_id;
 			$result_json['pid'] = $v_pid;
