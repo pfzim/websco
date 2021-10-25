@@ -59,6 +59,7 @@ EOT
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_access` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sid` varchar(256) NOT NULL DEFAULT '',
   `dn` varchar(1024) NOT NULL DEFAULT '',
   `oid` int(10) unsigned NOT NULL DEFAULT 0,
   `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
