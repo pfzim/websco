@@ -825,6 +825,7 @@ EOT;
 			SELECT
 				j.`id`,
 				j.`guid`,
+				DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
 				r.`name`,
 				r.`id` AS `runbook_id`,
 				r.`guid` AS `runbook_guid`,
@@ -857,15 +858,28 @@ EOT;
 			}
 		}
 
+		$modified_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', (string) $properties->LastModifiedTime), new DateTimeZone('UTC'));
+		if($modified_date === FALSE)
+		{
+			$modified_date = '00.00.0000 00:00:00';
+		}
+		else
+		{
+			$modified_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+			$modified_date = $modified_date->format('d.m.Y H:i:s');
+		}
+
 		$job_info = array(
 			'id' => $job['id'],
 			'guid' => $job['guid'],
 			'name' => $job['name'],
+			'run_date' => $job['run_date'],
 			'runbook_id' => $job['runbook_id'],
 			'runbook_guid' => $job['runbook_guid'],
 			'folder_id' => $job['folder_id'],
 			'user' => $job['login'],
 			'status' => (string) $properties->Status,
+			'modified_date' => $modified_date,
 			'sid' => $sid,
 			'sid_name' => $sid_name,
 			'instances' => array()

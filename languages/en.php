@@ -49,6 +49,8 @@
 		'CurrentFolder'				=> 'Current folder',
 		'JobsForRunbook'			=> 'Jobs for runbook',
 		'Date'						=> 'Date',
+		'DateRun'					=> 'Run date',
+		'DateModified'				=> 'Modified date',
 		'SyncRunbooks'				=> 'Sync folders, runbooks and activities',
 		'SyncJobs'					=> 'Sync jobs (too slow)',
 		'UsageExample'				=> 'Usage example',

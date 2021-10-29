@@ -6,6 +6,8 @@
 				<span class="close" onclick="this.parentNode.parentNode.style.display='none'">&times;</span>
 				<h3 id="runbook_title"></h3>
 				<?php L('JobID') ?>: <span id="job_guid"></span><br />
+				<?php L('DateRun') ?>: <span id="job_run_date"></span><br />
+				<?php L('DateModified') ?>: <span id="job_modified_date"></span><br />
 				<?php L('JobSID') ?>: <span id="job_sid"></span><br />
 				<?php L('WhoRun') ?>: <span id="job_user"></span><br />
 				<br />

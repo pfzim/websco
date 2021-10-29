@@ -131,6 +131,10 @@ function f_get_job(guid)
 				el.innerText = data.name;
 				el = gi('job_guid');
 				el.innerText = data.guid;
+				el = gi('job_run_date');
+				el.innerText = data.run_date;
+				el = gi('job_modified_date');
+				el.innerText = data.modified_date;
 				el = gi('job_sid');
 				el.innerText = data.sid + ' (' + data.sid_name + ')';
 				el = gi('job_status');
