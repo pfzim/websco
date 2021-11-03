@@ -402,8 +402,8 @@ body {
     border-radius: 4px;
     transform: translate(-50%, -50%);
 	overflow-y: auto;
-	max-width: 1200px;
-	max-height: 900px;
+	max-width: 90vw;
+	max-height: 95vh;
 }
 .form-header {
     width: 500px;
