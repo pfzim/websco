@@ -821,6 +821,7 @@ function f_show_hide(url, id)
 	return false;
 }
 
+/*
 function f_search(url, query)
 {
 	//var fd = new FormData()
@@ -840,6 +841,15 @@ function f_search(url, query)
     document.body.appendChild(form);
 
     form.submit();
+
+	return false;
+}
+*/
+
+function f_search(f)
+{
+    f.action = f.action + '/' + encodeURIComponent(gi('search').value);
+    f.submit();
 
 	return false;
 }

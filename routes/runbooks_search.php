@@ -6,16 +6,16 @@ function runbooks_search(&$core, $params, $post_data)
 
 	$total = 0;
 	$offset = 0;
-	if(!empty($params[1]))
+	if(!empty($params[2]))
 	{
-		$offset = intval($params[1]);
+		$offset = intval($params[2]);
 	}
 
 	$search = '';
 	$where = '';
-	if(!empty($post_data['search']))
+	if(!empty($params[1]))
 	{
-		$search = $post_data['search'];
+		$search = urldecode($params[1]);
 		$where = rpv('
 				AND (
 					r.`name` LIKE \'%{r0}%\'
@@ -23,8 +23,8 @@ function runbooks_search(&$core, $params, $post_data)
 					OR r.`description` LIKE \'%{r0}%\'
 				)
 			',
-			sql_escape(trim($search)
-		));
+			sql_escape(trim($search))
+		);
 	}
 
 	if($core->db->select_ex($runbooks_total, rpv('
