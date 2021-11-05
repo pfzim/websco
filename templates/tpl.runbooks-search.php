@@ -34,7 +34,7 @@
 			<p><?php L('NothingFound') ?></p>
 		<?php } ?>
 
-		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('runbooks_search/'.urlencode($search).'/0'); ?>">1</a>
+		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('runbooks_search/0/'.urlencode($search)); ?>">1</a>
 		<?php 
 			$min = max(100, $offset - 1000);
 			$max = min($offset + 1000, $total - ($total % 100));
@@ -44,7 +44,7 @@
 			for($i = $min; $i <= $max; $i += 100)
 			{
 			?>
-				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('runbooks_search/'.urlencode($search).'/'.$i); ?>"><?php eh($i/100 + 1); ?></a>
+				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('runbooks_search/'.$i.'/'.urlencode($search)); ?>"><?php eh($i/100 + 1); ?></a>
 			<?php
 			}
 
@@ -52,7 +52,7 @@
 			if($i < $max)
 			{
 			?>
-				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('runbooks_search/'.urlencode($search).'/'.$max); ?>"><?php eh($max/100 + 1); ?></a>
+				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('runbooks_search/'.$max.'/'.urlencode($search)); ?>"><?php eh($max/100 + 1); ?></a>
 			<?php
 			}
 		?>
