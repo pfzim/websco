@@ -1003,12 +1003,12 @@ function autocomplete_on_keydown(e)
 	if(e.keyCode == 40)
 	{
 		autocomplete_current_focus++;
-		utocomplete_add_active(items);
+		autocomplete_add_active(items);
 	}
 	else if(e.keyCode == 38) //up
 	{
 		autocomplete_current_focus--;
-		utocomplete_add_active(items);
+		autocomplete_add_active(items);
 	}
 	else if (e.keyCode == 13)
 	{
@@ -1031,7 +1031,7 @@ function autocomplete_create(input, action)
 	input.addEventListener('keydown', autocomplete_on_keydown);
 }
 
-function utocomplete_add_active(items)
+function autocomplete_add_active(items)
 {
 	if(!items) return false;
 
