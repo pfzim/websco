@@ -9,6 +9,6 @@
 	</head>
 	<body>
 		<h3 align="center"><?php L('Error') ?>:</h3>
-		<p><?php eh($error_msg); ?></p>
+		<pre><?php eh($error_msg); ?></pre>
 	</body>
 </html>

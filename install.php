@@ -169,7 +169,7 @@ EOT
 
 $config = <<<'EOT'
 <?php
-	define('DB_HOST', '#db_host#');
+	define('DB_RW_HOST', '#db_host#');
 	define('DB_USER', '#db_user#');
 	define('DB_PASSWD', '#db_passwd#');
 	define('DB_NAME', '#db_name#');

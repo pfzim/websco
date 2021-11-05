@@ -848,8 +848,10 @@ function f_search(url, query)
 
 function f_search(f)
 {
-    f.action = f.action + '/' + encodeURIComponent(gi('search').value);
-    f.submit();
+    //f.action = f.action + '/' + encodeURIComponent(gi('search').value);
+    //f.submit();
+
+	window.location = f.action + '/' + encodeURIComponent(gi('search').value);
 
 	return false;
 }
