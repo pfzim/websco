@@ -212,6 +212,8 @@ $config = <<<'EOT'
 	define('USE_PRETTY_LINKS_FORCE', #use_pretty_links_force#);
 	define('PRETTY_LINKS_BASE_PATH', '#pretty_links_base_path#');
 
+	define('LOG_FILE', '#log_file#');
+
 EOT;
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -496,6 +498,8 @@ function build_config($config, $params)
 
 	if(empty($params['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
 
+	if(empty($params['log_file'])) throw new Exception('Log file value not defined!');
+
 	if(empty($params['mail_host'])) throw new Exception('MAIL Host value not defined!');
 	if(empty($params['mail_port'])) throw new Exception('MAIL Port value not defined!');
 	if(empty($params['mail_from'])) throw new Exception('MAIL From value not defined!');
@@ -550,6 +554,7 @@ function build_config($config, $params)
 			'#scorch_url#',
 			'#scorch_user#',
 			'#scorch_passwd#',
+			'#log_file#',
 			'#web_url#',
 			'#pretty_links_base_path#',
 			'#mail_auth#',
@@ -584,6 +589,7 @@ function build_config($config, $params)
 			sql_escape(@$params['scorch_url']),
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
+			sql_escape(@$params['log_file']),
 			sql_escape(@$params['web_url']),
 			sql_escape(@$params['pretty_links_base_path']),
 			empty($params['mail_user'])?'FALSE':'TRUE',
@@ -1772,6 +1778,12 @@ input:checked + .slider:after
 				<label for="ldap_use_sid" class="control-label col-sm-2">LDAP use SID for access groups (otherwise DN):</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="ldap_use_sid" name="ldap_use_sid" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="log_file" class="control-label col-sm-2">Log file:</label>
+				<div class="col-sm-5">
+					<input id="log_file" name="log_file" class="form-control" type="text" value="/var/log/websco/websco.log" />
 				</div>
 			</div>
 			<div class="form-group">

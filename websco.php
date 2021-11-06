@@ -85,7 +85,10 @@ function log_db($operation, $params, $flags)
 
 function log_file($message)
 {
-	error_log(date('c').'  '.$message."\n", 3, '/var/log/websco/websco.log');
+	if(defined('LOG_FILE'))
+	{
+		error_log(date('c').'  '.$message."\n", 3, LOG_FILE);
+	}
 }
 
 function LL($key)
