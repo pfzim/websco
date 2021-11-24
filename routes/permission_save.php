@@ -101,7 +101,7 @@ function permission_save(&$core, $params, $post_data)
 
 	if($v_apply_to_childs)
 	{
-		function permissions_apply_to_childs($parent_guid, $v_dn, $v_allow, $replace)
+		function permissions_apply_to_childs($parent_guid, $v_dn, $v_sid, $v_allow, $replace)
 		{
 			global $core;
 			$childs = 0;
@@ -123,16 +123,16 @@ function permission_save(&$core, $params, $post_data)
 						{
 							$bits = $core->UserAuth->merge_permissions($v_allow, $permissions[0]['allow_bits']);
 						}
-						$core->db->put(rpv("UPDATE `@access` SET `allow_bits` = ! WHERE `id` = # AND `oid` = # LIMIT 1", $bits, $permissions[0]['id'], $folder['id']));
+						$core->db->put(rpv("UPDATE `@access` SET `allow_bits` = !, `sid` = ! WHERE `id` = # AND `oid` = # LIMIT 1", $bits, $v_sid, $permissions[0]['id'], $folder['id']));
 						//log_file('  UPDATE');
 					}
 					else
 					{
-						$core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `allow_bits`) VALUES (#, !, !)", $folder['id'], $v_dn, $v_allow));
+						$core->db->put(rpv("INSERT INTO `@access` (`oid`, `dn`, `sid`, `allow_bits`) VALUES (#, !, !, !)", $folder['id'], $v_dn, $v_sid, $v_allow));
 						//log_file('  INSERT');
 					}
 
-					$childs += permissions_apply_to_childs($folder['guid'], $v_dn, $v_allow, $replace) + 1;
+					$childs += permissions_apply_to_childs($folder['guid'], $v_dn, $v_sid, $v_allow, $replace) + 1;
 				}
 			}
 
@@ -151,7 +151,7 @@ function permission_save(&$core, $params, $post_data)
 
 		if($folder_guid)
 		{
-			$result_json['childs'] = permissions_apply_to_childs($folder_guid, $v_dn, $v_allow, $v_replace_childs);
+			$result_json['childs'] = permissions_apply_to_childs($folder_guid, $v_dn, $v_sid, $v_allow, $v_replace_childs);
 		}
 	}
 
