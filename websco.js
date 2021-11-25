@@ -390,7 +390,10 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 					time_24hr: true,
 					defaultHour: 0,
 					defaultMinute: 0,
-					dateFormat: "d.m.Y H:i"
+					dateFormat: "d.m.Y H:i",
+					locale: {
+						firstDayOfWeek: 1
+					}
 				}
 			);
 		}
@@ -411,7 +414,11 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 					time_24hr: true,
 					defaultHour: 0,
 					defaultMinute: 0,
-					dateFormat: "H:i"
+					dateFormat: "H:i",
+					locale: {
+						firstDayOfWeek: 1
+					}
+
 				}
 			);
 		}
@@ -427,7 +434,11 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 				gi(form_id + fields[i].name),
 				{
 					allowInput: true,
-					dateFormat: "d.m.Y"
+					dateFormat: "d.m.Y",
+					locale: {
+						firstDayOfWeek: 1
+					}
+
 				}
 			);
 			/*
