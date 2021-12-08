@@ -151,6 +151,7 @@ function exception_handler_ajax($exception)
 
 	define('RBF_DELETED', 0x0001);
 	define('RBF_HIDED', 0x0002);
+	define('RBF_TYPE_CUSTOM', 0x0004);
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
@@ -288,6 +289,9 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('register_decline', 'register_decline');
 
 		$core->Router->add_route('memcached_flush', 'memcached_flush', TRUE);
+
+		$core->Router->add_route('custom', 'custom');
+		$core->Router->add_route('job_custom_get', 'job_custom_get');
 	}
 
 	$core->Router->add_route('logoff', 'logoff');

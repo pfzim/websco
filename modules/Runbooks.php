@@ -235,7 +235,7 @@ EOT;
 					'status' => (string) $properties->Status
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & 0x0001) = 0 LIMIT 1', (string) $properties->ActivityId)))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $properties->ActivityId)))
 				{
 					$activity['name'] = $name[0][0];
 				}
@@ -524,10 +524,10 @@ EOT;
 
 	public function sync()
 	{
-		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | 0x0001)"));
-		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | 0x0001)"));
-		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | 0x0001)"));
-		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | 0x0001)"));
+		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0"));
+		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED})"));
 
 		$total = 0;
 
@@ -558,7 +558,7 @@ EOT;
 							@runbooks_servers
 						SET
 							`name` = !,
-							`flags` = (`flags` & ~0x0001)
+							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
 							`guid` = !
 						LIMIT 1
@@ -602,7 +602,7 @@ EOT;
 						SET
 							`pid` = !,
 							`name` = !,
-							`flags` = (`flags` & ~0x0001)
+							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
 							`guid` = !
 						LIMIT 1
@@ -644,7 +644,7 @@ EOT;
 							@runbooks_activities
 						SET
 							`name` = !,
-							`flags` = (`flags` & ~0x0001)
+							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
 							`id` = #
 						LIMIT 1
@@ -685,7 +685,7 @@ EOT;
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0 AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `flags`)
@@ -710,7 +710,7 @@ EOT;
 							`folder_id` = #,
 							`name` = !,
 							`description` = !,
-							`flags` = (`flags` & ~0x0001)
+							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
 							`guid` = !
 						LIMIT 1
@@ -789,7 +789,7 @@ EOT;
 
 	public function get_runbook_by_id($id)
 	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
 		{
 			$this->core->error('Runbook '.$guid.' not found!');
 			return FALSE;
@@ -800,7 +800,7 @@ EOT;
 
 	public function get_runbook($guid)
 	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $guid)))
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $guid)))
 		{
 			$this->core->error('Runbook '.$guid.' not found!');
 			return FALSE;
@@ -830,11 +830,14 @@ EOT;
 				r.`id` AS `runbook_id`,
 				r.`guid` AS `runbook_guid`,
 				r.`folder_id`,
+				r.`flags`,
 				u.`login`
 			FROM @runbooks_jobs AS j
 			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
-			WHERE j.`guid` = !
+			WHERE
+				j.`guid` = !
+				AND (r.`flags` & {%RBF_TYPE_CUSTOM}) = 0
 			LIMIT 1
 		', $guid)))
 		{
@@ -891,6 +894,58 @@ EOT;
 		{
 			$job_info['instances'] = &$instances;
 		}
+
+		return $job_info;
+	}
+
+	public function get_custom_job($id)
+	{
+		if(!$this->core->db->select_assoc_ex($job, rpv('
+			SELECT
+				j.`id`,
+				j.`guid`,
+				DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
+				r.`name`,
+				r.`id` AS `runbook_id`,
+				r.`guid` AS `runbook_guid`,
+				r.`folder_id`,
+				r.`flags`,
+				u.`login`
+			FROM @runbooks_jobs AS j
+			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
+			LEFT JOIN @users AS u ON u.`id` = j.`uid`
+			WHERE
+				j.`id` = #
+				AND (r.`flags` & {%RBF_TYPE_CUSTOM})
+			LIMIT 1
+		', $id)))
+		{
+			$this->core->error('Job '.$id.' not found!');
+			return FALSE;
+		}
+
+		$job = &$job[0];
+
+		!$this->core->db->select_assoc_ex($job_params, rpv('
+			SELECT
+				jp.`guid`,
+				jp.`value`
+			FROM @runbooks_jobs_params AS jp
+			WHERE jp.`pid` = #
+		', $job['id']));
+
+		$job_info = array(
+			'id' => $job['id'],
+			'guid' => $job['guid'],
+			'name' => $job['name'],
+			'run_date' => $job['run_date'],
+			'runbook_id' => $job['runbook_id'],
+			'runbook_guid' => $job['runbook_guid'],
+			'status' => 'Completed',
+			'folder_id' => $job['folder_id'],
+			'user' => $job['login'],
+			'params' => &$job_params
+		);
 
 		return $job_info;
 	}
@@ -1055,7 +1110,7 @@ EOT;
 	{
 		$childs = NULL;
 
-		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} AND (f.`flags` & (0x0001)) = 0 ORDER BY f.`name`', $guid)))
+		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} AND (f.`flags` & {%RBF_DELETED}) = 0 ORDER BY f.`name`', $guid)))
 		{
 			$childs = array();
 

@@ -7,7 +7,7 @@
 		<?php print_folders_tree_id('runbooks', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
-		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?> (<a href="<?php ln('jobs_sync/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)</h3>
+		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?><?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?> (<a href="<?php ln('jobs_sync/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)<?php } ?></h3>
 
 		<table id="table" class="main-table">
 			<thead>
@@ -24,9 +24,15 @@
 					<tr>
 						<td><?php eh($i); ?>.</td>
 						<td><?php eh($row['run_date']); ?></td>
-						<td><a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a></td>
+						<td>
+							<?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?>
+								<a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a>
+							<?php } else { ?>
+								<a href="<?php ln('job_custom_get/'.$row['id']); ?>" onclick="return f_get_custom_job('<?php eh($row['id']); ?>');"><?php eh($row['guid'].'_'.$row['id']); ?></a>
+							<?php } ?>
+						</td>
 						<td><?php eh($row['login']); ?></td>
-						<td><a href="<?php ln('runbook_get/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a></td>
+						<td><?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?><a href="<?php ln('runbook_get/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a><?php } ?></td>
 					</tr>
 				<?php } ?>
 			</tbody>

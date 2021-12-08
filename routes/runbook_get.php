@@ -6,6 +6,13 @@ function runbook_get(&$core, $params, $post_data)
 	$job_id = @$params[2];
 	
 	$runbook = $core->Runbooks->get_runbook($guid);
+
+	if($runbook['flags'] & RBF_TYPE_CUSTOM)
+	{
+		$core->error('ERROR: Runbook with ID '.$filepath.' is a custom type!');
+		return NULL;
+	}
+
 	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
 
 	$result_json = array(

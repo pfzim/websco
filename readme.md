@@ -259,6 +259,14 @@ TRUNCATE w_runbooks_jobs;
 TRUNCATE w_runbooks_jobs_params;
 ```
 
+Add custom script:
+```
+INSERT INTO w_runbooks (`folder_id`, `guid`, `name`, `description`, `flags`)
+VALUES (50, 'myscript', 'My custom script', 'This is just a script', 0x0004);
+```
+where `50` - is a folder ID  
+`myscript` - is a file name in a `./custom/` folder (`myscript.php`)
+
 Example Apache config:
 ```
 <IfModule mod_ssl.c>
@@ -303,7 +311,7 @@ Example Nginx config:
         }
 ```
 
-Increase IIS request limit (HTTP error 413): system.webServer/serverRuntime/uploadReadAheadSize = 10485760
+Increase IIS request limit (HTTP error 413): system.webServer/serverRuntime/uploadReadAheadSize = 10485760  
 C:\Program Files (x86)\Microsoft System Center\Orchestrator\Web Service\web.config
 ```
 <?xml version="1.0" encoding="UTF-8"?>

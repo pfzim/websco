@@ -34,8 +34,13 @@ function runbooks(&$core, $params, $post_data)
 	}
 
 	$folders_tree = $core->Runbooks->get_folders_tree(TRUE);
-
-	$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`id`, r.`guid`, r.`name` FROM @runbooks AS r WHERE r.`folder_id` = {s0} AND (r.`flags` & (0x0001)) = 0 ORDER BY r.`name`', $current_folder['id']));
+	
+	$runbooks = NULL;
+	
+	if($core->UserAuth->check_permission($current_folder['id'], RB_ACCESS_EXECUTE))
+	{
+		$core->db->select_assoc_ex($runbooks, rpv('SELECT r.`id`, r.`guid`, r.`name`, r.`flags` FROM @runbooks AS r WHERE r.`folder_id` = {s0} AND (r.`flags` & ({%RBF_DELETED})) = 0 ORDER BY r.`name`', $current_folder['id']));
+	}
 
 	include(TEMPLATES_DIR.'tpl.runbooks.php');
 }

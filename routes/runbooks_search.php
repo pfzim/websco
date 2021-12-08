@@ -51,7 +51,8 @@ function runbooks_search(&$core, $params, $post_data)
 			r.`folder_id`,
 			f.`name` AS folder_name,
 			r.`guid`,
-			r.`name`
+			r.`name`,
+			r.`flags`
 		FROM @runbooks AS r
 		LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id`
 		WHERE

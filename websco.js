@@ -152,8 +152,10 @@ function f_get_job(guid)
 				el.innerText = data.user;
 				el = gi('job_update');
 				el.setAttribute('onclick', 'f_get_job(\'' + escapeHtml(guid) + '\');');
+				el.style.display = 'inline-block';
 				el = gi('job_restart');
 				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_guid) + '\', ' + data.id + ');');
+				el.style.display = 'inline-block';
 				gi('job').style.display = 'block';
 				el = gi('job_table_data');
 				el.innerHTML = '';
@@ -205,6 +207,67 @@ function f_get_job(guid)
 			}
 		},
 		guid
+	);
+
+	return false;
+}
+
+function f_get_custom_job(id)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		g_link_prefix + 'job_custom_get/' + id,
+		function(data, guid)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				var el = gi('runbook_title');
+				el.innerText = data.name;
+				el = gi('job_guid');
+				el.innerText = data.guid;
+				el = gi('job_run_date');
+				el.innerText = data.run_date;
+				el = gi('job_modified_date');
+				el.innerText = '';
+				el = gi('job_sid');
+				el.innerText = '';
+				el = gi('job_status');
+				el.innerText = data.status;
+				if(data.status == 'Completed')
+				{
+					el.className = 'status-ok';
+				}
+				else
+				{
+					el.className = 'status-warn';
+				}
+
+				el = gi('job_user');
+				el.innerText = data.user;
+				el = gi('job_update');
+				el.style.display = 'none';
+				el.setAttribute('onclick', '');
+				el = gi('job_restart');
+				el.style.display = 'none';
+				el.setAttribute('onclick', '');
+				gi('job').style.display = 'block';
+				el = gi('job_table_data');
+				el.innerHTML = '';
+				html = '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
+				for(i = 0; i < data.params.length; i++)
+				{
+					html += '<tr><td>' + escapeHtml(data.params[i].guid) +'</td><td>' + escapeHtml(data.params[i].value) +'</td></tr>';
+				}
+
+				el.innerHTML = html;
+			}
+		},
+		id
 	);
 
 	return false;
