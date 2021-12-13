@@ -17,12 +17,13 @@ function custom(&$core, $params, $post_data)
 		return;
 	}
 	
-	$filepath = ROOT_DIR.'custom'.DIRECTORY_SEPARATOR.preg_replace('/[^a-z0-9_-]/i', '', $runbook['guid']).'.php';
-	if(!file_exists($filepath))
+	$custom_script_dir = ROOT_DIR.'custom'.DIRECTORY_SEPARATOR.preg_replace('/[^a-z0-9_-]/i', '', $runbook['guid']).DIRECTORY_SEPARATOR;
+	$custom_script_file = $custom_script_dir.'main.php';
+	if(!file_exists($custom_script_file))
 	{
-		$core->error('ERROR: Script '.$filepath.' not found!');
+		$core->error('ERROR: Script '.$custom_script_file.' not found!');
 		return NULL;
 	}
 
-	require_once($filepath);
+	require_once($custom_script_file);
 }

@@ -265,7 +265,7 @@ INSERT INTO w_runbooks (`folder_id`, `guid`, `name`, `description`, `flags`)
 VALUES (50, 'myscript', 'My custom script', 'This is just a script', 0x0004);
 ```
 where `50` - is a folder ID  
-`myscript` - is a file name in a `./custom/` folder (`myscript.php`)
+`myscript` - is a directory name in a `custom` folder (`custom/myscript/main.php`)
 
 Example Apache config:
 ```
