@@ -225,10 +225,11 @@ AD. При настройке нужно указывать DN групп. Не�
 
 Bit `flags` in table `runbooks`
 
-| Bits   | Description                               |
-|--------|-------------------------------------------|
-| 0x0001 | Deleted                                   |
-| 0x0002 | Hide from list                            |
+| Bits   | Name              | Description                               |
+|--------|-------------------|-------------------------------------------|
+| 0x0001 | RBF_DELETED       | Deleted                                   |
+| 0x0002 | RBF_HIDED         | Hide from list                            |
+| 0x0004 | RBF_TYPE_CUSTOM   | Custom script                             |
 
 
 Query all ACL:
