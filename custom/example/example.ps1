@@ -1,6 +1,10 @@
 param (
 	$Name = $null,
-	$ComputerName = $null
+	$ComputerName = $null,
+	$Login = $null,
+	$Password = $null,
+	$Authentication = $null,
+	$ConfigurationName = $null
 )
 
 # Все входящие параметры указываем в $rb_input
@@ -9,7 +13,10 @@ $rb_input = @{
 	name = $Name
 
 	ps_server = $ComputerName
-	auth_type = 'Default' # Negotiate
+	ps_user = $Login
+	ps_passwd = $Password
+	ps_conf = $ConfigurationName
+	auth_type = $Authentication # Negotiate
 
 	debug_pref = 'SilentlyContinue'  # Change to Continue for show debug messages
 }
@@ -50,7 +57,22 @@ function main($rb_input)
 		# Подключаемся к менеджмент серверу
 
 		#$result = Invoke-Command -ComputerName $rb_input.ps_server -ConfigurationName WebSCO -Authentication Negotiate -ArgumentList @($rb_input) -ScriptBlock {
-		$result = Invoke-Command -ComputerName $rb_input.ps_server -Authentication $rb_input.auth_type -ArgumentList @($rb_input) -ScriptBlock {
+			
+		$ps_params = @{
+			Authentication = $rb_input.auth_type
+		}
+
+		if($rb_input.ps_conf)
+		{
+			$ps_params['ConfigurationName'] = $rb_input.ps_conf
+		}
+
+		if($rb_input.ps_user -and $rb_input.ps_passwd)
+		{
+			$ps_params['Credential'] = (New-Object System.Management.Automation.PSCredential ($rb_input.ps_user, (ConvertTo-SecureString $rb_input.ps_passwd -AsPlainText -Force)))
+		}
+
+		$result = Invoke-Command -ComputerName $rb_input.ps_server @ps_params -ArgumentList @($rb_input) -ScriptBlock {
 			param(
 				$rb_input
 			)

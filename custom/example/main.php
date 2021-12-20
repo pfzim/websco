@@ -12,7 +12,7 @@
 	{
 		case 'my_custom_example_action':
 			{
-				$result_raw = shell_exec('pwsh -File "'.$custom_script_dir.'example.ps1" -ComputerName "'.addslashes(@$post_data['server_name']).'" -Name "'.addslashes(@$post_data['example_input_value']).'"');
+				$result_raw = shell_exec('pwsh -File "'.$custom_script_dir.'example.ps1" -ComputerName "'.addslashes(@$post_data['server_name']).'" -Name "'.addslashes(@$post_data['example_input_value']).'" -Authentication "'.addslashes(@$post_data['example_input_auth']).'" -ConfigurationName "'.addslashes(@$post_data['example_input_conf']).'" -Login "'.addslashes(@$post_data['example_input_login']).'" -Password "'.addslashes(@$post_data['example_input_password']).'"');
 				$result = json_decode($result_raw, true);
 
 				include($custom_script_dir.'tpl.example.php');
