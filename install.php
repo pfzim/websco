@@ -86,6 +86,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `description` varchar(4096) NOT NULL,
+  `wiki_url` varchar(1024) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`,`guid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -163,7 +164,7 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
 EOT
 ,
 <<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 1);
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 2);
 EOT
 );
 

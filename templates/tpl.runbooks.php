@@ -28,6 +28,7 @@
 						<?php } ?>
 						<td>
 							<a href="<?php ln('jobs/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
+							<?php if(!empty($row['wiki_url'])) { ?> <a href="<?php eh($row['wiki_url']); ?>" target="_blank"><?php L('Instruction') ?></a> <?php } ?>
 						</td>
 					</tr>
 				<?php } ?>

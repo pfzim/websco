@@ -42,6 +42,7 @@
 		'Tools'						=> 'Tools',
 		'Permissions'				=> 'Permissions',
 		'ViewJobs'					=> 'View jobs',
+		'Instruction'				=> 'Instruction',
 		'UpLevel'					=> 'Up level',
 		'AdvancedSettings'			=> 'Advanced settings',
 		'SelectRunbookServers'		=> 'Select runbook servers (optional)',

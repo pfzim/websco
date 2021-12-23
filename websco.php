@@ -156,6 +156,12 @@ function exception_handler_ajax($exception)
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
 	
+	if(intval($core->Config->get_global('db_version', 0)) != 2)
+	{
+		header('Location: '.WEB_LINK_STATIC_PREFIX.'upgrade.php');
+		exit;
+	}
+
 	define('RB_ACCESS_LIST', 1);
 	define('RB_ACCESS_EXECUTE', 2);
 	$core->UserAuth->set_bits_representation('lx');

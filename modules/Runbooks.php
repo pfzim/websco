@@ -481,11 +481,21 @@ EOT;
 			{
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
 				//echo "\n".'Runbook: '.$properties->Name.' ('.$properties->Id.')'."\n";
+				
+				$description = (string) $properties->Description;
+				$wiki_url = '';
+				
+				if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
+				{
+					$wiki_url = trim($matches[1]);
+					$description = preg_replace('#\s*\[wiki\](.*?)\[/wiki\]#i', '', $description, 1);
+				}
 
 				$runbook = array(
 					'guid' => (string) $properties->Id,
 					'name' => (string) $properties->Name,
-					'description' => (string) $properties->Description,
+					'description' => $description,
+					'wiki_url' => $wiki_url,
 					'folder_id' => (string) $properties->FolderId,
 					'path' => (string) $properties->Path,
 					'params' => array()
@@ -688,13 +698,14 @@ EOT;
 			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0 AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
-						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `flags`)
-						VALUES (!, #, !, !, #)
+						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
+						VALUES (!, #, !, !, !, #)
 					",
 					$runbook['guid'],
 					$folder_id,
 					$runbook['name'],
 					$runbook['description'],
+					$runbook['wiki_url'],
 					0x0000
 				)))
 				{
@@ -710,6 +721,7 @@ EOT;
 							`folder_id` = #,
 							`name` = !,
 							`description` = !,
+							`wiki_url` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
 							`guid` = !
@@ -718,6 +730,7 @@ EOT;
 					$folder_id,
 					$runbook['name'],
 					$runbook['description'],
+					$runbook['wiki_url'],
 					$res[0][0]
 				));
 
