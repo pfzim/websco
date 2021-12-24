@@ -68,6 +68,7 @@ Pros over the standard console:
  - Restarting runbooks with previously entered parameters
  - Escaping a single quote when passing parameters to the runbook (so that you cannot inject into the runbook code)
  - The description of the runbook is displayed in the launch window
+ - In the description, you can use the [wiki]your_url_here[/wiki] tag to add an arbitrary link to the instruction
  - Does not required Silverlight
 
 Minuses:
@@ -149,6 +150,7 @@ see hidden folders.
  - Перезапуск ранбуков с ранее введенными параметрами
  - Экранирование одинарной кавычки при передаче параметров в ранбук (чтобы нельзя было сделать инъекцию в код ранбука)
  - Описание ранбука отображается в окне запуска
+ - В описании ранбука можно использовать тэг [wiki]you_url_here[/wiki] для добавления произвольной ссылки на инструкцию
  - Не требуется Silverlight
 
 Минусы:
@@ -310,6 +312,11 @@ Example Nginx config:
             rewrite ^/websco/(.*)$ /websco/websco.php?path=$1 last;
           }
         }
+```
+
+```
+openssl pkcs12 -in websco.pfx -clcerts -nokeys -out /etc/ssl/certs/websco.cer
+openssl pkcs12 -in websco.pfx -nocerts -nodes -out /etc/ssl/private/websco.key
 ```
 
 Increase IIS request limit (HTTP error 413): system.webServer/serverRuntime/uploadReadAheadSize = 10485760  
