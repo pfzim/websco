@@ -360,3 +360,10 @@ C:\Program Files (x86)\Microsoft System Center\Orchestrator\Web Service\Orchestr
 	</system.serviceModel>
 	...
 ```
+
+[Apache config example](/examples/apache-21-websco-ssl.conf)
+[Nginx config example](/examples/nginx-01-websco.conf)
+[Backup script example](/examples/backup.sh)
+[logrotate config example](/examples/websco)
+[crontab config example](/examples/crontab)
+[inc.config.php and krb5.conf example](/examples/inc.config.php)
