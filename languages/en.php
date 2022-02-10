@@ -106,6 +106,8 @@
 		'FileTooLarge'				=> 'The file is too large',
 		'Search'					=> 'Search',
 		'FindRunbook'				=> 'Find runbook',
+		'FindJobs'					=> 'Find jobs',
+		'LookingValue'				=> 'Enter the value you are looking for',
 		'RunbookName'				=> 'Runbook name',
 		'FolderName'				=> 'Folder name',
 		'SearchResult'				=> 'Search result',

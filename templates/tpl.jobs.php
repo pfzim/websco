@@ -9,6 +9,11 @@
 	<div class="content-box">
 		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?><?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?> (<a href="<?php ln('jobs_sync/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)<?php } ?></h3>
 
+		<form id="search_form" action="<?php ln('jobs/'.$runbook['id'].'/0'); ?>" method="get" onsubmit="return f_search(this);">
+			<?php L('FindJobs') ?>: <input type="text" name="search" class="form-field" placeholder="<?php L('LookingValue') ?>..." value="<?php if(isset($search_job)) eh($search_job); ?>">
+			<input class="button-other" type="submit" value="<?php L('Search') ?>" /><br />
+		</form>
+
 		<table id="table" class="main-table">
 			<thead>
 				<tr>
@@ -38,7 +43,7 @@
 			</tbody>
 		</table>
 
-		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/0'); ?>">1</a>
+		<a class="page-number<?php if($offset == 0) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/0/'.urlencode($search_job)); ?>">1</a>
 		<?php 
 			$min = max(100, $offset - 1000);
 			$max = min($offset + 1000, $total - ($total % 100));
@@ -48,7 +53,7 @@
 			for($i = $min; $i <= $max; $i += 100)
 			{
 			?>
-				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/'.$i); ?>"><?php eh($i/100 + 1); ?></a>
+				<a class="page-number<?php if($offset == $i) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/'.$i.'/'.urlencode($search_job)); ?>"><?php eh($i/100 + 1); ?></a>
 			<?php
 			}
 
@@ -56,7 +61,7 @@
 			if($i < $max)
 			{
 			?>
-				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/'.$max); ?>"><?php eh($max/100 + 1); ?></a>
+				&nbsp;...&nbsp;<a class="page-number<?php if($offset == $max) eh(' boldtext'); ?>" href="<?php ln('jobs/'.$runbook['id'].'/'.$max.'/'.urlencode($search_job)); ?>"><?php eh($max/100 + 1); ?></a>
 			<?php
 			}
 		?>

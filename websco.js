@@ -925,7 +925,7 @@ function f_search(f)
     //f.action = f.action + '/' + encodeURIComponent(gi('search').value);
     //f.submit();
 
-	window.location = f.action + '/' + encodeURIComponent(gi('search').value);
+	window.location = f.action + '/' + encodeURIComponent(f.elements.search.value);
 
 	return false;
 }
