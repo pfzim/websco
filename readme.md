@@ -233,6 +233,10 @@ Bit `flags` in table `runbooks`
 | 0x0002 | RBF_HIDED         | Hide from list                            |
 | 0x0004 | RBF_TYPE_CUSTOM   | Custom script                             |
 
+Clearing Kerberos authorization tickets after adding a WebSCO service account to an AD group:
+```
+kdestroy -A -c /tmp/krb5cc_<user_id>
+```
 
 Query all ACL:
 

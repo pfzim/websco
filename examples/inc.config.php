@@ -39,10 +39,13 @@
 			kinit -S HTTP/web.contoso.com -p <any_user>@CONTOSO.COM
 			klist
 		
-		kdestroy -A
-		
-		after update keytab run on client:
-			klist purge
+		Clearing Kerberos authorization tickets after adding a WebSCO service account to an AD group or updating a keytab:
+			Linux:
+				kdestroy -A
+				kdestroy -A -c /tmp/krb5cc_<user_id>
+			
+			Windows:
+				klist purge
 	*/
 
 	define('USE_GSSAPI', TRUE);
