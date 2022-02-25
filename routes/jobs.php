@@ -80,7 +80,7 @@ function jobs(&$core, $params, $post_data)
 		WHERE j.`pid` = {d0}
 		{r1}
 		ORDER BY j.`date` DESC, j.`id` DESC
-		LIMIT {d3},100
+		LIMIT {d2},100
 	',
 		$runbook['id'],
 		$where,
