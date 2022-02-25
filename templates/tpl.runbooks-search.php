@@ -65,4 +65,5 @@
 
 
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
+<?php include(TEMPLATES_DIR.'tpl.job-info.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>
