@@ -15,14 +15,17 @@
 ## Installation
 
 ```
-sudo apt-get install apache2 mariadb-server
-sudo apt-get install php php-mysql php-ldap php-curl php-xml libapache2-mod-php
+sudo apt-get install mariadb-server
+#sudo apt-get install apache2 libapache2-mod-php
+sudo apt-get install php php-mysql php-ldap php-curl php-xml
 sudo apt-get install memcached php-memcached
+sudo apt-get install nginx php-fpm
 ```
 
 Only when using Kerberos:
 ```
-sudo apt-get install libsasl2-modules-gssapi-mit ldap-utils libapache2-mod-auth-kerb libapache2-mod-auth-gssapi libsasl2-2 krb5-clients krb5-user krb5 ldap-utils gss-ntlmssp
+sudo apt-get install ldap-utils libsasl2-modules-gssapi-mit libsasl2-2 gss-ntlmssp krb5 krb5-clients krb5-user 
+#sudo apt-get install libapache2-mod-auth-kerb libapache2-mod-auth-gssapi
 ```
 
 If you want to use pretty links, then `mod_rewrite` is required.
@@ -323,6 +326,12 @@ Convert PFX certificate:
 ```
 openssl pkcs12 -in websco.pfx -clcerts -nokeys -out /etc/ssl/certs/websco.cer
 openssl pkcs12 -in websco.pfx -nocerts -nodes -out /etc/ssl/private/websco.key
+```
+
+Generate self-signed certificate:
+
+```
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/websco.key -out /etc/ssl/certs/websco.cer
 ```
 
 Increase IIS request limit (HTTP error 413): system.webServer/serverRuntime/uploadReadAheadSize = 10485760  

@@ -87,7 +87,10 @@ function jobs(&$core, $params, $post_data)
 		$offset
 	));
 
-	log_db('Search jobs: '.$search_job, '', 0);
+	if(!empty($search_job))
+	{
+		log_db('Search jobs: '.$search_job, '', 0);
+	}
 
 	include(TEMPLATES_DIR.'tpl.jobs.php');
 }
