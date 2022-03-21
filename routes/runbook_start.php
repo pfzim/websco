@@ -28,6 +28,7 @@ function runbook_start(&$core, $params, $post_data)
 	foreach($runbook_params as &$param)
 	{
 		$value = '';
+		//$params[$param['guid']] = $value;
 
 		if($param['type'] == 'who')
 		{
@@ -86,7 +87,7 @@ function runbook_start(&$core, $params, $post_data)
 			$value = trim($post_data['param'][$param['guid']]);
 		}
 
-		if($param['required'] && $value == '')
+		if($param['required'] && empty($value))
 		{
 			$result_json['code'] = 1;
 			$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ThisFieldRequired'));
@@ -94,13 +95,16 @@ function runbook_start(&$core, $params, $post_data)
 		}
 		elseif($param['type'] == 'date')
 		{
-			list($nd, $nm, $ny) = explode('.', $value, 3);
-
-			if(!datecheck($nd, $nm, $ny))
+			if(!empty($value))
 			{
-				$result_json['code'] = 1;
-				$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('IncorrectDate').' DD.MM.YYYY');
-				continue;
+				list($nd, $nm, $ny) = explode('.', $value, 3);
+
+				if(!datecheck($nd, $nm, $ny))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('IncorrectDate').' DD.MM.YYYY');
+					continue;
+				}
 			}
 		}
 		elseif($param['type'] == 'list')
@@ -114,7 +118,7 @@ function runbook_start(&$core, $params, $post_data)
 		}
 		elseif($param['type'] == 'integer')
 		{
-			if(!preg_match('/^\d+$/i', $value))
+			if(!empty($value) && !preg_match('/^\d+$/i', $value))
 			{
 				$result_json['code'] = 1;
 				$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('OnlyNumbers'));

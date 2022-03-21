@@ -403,7 +403,7 @@ body {
     transform: translate(-50%, -50%);
 	overflow-y: auto;
 	max-width: 90vw;
-	max-height: 95vh;
+	max-height: 90vh;
 }
 .form-header {
     width: 500px;
