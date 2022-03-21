@@ -277,6 +277,36 @@ VALUES                 (50,          'myscript', 'My custom script', 'This is ju
 where `50` - is a folder ID  
 `myscript` - is a directory name in a `custom` folder (`custom/myscript/main.php`)
 
+Jobs run history:
+```
+SELECT *
+FROM websco.w_logs AS l
+LEFT JOIN websco.w_users AS u
+	ON u.id = l.uid
+WHERE l.operation LIKE 'Run:%'
+ORDER BY l.`date` DESC;
+```
+
+Top runbooks:
+```
+SELECT r.`name`, COUNT(*) AS `run_count`
+FROM websco.w_runbooks AS r
+LEFT JOIN websco.w_runbooks_jobs AS rj
+  ON rj.`pid` = r.`id`
+GROUP BY r.`id`
+ORDER BY `run_count` DESC;
+```
+
+Top users:
+```
+SELECT u.`login`, COUNT(*) `run_count`
+FROM websco.w_users AS u
+LEFT JOIN websco.w_logs AS l
+	ON l.uid = u.id AND l.operation LIKE 'Run:%'
+GROUP BY u.`id`
+ORDER BY `run_count` DESC;
+```
+
 Example Apache config:
 ```
 <IfModule mod_ssl.c>
