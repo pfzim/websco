@@ -761,7 +761,7 @@ EOT;
 		return $total;
 	}
 
-	public function sync_jobs($guid)
+	public function sync_jobs_old($guid)
 	{
 		$total = 0;
 		$jobs = $this->retrieve_jobs($guid);
@@ -796,6 +796,70 @@ EOT;
 				}
 			}
 		}
+
+		return $total;
+	}
+
+	public function sync_jobs($guid)
+	{
+		$skip = 0;
+		$total = 0;
+
+		$job_filter = '';
+
+		if(!empty($guid))
+		{
+			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+		}
+
+		do
+		{
+			$xml = $this->get_http_xml($this->orchestrator_url.$job_filter.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+
+			$total = intval($xml->children('m', TRUE)->count);
+
+			foreach($xml->entry as $entry)
+			{
+				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+
+				$job = array(
+					'guid' => (string) $properties->Id,
+					'pid' => (string) $properties->RunbookId,
+					'date' => (string) $properties->CreationTime
+				);
+
+				if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
+				{
+					if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
+					{
+						$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
+						if($job_date === FALSE)
+						{
+							$job_date = '0000-00-00 00:00:00';
+						}
+						else
+						{
+							$job_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+							$job_date = $job_date->format('Y-m-d H:i:s');
+						}
+
+						$this->core->db->put(rpv("
+								INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
+								VALUES (!, #, !, NULL, 0x0000)
+							",
+							$job_date,
+							$rb[0][0],
+							$job['guid']
+						));
+					}
+				}
+
+				//break;
+				$skip++;
+			}
+			//break;
+		}
+		while($skip < $total);
 
 		return $total;
 	}
@@ -1100,7 +1164,7 @@ EOT;
 
 			if((($type == 'list') || ($type == 'flags') || ($type == 'upload')) && preg_match('/\(([^\)]+)\)\s*\*?$/i', $name, $matches))
 			{
-				$name = preg_replace('/\s*\(([^\)]+)\)\s*(\*?)/i', '\2', $name);
+				$form_field['name'] = preg_replace('/\s*\(([^\)]+)\)\s*(\*?)/i', '\2', $name);
 				$list = preg_split('/\s*[,;]\s*/', $matches[1]);
 
 				if($type == 'upload')
