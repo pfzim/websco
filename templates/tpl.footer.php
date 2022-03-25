@@ -13,7 +13,7 @@
 			</div>
 		</div>
 <?php if(!defined('Z_HIDE_COPYRIGHT')) { ?>
-		<div id="codedby"><small>Coded by Dmitry V. Zimin. Project on <a href="https://github.com/pfzim/ldap-phonebook">GitHub</a></small></div>
+		<div id="codedby"><small>Coded by Dmitry V. Zimin. Project on <a href="https://github.com/pfzim/websco">GitHub</a></small></div>
 <?php } ?>
 	</body>
 </html>
