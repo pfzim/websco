@@ -241,6 +241,12 @@ Clearing Kerberos authorization tickets after adding a WebSCO service account to
 kdestroy -A -c /tmp/krb5cc_<user_id>
 ```
 
+Sometime required clear AuthorizationCache after creating new Runbook:
+```
+USE Orchestrator 
+TRUNCATE TABLE [Microsoft.SystemCenter.Orchestrator.Internal].AuthorizationCache
+```
+
 Query all ACL:
 
 ```
