@@ -295,7 +295,7 @@ ORDER BY l.`date` DESC;
 
 Top runbooks:
 ```
-SELECT r.`name`, COUNT(*) AS `run_count`
+SELECT r.`name`, COUNT(rj.`id`) AS `run_count`
 FROM websco.w_runbooks AS r
 LEFT JOIN websco.w_runbooks_jobs AS rj
   ON rj.`pid` = r.`id`
@@ -305,7 +305,7 @@ ORDER BY `run_count` DESC;
 
 Top users:
 ```
-SELECT u.`login`, COUNT(*) `run_count`
+SELECT u.`login`, COUNT(l.`id`) `run_count`
 FROM websco.w_users AS u
 LEFT JOIN websco.w_logs AS l
 	ON l.uid = u.id AND l.operation LIKE 'Run:%'

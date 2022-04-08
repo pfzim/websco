@@ -43,6 +43,7 @@ class UserAuth
 	private $login = NULL;				/// sAMAccountName, zl cookie
 	private $token = NULL;				/// zh cookie
 	private $flags = 0;
+	private $cookie_path = '/';
 
 	private $salt = 'UserAuth';
 
@@ -68,6 +69,15 @@ class UserAuth
 		else
 		{
 			$this->ldap = NULL;
+		}
+
+		if(defined('WEB_LINK_BASE_PATH') && !empty(WEB_LINK_BASE_PATH))
+		{
+			$this->cookie_path = WEB_LINK_BASE_PATH;
+		}
+		else
+		{
+			$this->cookie_path = '/';
 		}
 
 		$this->bits_string_representation = '';
@@ -219,8 +229,8 @@ class UserAuth
 			$this->core->db->put(rpv('UPDATE @users SET `sid` = !, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->token, $this->uid));
 		}
 
-		setcookie('zh', $this->token, time() + 2592000, '/');
-		setcookie('zl', $this->login, time() + 2592000, '/');
+		setcookie('zh', $this->token, time() + 2592000, $this->cookie_path);
+		setcookie('zl', $this->login, time() + 2592000, $this->cookie_path);
 
 		//$this->core->db->put(rpv('UPDATE @users SET `sid` = ! WHERE `id` = # LIMIT 1', $this->token, $this->uid));
 
@@ -255,8 +265,8 @@ class UserAuth
 			$this->token = $user_data[0][3];
 
 			// Extend cookie life time
-			setcookie('zh', $this->token, time() + 2592000, '/');
-			setcookie('zl', $this->login, time() + 2592000, '/');
+			setcookie('zh', $this->token, time() + 2592000, $this->cookie_path);
+			setcookie('zl', $this->login, time() + 2592000, $this->cookie_path);
 
 			return TRUE;
 		}
@@ -272,8 +282,8 @@ class UserAuth
 		}
 
 		$_SESSION['uid'] = 0;
-		setcookie('zh', NULL, time() - 60, '/');
-		setcookie('zl', NULL, time() - 60, '/');
+		setcookie('zh', NULL, time() - 60, $this->cookie_path);
+		setcookie('zl', NULL, time() - 60, $this->cookie_path);
 
 		$this->loaded = FALSE;
 		$this->uid = 0;

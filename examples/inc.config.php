@@ -81,8 +81,8 @@
 	define('USE_MEMCACHED', TRUE);
 
 	define('WEB_URL', 'https://websco.contoso.com/websco/');
+	define('WEB_LINK_BASE_PATH', '/websco/');
 	define('USE_PRETTY_LINKS', FALSE);
 	define('USE_PRETTY_LINKS_FORCE', FALSE);
-	define('PRETTY_LINKS_BASE_PATH', '/websco/');
 	
 	define('LOG_FILE', '/var/log/websco/websco.log');
