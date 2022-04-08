@@ -85,7 +85,7 @@ class UserAuth
 		$this->rights = array();
 		$this->loaded = FALSE;
 
-		if(empty($_SESSION['uid']))
+		if(empty($_SESSION[DB_PREFIX.'uid']))
 		{
 			if(!empty($_COOKIE['zh']) && !empty($_COOKIE['zl']))
 			{
@@ -94,7 +94,7 @@ class UserAuth
 		}
 		else
 		{
-			$this->uid = intval($_SESSION['uid']);
+			$this->uid = intval($_SESSION[DB_PREFIX.'uid']);
 
 			/*
 			// preload user info
@@ -111,7 +111,7 @@ class UserAuth
 					m.`id` = #
 					AND (m.`flags` & 0x0001) = 0
 				LIMIT 1
-			", $_SESSION['uid'])))
+			", $_SESSION[DB_PREFIX.'uid'])))
 			{
 				$this->loaded = TRUE;
 				$this->uid = $user_data[0][0];
@@ -178,7 +178,7 @@ class UserAuth
 					return FALSE;
 				}
 
-				$_SESSION['uid'] = $user_data[0][0];
+				$_SESSION[DB_PREFIX.'uid'] = $user_data[0][0];
 				$this->login = $user_data[0][1];
 				$this->flags = intval($user_data[0][2]);
 				$this->token = $user_data[0][3];
@@ -189,7 +189,7 @@ class UserAuth
 				$this->login = $sam_account_name;
 				$this->flags = UA_LDAP;
 				$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, sid, flags) VALUES (!, \'\', !, !, #)', $this->login, @$records[0]['mail'][0], $this->token, $this->flags));
-				$_SESSION['uid'] = $this->core->db->last_id();
+				$_SESSION[DB_PREFIX.'uid'] = $this->core->db->last_id();
 			}
 		}
 		else  // internal authorization method
@@ -214,14 +214,14 @@ class UserAuth
 				return FALSE;
 			}
 
-			$_SESSION['uid'] = $user_data[0][0];
+			$_SESSION[DB_PREFIX.'uid'] = $user_data[0][0];
 			$this->login = $user_data[0][1];
 			$this->flags = intval($user_data[0][2]);
 			$this->token = $user_data[0][3];
 		}
 
 		$this->loaded = TRUE;
-		$this->uid = $_SESSION['uid'];
+		$this->uid = $_SESSION[DB_PREFIX.'uid'];
 
 		if(empty($this->token))
 		{
@@ -258,8 +258,8 @@ class UserAuth
 		", $login, $token)))
 		{
 			$this->loaded = TRUE;
-			$_SESSION['uid'] = $user_data[0][0];
-			$this->uid = $_SESSION['uid'];
+			$_SESSION[DB_PREFIX.'uid'] = $user_data[0][0];
+			$this->uid = $_SESSION[DB_PREFIX.'uid'];
 			$this->flags = intval($user_data[0][1]);
 			$this->login = $user_data[0][2];
 			$this->token = $user_data[0][3];
@@ -281,7 +281,7 @@ class UserAuth
 			$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->uid));
 		}
 
-		$_SESSION['uid'] = 0;
+		$_SESSION[DB_PREFIX.'uid'] = 0;
 		setcookie('zh', NULL, time() - 60, $this->cookie_path);
 		setcookie('zl', NULL, time() - 60, $this->cookie_path);
 
