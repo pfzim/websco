@@ -534,6 +534,11 @@ EOT;
 
 	public function sync()
 	{
+		$servers = $this->retrieve_servers();
+		$folders = $this->retrieve_folders();
+		$activities = $this->retrieve_activities();
+		$runbooks = $this->retrieve_runbooks();
+
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0"));
 		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
@@ -541,7 +546,7 @@ EOT;
 
 		$total = 0;
 
-		$servers = $this->retrieve_servers();
+		//$servers = $this->retrieve_servers();
 
 		foreach($servers as &$server)
 		{
@@ -583,7 +588,7 @@ EOT;
 
 		unset($servers);
 
-		$folders = $this->retrieve_folders();
+		//$folders = $this->retrieve_folders();
 
 		foreach($folders as &$folder)
 		{
@@ -628,7 +633,7 @@ EOT;
 
 		unset($folders);
 
-		$activities = $this->retrieve_activities();
+		//$activities = $this->retrieve_activities();
 
 		foreach($activities as &$activity)
 		{
@@ -669,7 +674,7 @@ EOT;
 
 		unset($activities);
 
-		$runbooks = $this->retrieve_runbooks();
+		//$runbooks = $this->retrieve_runbooks();
 
 		foreach($runbooks as &$runbook)
 		{
@@ -804,6 +809,7 @@ EOT;
 	{
 		$skip = 0;
 		$total = 0;
+		$jobs_added = 0;
 
 		$job_filter = '';
 
@@ -851,6 +857,8 @@ EOT;
 							$rb[0][0],
 							$job['guid']
 						));
+
+						$jobs_added++;
 					}
 				}
 
@@ -861,7 +869,7 @@ EOT;
 		}
 		while($skip < $total);
 
-		return $total;
+		return $jobs_added;
 	}
 
 	public function get_runbook_by_id($id)

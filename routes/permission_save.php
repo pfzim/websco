@@ -107,13 +107,22 @@ function permission_save(&$core, $params, $post_data)
 			$childs = 0;
 
 			log_file('Apply to childs of ID: '.$parent_guid);
-			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & 0x0001) = 0 AND f.`pid` = !', $parent_guid)))
+			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & {%RBF_DELETED}) = 0 AND f.`pid` = !', $parent_guid)))
 			{
 				foreach($folders as &$folder)
 				{
 					//log_file('  Folder ID: '.$folder['id'].', GUID: '.$folder['guid'].', Name: '.$folder['name']);
 
-					if($core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = # AND a.`dn` = !', $folder['id'], $v_dn)))
+					if(defined('LDAP_USE_SID') && LDAP_USE_SID)
+					{
+						$condition = rpv('a.`sid` = !', $v_sid);
+					}
+					else
+					{
+						$condition = rpv('a.`dn` = !', $v_dn);
+					}
+
+					if($core->db->select_assoc_ex($permissions, rpv('SELECT a.`id`, a.`allow_bits` FROM `@access` AS a WHERE a.`oid` = {d0} AND {r1}', $folder['id'], $condition)))
 					{
 						if($replace)
 						{
