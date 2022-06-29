@@ -112,5 +112,6 @@
 		'FolderName'				=> 'Folder name',
 		'SearchResult'				=> 'Search result',
 		'NothingFound'				=> 'Nothing found',
+		'Admin'						=> 'Administrator',
 		'Loading'					=> 'Loading, please wait...'
 	);
