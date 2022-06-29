@@ -1,6 +1,6 @@
 <?php
 
-function complete_group(&$core, $params, $post_data)
+function complete_group_sam(&$core, $params, $post_data)
 {
 	$search = @$post_data['search'];
 
@@ -12,12 +12,12 @@ function complete_group(&$core, $params, $post_data)
 	
 	if(defined('USE_LDAP') && USE_LDAP && !empty($search) && strlen($search) >= 3)
 	{
-		if($core->LDAP->search($result, '(&(objectCategory=group)(cn='.ldap_escape($search, null, LDAP_ESCAPE_FILTER).'*))', array('distinguishedName')))
+		if($core->LDAP->search($result, '(&(objectCategory=group)(cn='.ldap_escape($search, null, LDAP_ESCAPE_FILTER).'*))', array('samaccountname')))
 		{
 			//log_file(print_r($result, TRUE));
 			foreach($result as $row)
 			{
-				$result_json['list'][] = $row['distinguishedName'][0];
+				$result_json['list'][] = $row['sAMAccountName'][0];
 			}
 		}
 	}

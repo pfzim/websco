@@ -78,6 +78,10 @@ function runbook_get(&$core, $params, $post_data)
 		{
 			$field['autocomplete'] = 'complete_computer';
 		}
+		elseif(($param['type'] == 'group'))
+		{
+			$field['autocomplete'] = 'complete_group_sam';
+		}
 		elseif(($param['type'] == 'mail'))
 		{
 			$field['autocomplete'] = 'complete_mail';

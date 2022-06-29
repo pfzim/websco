@@ -1082,7 +1082,7 @@ EOT;
 			$type = 'string';
 
 			$i++;
-			if(preg_match('#[/_]([isdtlacmfrwu]+)$#i', $row['name'], $matches))
+			if(preg_match('#[/_]([isdtlacgmfrwu]+)$#i', $row['name'], $matches))
 			{
 				$suffix = $matches[1];
 
@@ -1130,6 +1130,9 @@ EOT;
 						case 'c':
 							$type = 'computer';
 							break;
+						case 'g':
+							$type = 'group';
+							break;
 						case 'm':
 							$type = 'mail';
 							break;
@@ -1148,7 +1151,7 @@ EOT;
 				}
 			}
 
-			$name = preg_replace('#\s*[/_][isdtlacmfrwu]+$#i', '', $row['name']);
+			$name = preg_replace('#\s*[/_][isdtlacgmfrwu]+$#i', '', $row['name']);
 
 			if(preg_match('/\*\s*:?\s*$/i', $name))
 			{

@@ -17,6 +17,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+define('DB_VERSION', 2);
+
 if(!defined('ROOT_DIR'))
 {
 	define('ROOT_DIR', dirname(__FILE__).DIRECTORY_SEPARATOR);
@@ -158,7 +160,7 @@ function exception_handler_ajax($exception)
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
 	
-	if(intval($core->Config->get_global('db_version', 0)) != 2)
+	if(intval($core->Config->get_global('db_version', 0)) != DB_VERSION)
 	{
 		header('Location: '.WEB_LINK_STATIC_PREFIX.'upgrade.php');
 		exit;
@@ -268,6 +270,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('complete_computer', 'complete_computer', TRUE);
 		$core->Router->add_route('complete_mail', 'complete_mail', TRUE);
 		$core->Router->add_route('complete_group', 'complete_group', TRUE);
+		$core->Router->add_route('complete_group_sam', 'complete_group_sam', TRUE);
 
 		$core->Router->add_route('tools', 'tools');
 
