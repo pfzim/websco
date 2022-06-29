@@ -18,6 +18,9 @@
 */
 
 define('DB_VERSION', 2);
+define('Z_PROTECTED', 'YES');
+
+error_reporting(E_ALL);
 
 if(!defined('ROOT_DIR'))
 {
@@ -37,25 +40,43 @@ if(!file_exists(ROOT_DIR.'inc.config.php'))
 
 require_once(ROOT_DIR.'inc.config.php');
 
+if (defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS
+	&& (
+		(defined('USE_PRETTY_LINKS_FORCE') && (USE_PRETTY_LINKS_FORCE))
+		|| (function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+	))
+{
+	define('PRETTY_LINKS_BASE_PATH', WEB_LINK_BASE_PATH);
+	define('WEB_LINK_PREFIX', WEB_LINK_BASE_PATH);			// '/websco/'
+	define('WEB_LINK_STATIC_PREFIX', WEB_LINK_BASE_PATH);
+	define('WEB_LINK_EXTERNAL', WEB_URL);
+}
+else
+{
+	define('PRETTY_LINKS_BASE_PATH', '');
+	define('WEB_LINK_PREFIX', basename(__FILE__).'?path=');
+	define('WEB_LINK_STATIC_PREFIX', '');
+	define('WEB_LINK_EXTERNAL', WEB_URL.WEB_LINK_PREFIX);
+}
 
-	session_name('ZID');
-	session_start();
-	error_reporting(E_ALL);
-	define('Z_PROTECTED', 'YES');
+session_name('ZID');
+session_start(
+	array(
+		'cookie_path' => defined('WEB_LINK_BASE_PATH') ? WEB_LINK_BASE_PATH : '/'
+	)
+);
 
-	//$self = $_SERVER['PHP_SELF'];
+if(!empty($_SERVER['HTTP_CLIENT_IP'])) {
+	$ip = $_SERVER['HTTP_CLIENT_IP'];
+} elseif(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+	$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+} else {
+	$ip = @$_SERVER['REMOTE_ADDR'];
+}
 
-	if(!empty($_SERVER['HTTP_CLIENT_IP'])) {
-		$ip = $_SERVER['HTTP_CLIENT_IP'];
-	} elseif(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	} else {
-		$ip = @$_SERVER['REMOTE_ADDR'];
-	}
-
-	require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
-	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
-	require_once(ROOT_DIR.'inc.utils.php');
+require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
+require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
+require_once(ROOT_DIR.'inc.utils.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
 {
@@ -108,25 +129,6 @@ function LL($key)
 function L($key)
 {
 	eh(LL($key));
-}
-
-if (defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS
-	&& (
-		(defined('USE_PRETTY_LINKS_FORCE') && (USE_PRETTY_LINKS_FORCE))
-		|| (function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
-	))
-{
-	define('PRETTY_LINKS_BASE_PATH', WEB_LINK_BASE_PATH);
-	define('WEB_LINK_PREFIX', WEB_LINK_BASE_PATH);			// '/websco/'
-	define('WEB_LINK_STATIC_PREFIX', WEB_LINK_BASE_PATH);
-	define('WEB_LINK_EXTERNAL', WEB_URL);
-}
-else
-{
-	define('PRETTY_LINKS_BASE_PATH', '');
-	define('WEB_LINK_PREFIX', basename(__FILE__).'?path=');
-	define('WEB_LINK_STATIC_PREFIX', '');
-	define('WEB_LINK_EXTERNAL', WEB_URL.WEB_LINK_PREFIX);
 }
 
 function ln($path)
