@@ -856,7 +856,7 @@ function build_config($config, $params)
 					$db->put(rpv("
 						INSERT
 							INTO w_users (login, passwd, mail, flags)
-							VALUES ({s0}, MD5({s1}), {s2}, 0x0000)
+							VALUES ({s0}, MD5({s1}), {s2}, 0x0008)
 						-- ON DUPLICATE KEY UPDATE
 						--	SET passwd = MD5({s1}),
 						--	mail = {s2}
