@@ -6,7 +6,7 @@
 storage_path="/var/websco/backups"
 curdate=`date '+%Y-%m-%d-%H%M%S'`
 
-#mysqldump --add-drop-database --add-drop-table --no-data --databases websco > database-structure.sql
+#mysqldump --add-drop-database --add-drop-table --no-data --databases websco | sed -e 's/ AUTO_INCREMENT=[0-9]\+//' > database-structure.sql
 
 # client.conf example:
 #
