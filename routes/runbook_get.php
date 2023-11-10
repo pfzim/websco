@@ -20,6 +20,7 @@ function runbook_get(&$core, $params, $post_data)
 		'message' => '',
 		'title' => $runbook['name'],
 		'description' => $runbook['description'],
+		'wiki_url' => $runbook['wiki_url'],
 		'action' => 'runbook_start',
 		'fields' => array(
 			/*
