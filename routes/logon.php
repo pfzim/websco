@@ -1,9 +1,10 @@
 <?php
 
-function logon(&$core, $params)
+function logon(&$core, $params, $post_data)
 {
-	if(!$core->UserAuth->logon(@$_POST['login'], @$_POST['passwd']))
+	if(!$core->UserAuth->logon(@$post_data['login'], @$post_data['passwd']))
 	{
+		$return_url = @$post_data['return'];
 		$error_msg = LL('InvalidUserPasswd');
 		include(TEMPLATES_DIR.'tpl.login.php');
 		exit;
@@ -18,6 +19,13 @@ function logon(&$core, $params)
 		exit;
 	}
 	*/
-
-	header('Location: /websco/');
+	
+	if(!empty($post_data['return']))
+	{
+		header('Location: '.$post_data['return']);
+	}
+	else
+	{
+		header('Location: '.WEB_LINK_PREFIX);
+	}
 }

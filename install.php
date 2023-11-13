@@ -23,13 +23,199 @@ if (!defined('ROOT_DIR'))
 {
 	define('ROOT_DIR', dirname(__FILE__).DIRECTORY_SEPARATOR);
 }
-	
+
 if(file_exists(ROOT_DIR.'inc.config.php'))
 {
 	header('Content-Type: text/plain; charset=utf-8');
 	echo 'Configuration file already exist. Remove inc.config.php before running installation';
 	exit;
 }
+
+$modules = array(
+	'ldap',
+	'SimpleXML',
+	'memcached',
+	'json',
+	'curl',
+	'pcre',
+	//'gd',
+	'mysqli'
+);
+
+$sql = array(
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `login` varchar(255) NOT NULL,
+  `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
+  `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
+  `sid` varchar(16) DEFAULT NULL,
+  `reset_token` varchar(16) DEFAULT NULL,
+  `flags` int(10) unsigned NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_access` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sid` varchar(256) NOT NULL DEFAULT '',
+  `dn` varchar(1024) NOT NULL DEFAULT '',
+  `oid` int(10) unsigned NOT NULL DEFAULT 0,
+  `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `date` datetime NOT NULL,
+  `uid` int(10) unsigned NOT NULL,
+  `operation` varchar(1024) NOT NULL,
+  `params` varchar(4096) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `folder_id` int(10) unsigned NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` varchar(4096) NOT NULL,
+  `wiki_url` varchar(1024) DEFAULT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `pid` varchar(36) NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `date` datetime NOT NULL,
+  `pid` int(10) unsigned NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `uid` int(10) unsigned DEFAULT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
+  `pid` int(10) unsigned NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`pid`,`guid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
+  `pid` varchar(36) NOT NULL,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`guid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `guid` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `flags` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`,`guid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+CREATE TABLE `#DB_NAME#`.`w_config` (
+  `uid` int(10) unsigned NOT NULL,
+  `name` varchar(255) NOT NULL DEFAULT '',
+  `value` varchar(8192) NOT NULL DEFAULT '',
+  PRIMARY KEY (`name`,`uid`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+EOT
+,
+<<<'EOT'
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 2);
+EOT
+);
+
+$config = <<<'EOT'
+<?php
+	define('DB_RW_HOST', '#db_host#');
+	define('DB_USER', '#db_user#');
+	define('DB_PASSWD', '#db_passwd#');
+	define('DB_NAME', '#db_name#');
+	define('DB_CPAGE', 'utf8');
+	define('DB_PREFIX', 'w_');
+
+	define('APP_LANGUAGE', '#language#');
+
+	define('USE_GSSAPI', #use_gssapi#);
+
+	define('USE_LDAP', TRUE);
+	define('LDAP_URI', '#ldap_uri#');
+	define('LDAP_USER', '#ldap_user#');
+	define('LDAP_PASSWD', '#ldap_passwd#');
+	define('LDAP_BASE_DN', '#ldap_base#');
+	define('LDAP_USE_SID', #ldap_use_sid#);
+
+	define('MAIL_HOST', '#mail_host#');
+	define('MAIL_FROM', '#mail_from#');
+	define('MAIL_FROM_NAME', '#mail_from_name#');
+	define('MAIL_ADMIN', '#mail_admin#');
+	define('MAIL_ADMIN_NAME', '#mail_admin_name#');
+	define('MAIL_AUTH', #mail_auth#);
+	define('MAIL_LOGIN', '#mail_user#');
+	define('MAIL_PASSWD', '#mail_passwd#');
+	define('MAIL_SECURE', '#mail_secure#');
+	define('MAIL_PORT', #mail_port#);
+	define('MAIL_VERIFY_PEER', #mail_verify_peer#);
+	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
+	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
+
+	define('ORCHESTRATOR_URL', '#scorch_url#');
+	define('ORCHESTRATOR_USER', '#scorch_user#');
+	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
+
+	define('USE_MEMCACHED', #use_memcached#);
+
+	define('WEB_URL', '#web_url#');
+	define('WEB_LINK_BASE_PATH', '#pretty_links_base_path#');
+	define('USE_PRETTY_LINKS', #use_pretty_links#);
+	define('USE_PRETTY_LINKS_FORCE', #use_pretty_links_force#);
+
+	define('LOG_FILE', '#log_file#');
+
+EOT;
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -147,6 +333,11 @@ class MySQLDB
 		//$this->error_msg = $str;
 		throw new Exception($str); //__CLASS__.": ".$str
 	}
+}
+
+function eh($str)
+{
+	echo htmlspecialchars($str);
 }
 
 function json_escape($value) //json_escape
@@ -308,6 +499,8 @@ function build_config($config, $params)
 
 	if(empty($params['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
 
+	if(empty($params['log_file'])) throw new Exception('Log file value not defined!');
+
 	if(empty($params['mail_host'])) throw new Exception('MAIL Host value not defined!');
 	if(empty($params['mail_port'])) throw new Exception('MAIL Port value not defined!');
 	if(empty($params['mail_from'])) throw new Exception('MAIL From value not defined!');
@@ -346,6 +539,7 @@ function build_config($config, $params)
 			'#ldap_user#',
 			'#ldap_passwd#',
 			'#ldap_base#',
+			'#ldap_use_sid#',
 			'#mail_host#',
 			'#mail_port#',
 			'#mail_user#',
@@ -361,9 +555,13 @@ function build_config($config, $params)
 			'#scorch_url#',
 			'#scorch_user#',
 			'#scorch_passwd#',
+			'#log_file#',
 			'#web_url#',
+			'#pretty_links_base_path#',
 			'#mail_auth#',
 			'#use_memcached#',
+			'#use_pretty_links#',
+			'#use_pretty_links_force#',
 			'#language#'
 		),
 		array(
@@ -376,6 +574,7 @@ function build_config($config, $params)
 			sql_escape(@$params['ldap_user']),
 			sql_escape(@$params['ldap_passwd']),
 			sql_escape(@$params['ldap_base']),
+			intval(@$params['ldap_use_sid'])?'TRUE':'FALSE',
 			sql_escape(@$params['mail_host']),
 			sql_escape(@$params['mail_port']),
 			sql_escape(@$params['mail_user']),
@@ -391,172 +590,18 @@ function build_config($config, $params)
 			sql_escape(@$params['scorch_url']),
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
+			sql_escape(@$params['log_file']),
 			sql_escape(@$params['web_url']),
+			sql_escape(@$params['pretty_links_base_path']),
 			empty($params['mail_user'])?'FALSE':'TRUE',
 			intval(@$params['use_memcached'])?'TRUE':'FALSE',
+			intval(@$params['use_pretty_links'])?'TRUE':'FALSE',
+			intval(@$params['use_pretty_links_force'])?'TRUE':'FALSE',
 			sql_escape(@$params['language'])
 		),
 		$config
 	);
 }
-
-$sql = array(
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_users` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `login` varchar(255) NOT NULL,
-  `passwd` varchar(255) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL,
-  `mail` varchar(1024) CHARACTER SET latin1 NOT NULL,
-  `sid` varchar(16) DEFAULT NULL,
-  `reset_token` varchar(16) DEFAULT NULL,
-  `flags` int(10) unsigned NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_access` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `dn` varchar(1024) NOT NULL DEFAULT '',
-  `oid` int(10) unsigned NOT NULL DEFAULT 0,
-  `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_logs` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `date` datetime NOT NULL,
-  `uid` int(10) unsigned NOT NULL,
-  `operation` varchar(1024) NOT NULL,
-  `params` varchar(4096) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `folder_id` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `description` varchar(1024) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `pid` varchar(36) NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `date` datetime NOT NULL,
-  `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `uid` int(10) unsigned DEFAULT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
-  `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `value` varchar(4096) NOT NULL,
-  PRIMARY KEY (`pid`,`guid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
-  `pid` varchar(36) NOT NULL,
-  `guid` varchar(36) NOT NULL,
-  `name` varchar(255) NOT NULL,
-  `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`guid`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-CREATE TABLE `#DB_NAME#`.`w_config` (
-  `uid` int(10) unsigned NOT NULL,
-  `name` varchar(255) NOT NULL DEFAULT '',
-  `value` varchar(8192) NOT NULL DEFAULT '',
-  PRIMARY KEY (`name`,`uid`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-EOT
-,
-<<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 1);
-EOT
-);
-
-$config = <<<'EOT'
-<?php
-	define('DB_HOST', '#db_host#');
-	define('DB_USER', '#db_user#');
-	define('DB_PASSWD', '#db_passwd#');
-	define('DB_NAME', '#db_name#');
-	define('DB_CPAGE', 'utf8');
-	define('DB_PREFIX', 'w_');
-
-	define('APP_LANGUAGE', '#language#');
-
-	define('USE_GSSAPI', #use_gssapi#);
-
-	define('USE_LDAP', TRUE);
-	define('LDAP_URI', '#ldap_uri#');
-	define('LDAP_USER', '#ldap_user#');
-	define('LDAP_PASSWD', '#ldap_passwd#');
-	define('LDAP_BASE_DN', '#ldap_base#');
-
-	define('MAIL_HOST', '#mail_host#');
-	define('MAIL_FROM', '#mail_from#');
-	define('MAIL_FROM_NAME', '#mail_from_name#');
-	define('MAIL_ADMIN', '#mail_admin#');
-	define('MAIL_ADMIN_NAME', '#mail_admin_name#');
-	define('MAIL_AUTH', #mail_auth#);
-	define('MAIL_LOGIN', '#mail_user#');
-	define('MAIL_PASSWD', '#mail_passwd#');
-	define('MAIL_SECURE', '#mail_secure#');
-	define('MAIL_PORT', #mail_port#);
-	define('MAIL_VERIFY_PEER', #mail_verify_peer#);
-	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
-	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
-
-	define('ORCHESTRATOR_URL', '#scorch_url#');
-	define('ORCHESTRATOR_USER', '#scorch_user#');
-	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
-
-	define('WS_URL', '#web_url#');
-
-	define('USE_MEMCACHED', #use_memcached#);
-
-EOT;
-
 
 	//error_reporting(0);
 
@@ -569,6 +614,29 @@ EOT;
 
 			switch($action)
 			{
+				case 'check_modules':
+				{
+					$result_json = array(
+						'code' => 0,
+						'message' => '',
+					);
+
+					foreach($modules as $module)
+					{
+						if(extension_loaded($module))
+						{
+							$result_json['message'] .= $module." - OK\n";
+						}
+						else
+						{
+							$result_json['code'] = 1;
+							$result_json['message'] .= $module." - missing\n";
+						}
+					}
+
+					echo json_encode($result_json, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+				}
+				exit;
 				case 'check_db_conn':
 				{
 					if(empty($_POST['db_host'])) throw new Exception('Host value not defined!');
@@ -788,7 +856,7 @@ EOT;
 					$db->put(rpv("
 						INSERT
 							INTO w_users (login, passwd, mail, flags)
-							VALUES ({s0}, MD5({s1}), {s2}, 0x0000)
+							VALUES ({s0}, MD5({s1}), {s2}, 0x0008)
 						-- ON DUPLICATE KEY UPDATE
 						--	SET passwd = MD5({s1}),
 						--	mail = {s2}
@@ -836,6 +904,9 @@ EOT;
 	}
 
 	header("Content-Type: text/html; charset=utf-8");
+	
+	$pretty_links_base_path = preg_replace('#/[^/]+$#', '/', $_SERVER['REQUEST_URI']);
+	$web_url = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].$pretty_links_base_path;
 ?>
 <!DOCTYPE html>
 <html>
@@ -1373,6 +1444,19 @@ input:checked + .slider:after
 		<div class="container">
 		<div class="form-horizontal">
 		<form id="uform-fields" action="?action=download_config" method="post" target="_blank">
+			<?php $n = 1 ?>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<h3>Requirements</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_modules');"><?php eh($n++) ?>. Check loaded PHP modules</button>
+					<pre id="result_check_modules" class="alert alert-danger" style="display: none"></pre>
+				</div>
+			</div>
+
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Language settings</h3>
@@ -1418,7 +1502,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_db_conn');">1. Check DB connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_db_conn');"><?php eh($n++) ?>. Check DB connection</button>
 					<div id="result_check_db_conn" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1430,13 +1514,13 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db');">2. Create database</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db');"><?php eh($n++) ?>. Create database</button>
 					<div id="result_create_db" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_tables');">3. Create tables</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_tables');"><?php eh($n++) ?>. Create tables</button>
 					<div id="result_create_tables" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1459,13 +1543,13 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db_user');">4. Create DB user</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_db_user');"><?php eh($n++) ?>. Create DB user</button>
 					<div id="result_create_db_user" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('grant_access');">5. Grant access to database</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('grant_access');"><?php eh($n++) ?>. Grant access to database</button>
 					<div id="result_grant_access" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1511,7 +1595,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_ldap');">6. Check LDAP connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_ldap');"><?php eh($n++) ?>. Check LDAP connection</button>
 					<div id="result_check_ldap" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1540,7 +1624,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');">7. Check SCORCH connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++) ?>. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1609,26 +1693,26 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_memcached" class="control-label col-sm-2">Verify peer:</label>
+				<label for="mail_verify_peer" class="control-label col-sm-2">Verify peer:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="mail_verify_peer" name="mail_verify_peer" class="form-control" type="checkbox" value="1" checked="checked"/><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_memcached" class="control-label col-sm-2">Verify peer name:</label>
+				<label for="mail_verify_peer_name" class="control-label col-sm-2">Verify peer name:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="mail_verify_peer_name" name="mail_verify_peer_name" class="form-control" type="checkbox" value="1" checked="checked" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_memcached" class="control-label col-sm-2">Allow self signed certificate:</label>
+				<label for="mail_allow_self_signed" class="control-label col-sm-2">Allow self signed certificate:</label>
 				<div class="col-sm-5">
 					<label class="switch"><input id="mail_allow_self_signed" name="mail_allow_self_signed" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');">8. Check mail connection</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_mail');"><?php eh($n++) ?>. Check mail connection</button>
 					<div id="result_check_mail" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1652,7 +1736,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');">9. Create admin account</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('create_admin_account');"><?php eh($n++) ?>. Create admin account</button>
 					<div id="result_create_admin_account" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
@@ -1662,9 +1746,27 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="web_url" class="control-label col-sm-2">WebSCO URL:</label>
+				<label for="web_url" class="control-label col-sm-2">WebSCO URL (with trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="web_url" name="web_url" class="form-control" type="text" value="https://websco.contoso.com" />
+					<input id="web_url" name="web_url" class="form-control" type="text" value="<?php eh($web_url) ?>" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="pretty_links_base_path" class="control-label col-sm-2">Links base path (with leading and trailing slash):</label>
+				<div class="col-sm-5">
+					<input id="pretty_links_base_path" name="pretty_links_base_path" class="form-control" type="text" value="<?php eh($pretty_links_base_path) ?>" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_pretty_links" class="control-label col-sm-2">Use pretty links (mod_rewrite required):</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="use_pretty_links" name="use_pretty_links" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_pretty_links_force" class="control-label col-sm-2">Use pretty links force (if used nginx rewrite):</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="use_pretty_links_force" name="use_pretty_links_force" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">
@@ -1674,8 +1776,20 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
+				<label for="ldap_use_sid" class="control-label col-sm-2">LDAP use SID for access groups (otherwise DN):</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="ldap_use_sid" name="ldap_use_sid" class="form-control" type="checkbox" value="1" /><div class="slider round"></div></label>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="log_file" class="control-label col-sm-2">Log file:</label>
+				<div class="col-sm-5">
+					<input id="log_file" name="log_file" class="form-control" type="text" value="/var/log/websco/websco.log" />
+				</div>
+			</div>
+			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');">10. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
+					<button type="button" class="btn btn-primary" onclick="f_send_form('save_config');"><?php eh($n++) ?>. Save config</button> or <button type="button" class="btn btn-primary" onclick="f_download_config();">Download config</button>
 					<div id="result_save_config" class="alert alert-danger" style="display: none"></div>
 					<div id="result_download_config" class="alert alert-danger" style="display: none"></div>
 				</div>

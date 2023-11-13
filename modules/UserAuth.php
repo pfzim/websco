@@ -32,7 +32,9 @@
 */
 
 define('UA_DISABLED',	0x0001);  /// Ignored for LDAP user
-define('UA_LDAP',		0x0002);  /// Is a LDAP user (overwise is internal user)
+define('UA_LDAP',		0x0002);  /// Is a LDAP user (otherwise is internal user)
+define('UA_DELETED',	0x0004);  /// User is deleted
+define('UA_ADMIN',		0x0008);  /// User is admin
 
 class UserAuth
 {
@@ -42,7 +44,8 @@ class UserAuth
 	private $login = NULL;				/// sAMAccountName, zl cookie
 	private $token = NULL;				/// zh cookie
 	private $flags = 0;
-	
+	private $cookie_path = '/';
+
 	private $salt = 'UserAuth';
 
 	private $ldap = NULL;
@@ -69,12 +72,21 @@ class UserAuth
 			$this->ldap = NULL;
 		}
 
+		if(defined('WEB_LINK_BASE_PATH') && !empty(WEB_LINK_BASE_PATH))
+		{
+			$this->cookie_path = WEB_LINK_BASE_PATH;
+		}
+		else
+		{
+			$this->cookie_path = '/';
+		}
+
 		$this->bits_string_representation = '';
 		$this->max_bits = 0;
 		$this->rights = array();
 		$this->loaded = FALSE;
 
-		if(empty($_SESSION['uid']))
+		if(empty($_SESSION[DB_PREFIX.'uid']))
 		{
 			if(!empty($_COOKIE['zh']) && !empty($_COOKIE['zl']))
 			{
@@ -83,7 +95,7 @@ class UserAuth
 		}
 		else
 		{
-			$this->uid = intval($_SESSION['uid']);
+			$this->uid = intval($_SESSION[DB_PREFIX.'uid']);
 
 			/*
 			// preload user info
@@ -100,7 +112,7 @@ class UserAuth
 					m.`id` = #
 					AND (m.`flags` & 0x0001) = 0
 				LIMIT 1
-			", $_SESSION['uid'])))
+			", $_SESSION[DB_PREFIX.'uid'])))
 			{
 				$this->loaded = TRUE;
 				$this->uid = $user_data[0][0];
@@ -114,6 +126,8 @@ class UserAuth
 
 	public function logon($login, $passwd)
 	{
+		$this->logoff();
+
 		if(empty($login) || empty($passwd))
 		{
 			$this->core->error_ex('Empty login or password!', $this->rise_exception);
@@ -154,7 +168,7 @@ class UserAuth
 						`@users` AS m
 					WHERE
 						m.`login` = !
-						AND (m.`flags` & (0x0002)) = 0x0002
+						AND (m.`flags` & ({%UA_LDAP})) = {%UA_LDAP}
 					LIMIT 1
 				", $sam_account_name
 			)))
@@ -165,7 +179,7 @@ class UserAuth
 					return FALSE;
 				}
 
-				$_SESSION['uid'] = $user_data[0][0];
+				$_SESSION[DB_PREFIX.'uid'] = $user_data[0][0];
 				$this->login = $user_data[0][1];
 				$this->flags = intval($user_data[0][2]);
 				$this->token = $user_data[0][3];
@@ -176,7 +190,7 @@ class UserAuth
 				$this->login = $sam_account_name;
 				$this->flags = UA_LDAP;
 				$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, sid, flags) VALUES (!, \'\', !, !, #)', $this->login, @$records[0]['mail'][0], $this->token, $this->flags));
-				$_SESSION['uid'] = $this->core->db->last_id();
+				$_SESSION[DB_PREFIX.'uid'] = $this->core->db->last_id();
 			}
 		}
 		else  // internal authorization method
@@ -192,7 +206,7 @@ class UserAuth
 					WHERE
 						m.`login` = !
 						AND m.`passwd` = MD5(!)
-						AND (m.`flags` & (0x0001 | 0x0002)) = 0x0000
+						AND (m.`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0x0000
 					LIMIT 1
 				", $login, $passwd.$this->salt
 			)))
@@ -201,14 +215,14 @@ class UserAuth
 				return FALSE;
 			}
 
-			$_SESSION['uid'] = $user_data[0][0];
+			$_SESSION[DB_PREFIX.'uid'] = $user_data[0][0];
 			$this->login = $user_data[0][1];
 			$this->flags = intval($user_data[0][2]);
 			$this->token = $user_data[0][3];
 		}
 
 		$this->loaded = TRUE;
-		$this->uid = $_SESSION['uid'];
+		$this->uid = $_SESSION[DB_PREFIX.'uid'];
 
 		if(empty($this->token))
 		{
@@ -216,8 +230,8 @@ class UserAuth
 			$this->core->db->put(rpv('UPDATE @users SET `sid` = !, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->token, $this->uid));
 		}
 
-		setcookie('zh', $this->token, time() + 2592000, '/');
-		setcookie('zl', $this->login, time() + 2592000, '/');
+		setcookie('zh', $this->token, time() + 2592000, $this->cookie_path);
+		setcookie('zl', $this->login, time() + 2592000, $this->cookie_path);
 
 		//$this->core->db->put(rpv('UPDATE @users SET `sid` = ! WHERE `id` = # LIMIT 1', $this->token, $this->uid));
 
@@ -240,35 +254,39 @@ class UserAuth
 				m.`login` = !
 				AND m.`sid` IS NOT NULL
 				AND m.`sid` = !
-				AND (m.`flags` & 0x0001) = 0
+				AND (m.`flags` & ({%UA_DISABLED} | {%UA_DELETED})) = 0
 			LIMIT 1
 		", $login, $token)))
 		{
 			$this->loaded = TRUE;
-			$_SESSION['uid'] = $user_data[0][0];
-			$this->uid = $_SESSION['uid'];
+			$_SESSION[DB_PREFIX.'uid'] = $user_data[0][0];
+			$this->uid = $_SESSION[DB_PREFIX.'uid'];
 			$this->flags = intval($user_data[0][1]);
 			$this->login = $user_data[0][2];
 			$this->token = $user_data[0][3];
 
 			// Extend cookie life time
-			setcookie('zh', $this->token, time() + 2592000, '/');
-			setcookie('zl', $this->login, time() + 2592000, '/');
-			
+			setcookie('zh', $this->token, time() + 2592000, $this->cookie_path);
+			setcookie('zl', $this->login, time() + 2592000, $this->cookie_path);
+
 			return TRUE;
 		}
 
 		return FALSE;
 	}
-	
+
 	public function logoff()
 	{
-		$_SESSION['uid'] = 0;
-		setcookie('zh', NULL, time() - 60, '/');
-		setcookie('zl', NULL, time() - 60, '/');
+		if($this->uid)
+		{
+			$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->uid));
+		}
+
+		$_SESSION[DB_PREFIX.'uid'] = 0;
+		setcookie('zh', NULL, time() - 60, $this->cookie_path);
+		setcookie('zl', NULL, time() - 60, $this->cookie_path);
 
 		$this->loaded = FALSE;
-		$this->core->db->put(rpv('UPDATE @users SET `sid` = NULL, `reset_token` = NULL WHERE `id` = # LIMIT 1', $this->uid));
 		$this->uid = 0;
 		$this->flags = 0;
 		$this->login = NULL;
@@ -277,13 +295,13 @@ class UserAuth
 
 	public function add($login, $passwd, $mail)
 	{
-		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE (u.`login`= ! OR u.`mail` = !) AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $login, $mail)))
+		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE (u.`login`= ! OR u.`mail` = !) AND (`flags` & ({%UA_DELETED} | {%UA_LDAP})) = 0 LIMIT 1', $login, $mail)))
 		{
 			$this->core->error_ex('User already exist!', $this->rise_exception);
 			return 0;
 		}
 
-		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, 0x0001)', $login, $passwd.$this->salt, $mail)))
+		if(!$this->core->db->put(rpv('INSERT INTO @users (login, passwd, mail, flags) VALUES (!, MD5(!), !, {%UA_DISABLED})', $login, $passwd.$this->salt, $mail)))
 		{
 			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return 0;
@@ -296,9 +314,13 @@ class UserAuth
 	{
 		$affected = 0;
 
-		if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+		if($this->core->db->select(rpv('SELECT u.`id` FROM @users AS u WHERE u.`id` = # AND u.`reset_token` = ! AND (u.`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $uid, $token)))
 		{
-			return ($affected > 0);
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!), `reset_token` = NULL WHERE `id` = # AND `reset_token` = ! LIMIT 1', $passwd.$this->salt, $uid, $token), $affected))
+			{
+				//return ($affected > 0);
+				return TRUE;
+			}
 		}
 
 		return FALSE;
@@ -308,7 +330,7 @@ class UserAuth
 	{
 		$token = bin2hex(random_bytes(8));
 
-		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $token, $uid)))
+		if($this->core->db->put(rpv('UPDATE `@users` SET `reset_token` = ! WHERE `id` = # AND (`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $token, $uid)))
 		{
 			return TRUE;
 		}
@@ -322,9 +344,10 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $passwd.$this->salt, $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `passwd` = MD5(!) WHERE `id` = # AND (`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $passwd.$this->salt, $uid), $affected))
 			{
-				return ($affected > 0);
+				//return ($affected > 0);
+				return TRUE;
 			}
 		}
 
@@ -345,7 +368,7 @@ class UserAuth
 	{
 		if($this->uid && !$this->is_ldap_user())  // Only internal user can change self password
 		{
-			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $this->uid, $passwd.$this->salt)))
+			if($this->core->db->select_ex($user, rpv('SELECT u.`id` FROM `@users` AS u WHERE u.`id` = # AND u.`passwd` = MD5(!) AND (u.`flags` & ({%UA_DISABLED} | {%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $this->uid, $passwd.$this->salt)))
 			{
 				if(intval($user[0][0]) == $this->uid)
 				{
@@ -363,28 +386,34 @@ class UserAuth
 	 *  \param [in] $uid User ID. If 0 then user will be created
 	 *  \param [in] $login User login
 	 *  \param [in] $mail User mail address for send notification
+	 *  \param [in] $is_admin User is local administrator
 	 *  \return true - if activated successfully
 	 */
 
-	public function set_user_info_ex($uid, $login, $mail)
+	public function set_user_info_ex($uid, $login, $mail, $is_admin = FALSE)
 	{
 		$affected = 0;
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = ! WHERE `id` = # AND (`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail, $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `login` = !, `mail` = !, `flags` = ((`flags` & ~{%UA_ADMIN}) | #) WHERE `id` = # AND (`flags` & ({%UA_LDAP})) = 0 LIMIT 1', $login, $mail, $is_admin ? UA_ADMIN : 0, $uid), $affected))
 			{
-				return ($affected > 0);
+				//return ($affected > 0);
+				return TRUE;
 			}
 		}
 		else
 		{
-			if(!$this->core->db->select_ex($users, rpv('SELECT u.`id` FROM `@users` AS u WHERE (u.`login` = ! OR u.`mail` = !) AND (u.`flags` & (0x0001 | 0x0002)) = 0x0000 LIMIT 1', $login, $mail)))
+			if(!$this->core->db->select_ex($users, rpv('SELECT u.`id` FROM `@users` AS u WHERE (u.`login` = ! OR u.`mail` = !) AND (u.`flags` & ({%UA_DELETED} | {%UA_LDAP})) = 0 LIMIT 1', $login, $mail)))
 			{
-				if($this->core->db->put(rpv('INSERT INTO `@users` (`login`, `mail`, `passwd`, `flags`) VALUES (!, !, \'\', 0)', $login, $mail)))
+				if($this->core->db->put(rpv('INSERT INTO `@users` (`login`, `mail`, `passwd`, `flags`) VALUES (!, !, \'\', #)', $login, $mail, $is_admin ? UA_ADMIN : 0)))
 				{
 					return TRUE;
 				}
+			}
+			else
+			{
+				$this->core->error_ex('User or mail already exist!', $this->rise_exception);
 			}
 		}
 
@@ -397,9 +426,42 @@ class UserAuth
 
 		if($uid)
 		{
-			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | 0x0001) WHERE `id` = # AND (`flags` & 0x0002) = 0 LIMIT 1', $uid), $affected))
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | {%UA_DELETED}) WHERE `id` = # AND (`flags` & ({%UA_LDAP} | {%UA_DELETED})) = 0 LIMIT 1', $uid), $affected))
 			{
-				return ($affected > 0);
+				//return ($affected > 0);
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
+	public function deactivate_user_ex($uid)
+	{
+		$affected = 0;
+
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` | {%UA_DISABLED}) WHERE `id` = # AND (`flags` & {%UA_LDAP}) = 0 LIMIT 1', $uid), $affected))
+			{
+				//return ($affected > 0);
+				return TRUE;
+			}
+		}
+
+		return FALSE;
+	}
+
+	public function activate_user_ex($uid)
+	{
+		$affected = 0;
+
+		if($uid)
+		{
+			if($this->core->db->put(rpv('UPDATE `@users` SET `flags` = (`flags` & ~{%UA_DISABLED}) WHERE `id` = # AND (`flags` & {%UA_LDAP}) = 0 LIMIT 1', $uid), $affected))
+			{
+				//return ($affected > 0);
+				return TRUE;
 			}
 		}
 
@@ -417,9 +479,9 @@ class UserAuth
 
 	public function activate($id, $login, &$mail)
 	{
-		if($this->uid && !$this->is_ldap_user())  // Only internal user can activate
+		if($this->uid && !$this->is_ldap_user() && (($this->flags & UA_ADMIN) == UA_ADMIN))  // Only internal admin user can activate
 		{
-			if($this->core->db->put(rpv('UPDATE @users SET `flags` = (`flags` & ~0x0001) WHERE `login` = ! AND `id` = #', $login, $id)))
+			if($this->core->db->put(rpv('UPDATE @users SET `flags` = (`flags` & ~{%UA_DISABLED}) WHERE `login` = ! AND `id` = #', $login, $id)))
 			{
 				//$this->core->db->put(rpv('INSERT INTO `@log` (`date`, `uid`, `type`, `p1`, `ip`) VALUES (NOW(), #, #, #, !)', 0, LOG_LOGIN_ACTIVATE, $id, $ip));
 				$mail = FALSE;
@@ -447,7 +509,7 @@ class UserAuth
 
 	public function find_user_by_mail(&$mail)
 	{
-		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! AND (u.`flags` & (0x0001 | 0x0002)) = 0 LIMIT 1', $mail)))
+		if($this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`mail` FROM @users AS u WHERE u.`mail` = ! AND (u.`flags` & ({%UA_DISABLED} | {%UA_LDAP})) = 0 LIMIT 1', $mail)))
 		{
 			$mail = $result[0][1];
 			return intval($result[0][0]);
@@ -458,7 +520,7 @@ class UserAuth
 
 	private function load_user_info()
 	{
-		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & 0x0001) = 0 LIMIT 1', $this->uid)))
+		if(!$this->core->db->select_ex($result, rpv('SELECT u.`login`, u.`sid`, u.`flags` FROM @users AS u WHERE u.`id` = # AND (u.`flags` & ({%UA_DISABLED} | {%UA_DELETED})) = 0 LIMIT 1', $this->uid)))
 		{
 			$this->core->error_ex($this->core->get_last_error(), $this->rise_exception);
 			return FALSE;
@@ -470,6 +532,22 @@ class UserAuth
 		$this->flags = intval($result[0][2]);
 
 		return TRUE;
+	}
+
+	public function get_user_info_ex($uid)
+	{
+		if(!$this->core->db->select_ex($result, rpv('SELECT u.`id`, u.`login`, u.`sid`, u.`mail`, u.`flags` FROM @users AS u WHERE u.`id` = # LIMIT 1', $uid)))
+		{
+			return FALSE;
+		}
+
+		return array(
+			'id' => $result[0][0],
+			'login' => $result[0][1],
+			'sid' => $result[0][2],
+			'mail' => $result[0][3],
+			'flags' => intval($result[0][4])
+		);
 	}
 
 	public function get_id()
@@ -522,7 +600,7 @@ class UserAuth
 		{
 			if(!$this->is_ldap_user())
 			{
-				return TRUE;  // Internal user is always admin
+				return (($this->flags & UA_ADMIN) == UA_ADMIN);  // Return TRUE if internal user is admin
 			}
 			else
 			{
@@ -574,7 +652,7 @@ class UserAuth
 		if(	$this->uid
 			&& $this->is_ldap_user()
 			&& $link
-			&& $this->core->db->select_ex($result, rpv("SELECT `dn`, `allow_bits` FROM @access WHERE `oid` = #", $object_id))
+			&& $this->core->db->select_ex($result, rpv("SELECT `sid`, `dn`, `allow_bits` FROM @access WHERE `oid` = #", $object_id))
 		)
 		{
 			foreach($result as &$row)
@@ -597,9 +675,26 @@ class UserAuth
 				}
 				ldap_free_result($sr);
 				*/
-				if($this->ldap->search($records, '(&(objectClass=user)(objectCategory=person)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$row[0].'))', array('samaccountname', 'objectsid')) == 1)
+				
+				if(defined('LDAP_USE_SID') && LDAP_USE_SID)
 				{
-					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[1]);
+					if($this->ldap->search($records, '(&(objectCategory=group)(objectSID='.$row[0].'))', array('distinguishedName')) != 1)
+					{
+						continue;
+					}
+
+					$group_dn = $records[0]['distinguishedName'][0];
+				}
+				else
+				{
+					$group_dn = $row[1];
+				}
+				
+				if($this->ldap->search($records, '(&(objectClass=user)(objectCategory=person)(sAMAccountName='.ldap_escape($this->get_login(), null, LDAP_ESCAPE_FILTER).')(memberOf:1.2.840.113556.1.4.1941:='.$group_dn.'))', array('samaccountname', 'objectsid')) == 1)
+				{
+					$this->rights[$object_id] = $this->merge_permissions($this->rights[$object_id], $row[2]);
+
+					//log_file('Object: '.$object_id.', Group: '.$row[0].', Perm: '.$this->permissions_to_string($this->rights[$object_id]));
 					/*
 					for($i = 0; $i <= ((int) ($this->max_bits / 8)); $i++)
 					{
@@ -638,9 +733,14 @@ class UserAuth
 	{
 		$object_id = intval($object_id);
 
-		if($this->uid && !$this->is_ldap_user())
+		if(!$this->uid)
 		{
-			return TRUE;  /// Internal user is always admin
+			return FALSE;  /// Not logged in user always return FALSE
+		}
+
+		if(!$this->is_ldap_user())
+		{
+			return (($this->flags & UA_ADMIN) == UA_ADMIN);  /// Return TRUE if internal user is admin
 		}
 
 		if(!isset($this->rights[$object_id]))  // local cache empty
@@ -652,6 +752,8 @@ class UserAuth
 		}
 
 		$level--;
+
+		//log_file('Object: '.$object_id.', Level: '.$level.', Perm: '.$this->permissions_to_string($this->rights[$object_id]).', Result: '.((ord($this->rights[$object_id][(int) ($level / 8)]) >> ($level % 8)) & 0x01).': '.(($level % 8)));
 		return ((ord($this->rights[$object_id][(int) ($level / 8)]) >> ($level % 8)) & 0x01);
 	}
 
@@ -704,4 +806,44 @@ function unset_permission_bit(&$bits, $bit)
 {
 	$bit--;
 	$bits[(int) ($bit / 8)] = chr(ord($bits[(int) ($bit / 8)]) & ((0x1 << ($bit % 8)) ^ 0xF));
+}
+
+
+// https://stackoverflow.com/questions/39533560/php-ldap-get-user-sid
+function bin_to_str_sid($binary_sid) {
+
+    $sid = NULL;
+    /* 64bt PHP */
+    if(strlen(decbin(~0)) == 64)
+    {
+        // Get revision, indentifier, authority 
+        $parts = unpack('Crev/x/nidhigh/Nidlow', $binary_sid);
+        // Set revision, indentifier, authority 
+        $sid = sprintf('S-%u-%d',  $parts['rev'], ($parts['idhigh']<<32) + $parts['idlow']);
+        // Translate domain
+        $parts = unpack('x8/V*', $binary_sid);
+        // Append if parts exists
+        if ($parts) $sid .= '-';
+        // Join all
+        $sid.= join('-', $parts);
+    }
+    /* 32bit PHP */
+    else
+    {   
+        $sid = 'S-';
+        $sidinhex = str_split(bin2hex($binary_sid), 2);
+        // Byte 0 = Revision Level
+        $sid = $sid.hexdec($sidinhex[0]).'-';
+        // Byte 1-7 = 48 Bit Authority
+        $sid = $sid.hexdec($sidinhex[6].$sidinhex[5].$sidinhex[4].$sidinhex[3].$sidinhex[2].$sidinhex[1]);
+        // Byte 8 count of sub authorities - Get number of sub-authorities
+        $subauths = hexdec($sidinhex[7]);
+        //Loop through Sub Authorities
+        for($i = 0; $i < $subauths; $i++) {
+            $start = 8 + (4 * $i);
+            // X amount of 32Bit (4 Byte) Sub Authorities
+            $sid = $sid.'-'.hexdec($sidinhex[$start+3].$sidinhex[$start+2].$sidinhex[$start+1].$sidinhex[$start]);
+        }
+    }
+    return $sid;
 }

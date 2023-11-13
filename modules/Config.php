@@ -45,29 +45,29 @@ class Config
 	{
 		$this->core->db->put(rpv('INSERT INTO @config (`uid`, `name`, `value`) VALUES ({d0}, {s1}, {s2}) ON DUPLICATE KEY UPDATE `value` = {s2}', $uid, $key, $value));
 
-		if(!isset($config[$uid]))
+		if(!isset($this->config[$uid]))
 		{
 			$this->load($uid);
 		}
 		else
 		{
-			$config[$uid][$key] = $value;
+			$this->config[$uid][$key] = $value;
 		}
 	}
 
 	private function get_ex($uid, $key, $def_value)
 	{
-		if(!isset($config[$uid]))
+		if(!isset($this->config[$uid]))
 		{
 			$this->load($uid);
 		}
 
-		if(!isset($config[$uid][$key]))
+		if(!isset($this->config[$uid][$key]))
 		{
 			return $def_value;
 		}
 
-		return $config[$uid][$key];
+		return $this->config[$uid][$key];
 	}
 
 	public function set_global($key, $value)
@@ -85,7 +85,7 @@ class Config
 		$uid = $this->core->UserAuth->get_id();
 		if(!$uid)
 		{
-			$this->core->error('Algorithm error. User not logged in!');
+			//$this->core->error('Algorithm error. User not logged in!');
 			return;
 		}
 
@@ -97,10 +97,28 @@ class Config
 		$uid = $this->core->UserAuth->get_id();
 		if(!$uid)
 		{
-			$this->core->error('Algorithm error. User not logged in!');
-			return NULL;
+			//$this->core->error('Algorithm error. User not logged in!');
+			return $def_value;
 		}
 
 		return $this->get_ex($this->core->UserAuth->get_id(), $key, $def_value);
 	}
+
+	public function get_all()
+	{
+		if(!isset($this->config[0]))
+		{
+			$this->load(0);
+		}
+
+		$uid = $this->core->UserAuth->get_id();
+
+		if(!isset($this->config[$uid]))
+		{
+			$this->load($uid);
+		}
+
+		return $this->config;
+	}
+
 }

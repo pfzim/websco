@@ -8,7 +8,7 @@ function gi(name)
 
 function escapeHtml(text)
 {
-  return (text+'')
+  return (''+text)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
@@ -110,14 +110,14 @@ function f_http(url, _f_callback, _callback_params, content_type, data)
 function f_restart_job(rb_guid, job_id)
 {
 	gi('job').style.display = 'none';
-	f_show_form('/websco/get_runbook/' + rb_guid + '/' + job_id);
+	f_show_form(g_link_prefix + 'runbook_get/' + rb_guid + '/' + job_id);
 }
 
 function f_get_job(guid)
 {
 	gi('loading').style.display = 'block';
 	f_http(
-		'/websco/get_job/' + guid,
+		g_link_prefix + 'job_get/' + guid,
 		function(data, guid)
 		{
 			gi('loading').style.display = 'none';
@@ -131,6 +131,10 @@ function f_get_job(guid)
 				el.innerText = data.name;
 				el = gi('job_guid');
 				el.innerText = data.guid;
+				el = gi('job_run_date');
+				el.innerText = data.run_date;
+				el = gi('job_modified_date');
+				el.innerText = data.modified_date;
 				el = gi('job_sid');
 				el.innerText = data.sid + ' (' + data.sid_name + ')';
 				el = gi('job_status');
@@ -147,9 +151,11 @@ function f_get_job(guid)
 				el = gi('job_user');
 				el.innerText = data.user;
 				el = gi('job_update');
-				el.setAttribute('onclick', 'f_get_job(\'' + guid + '\');');
+				el.setAttribute('onclick', 'f_get_job(\'' + escapeHtml(guid) + '\');');
+				el.style.display = 'inline-block';
 				el = gi('job_restart');
-				el.setAttribute('onclick', 'f_restart_job(\'' + data.runbook_guid + '\', ' + data.id + ');');
+				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_guid) + '\', ' + data.id + ');');
+				el.style.display = 'inline-block';
 				gi('job').style.display = 'block';
 				el = gi('job_table_data');
 				el.innerHTML = '';
@@ -165,15 +171,14 @@ function f_get_job(guid)
 						cl = 'status-warn';
 					}
 
+					html += '<tr><td>' + LL.InstanceID + ': ' + escapeHtml(data.instances[i].guid) +'</td><td class="' + cl + '">' + escapeHtml(data.instances[i].status) +'</td></tr>';
 
-					html += '<tr><td>Instance ID: ' + data.instances[i].guid +'</td><td class="' + cl + '">' + data.instances[i].status +'</td></tr>';
-
-					html += '<tr><td colspan="2"><b>Input parameters</b></td></tr>';
+					html += '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_in.length; j++)
 					{
-						html += '<tr><td>' + data.instances[i].params_in[j].name +'</td><td>' + data.instances[i].params_in[j].value +'</td></tr>';
+						html += '<tr><td>' + escapeHtml(data.instances[i].params_in[j].name) +'</td><td>' + escapeHtml(data.instances[i].params_in[j].value) +'</td></tr>';
 					}
-					html += '<tr><td colspan="2"><b>Activities</b></td></tr>';
+					html += '<tr><td colspan="2"><b>' + LL.Activities + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].activities.length; j++)
 					{
 						if(data.instances[i].activities[j].status == 'success')
@@ -189,12 +194,12 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td>' + data.instances[i].activities[j].sequence + '. ' + data.instances[i].activities[j].name +'</td><td class="' + cl + '">' + data.instances[i].activities[j].status +'</td></tr>';
+						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.instances[i].activities[j].id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
 					}
-					html += '<tr><td colspan="2"><b>Output parameters</b></td></tr>';
+					html += '<tr><td colspan="2"><b>' + LL.OutputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
 					{
-						html += '<tr><td>' + data.instances[i].params_out[j].name +'</td><td><pre>' + data.instances[i].params_out[j].value +'</pre></td></tr>';
+						html += '<tr><td>' + escapeHtml(data.instances[i].params_out[j].name) +'</td><td><pre>' + escapeHtml(data.instances[i].params_out[j].value) +'</pre></td></tr>';
 					}
 				}
 
@@ -202,6 +207,102 @@ function f_get_job(guid)
 			}
 		},
 		guid
+	);
+
+	return false;
+}
+
+function f_get_custom_job(id)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		g_link_prefix + 'job_custom_get/' + id,
+		function(data, guid)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				var el = gi('runbook_title');
+				el.innerText = data.name;
+				el = gi('job_guid');
+				el.innerText = data.guid;
+				el = gi('job_run_date');
+				el.innerText = data.run_date;
+				el = gi('job_modified_date');
+				el.innerText = '';
+				el = gi('job_sid');
+				el.innerText = '';
+				el = gi('job_status');
+				el.innerText = data.status;
+				if(data.status == 'Completed')
+				{
+					el.className = 'status-ok';
+				}
+				else
+				{
+					el.className = 'status-warn';
+				}
+
+				el = gi('job_user');
+				el.innerText = data.user;
+				el = gi('job_update');
+				el.style.display = 'none';
+				el.setAttribute('onclick', '');
+				el = gi('job_restart');
+				el.style.display = 'none';
+				el.setAttribute('onclick', '');
+				gi('job').style.display = 'block';
+				el = gi('job_table_data');
+				el.innerHTML = '';
+				html = '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
+				for(i = 0; i < data.params.length; i++)
+				{
+					html += '<tr><td>' + escapeHtml(data.params[i].guid) +'</td><td>' + escapeHtml(data.params[i].value) +'</td></tr>';
+				}
+
+				el.innerHTML = html;
+			}
+		},
+		id
+	);
+
+	return false;
+}
+
+function f_get_activity(url)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		url,
+		function(data, guid)
+		{
+			gi('loading').style.display = 'none';
+			if(data.code)
+			{
+				f_notify(data.message, 'error');
+			}
+			else
+			{
+				//var el = gi('activity_title');
+				//el.innerText = data.guid;
+
+				gi('activity').style.display = 'block';
+				var el = gi('activity_table_data');
+				el.innerHTML = '';
+				html = '';
+				for(j = 0; j < data.params.length; j++)
+				{
+					html += '<tr><td>' + escapeHtml(data.params[j].name) +'</td><td><pre>' + escapeHtml(data.params[j].value) +'</pre></td></tr>';
+				}
+
+				el.innerHTML = html;
+			}
+		},
+		'guid'
 	);
 
 	return false;
@@ -274,6 +375,212 @@ form_data = {
 }
 */
 
+function f_append_fields(el, fields, form_id, spoiler_id)
+{
+	//console.log('f_append_fields' + spoiler_id);
+	for(var i = 0, ec = fields.length; i < ec; i++)
+	{
+		if(fields[i].type == 'hidden')
+		{
+			html = '<input name="' + escapeHtml(fields[i].name) + '" type="hidden" value="' + escapeHtml(fields[i].value) + '" />';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'list' && fields[i].list)
+		{
+			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">'+ escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<select class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '">'
+				+ '<option value=""></option>';
+			for(j = 0; j < fields[i].list.length; j++)
+			{
+				selected = ''
+				if(fields[i].values)
+				{
+					if(fields[i].values[j] == fields[i].value)
+					{
+						selected = ' selected="selected"'
+					}
+				}
+				else if(fields[i].list[j] == fields[i].value)
+				{
+					selected = ' selected="selected"'
+				}
+				html += '<option value="' + escapeHtml(fields[i].values ? fields[i].values[j] : fields[i].list[j]) + '"' + selected + '>' + escapeHtml(fields[i].list[j]) + '</option>';
+			}
+			html += '</select>'
+				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'flags' && fields[i].list)
+		{
+			value = parseInt(fields[i].value, 10);
+
+			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':</div>';
+			for(j = 0; j < fields[i].list.length; j++)
+			{
+				checked = '';
+				if(value & (0x01 << j))
+				{
+					checked = ' checked="checked"';
+				}
+
+				html += '<span><input id="' + escapeHtml(form_id + fields[i].name) + '[' + j +']" name="' + escapeHtml(fields[i].name) + '[' + j +']" type="checkbox" value="' + escapeHtml(fields[i].values?fields[i].values[j]:'1') + '"' + checked + '/><label for="'+ escapeHtml(form_id + fields[i].name) + '[' + j + ']">' + escapeHtml(fields[i].list[j]) + '</label></span>'
+			}
+			html += '<div id="' + escapeHtml(form_id + fields[i].name) + '[0]-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'datetime')
+		{
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+			el.appendChild(wrapper);
+
+			flatpickr(
+				gi(form_id + fields[i].name),
+				{
+					allowInput: true,
+					enableTime: true,
+					time_24hr: true,
+					defaultHour: 0,
+					defaultMinute: 0,
+					dateFormat: "d.m.Y H:i",
+					locale: {
+						firstDayOfWeek: 1
+					}
+				}
+			);
+		}
+		else if(fields[i].type == 'time')
+		{
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+			el.appendChild(wrapper);
+
+			flatpickr(
+				gi(form_id + fields[i].name),
+				{
+					allowInput: true,
+					enableTime: true,
+					noCalendar: true,
+					time_24hr: true,
+					defaultHour: 0,
+					defaultMinute: 0,
+					dateFormat: "H:i",
+					locale: {
+						firstDayOfWeek: 1
+					}
+
+				}
+			);
+		}
+		else if(fields[i].type == 'date')
+		{
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+			el.appendChild(wrapper);
+
+			flatpickr(
+				gi(form_id + fields[i].name),
+				{
+					allowInput: true,
+					dateFormat: "d.m.Y",
+					locale: {
+						firstDayOfWeek: 1
+					}
+
+				}
+			);
+			/*
+			var picker = new Pikaday({
+				field: gi(form_id + fields[i].name),
+				format: 'DD.MM.YYYY'
+			});
+			*/
+		}
+		else if(fields[i].type == 'password')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="password" value=""/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'upload')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<span class="form-upload" id="' + escapeHtml(form_id + fields[i].name) + '-file">&nbsp;</span> <a href="#" onclick="gi(\'' + escapeHtml(form_id + fields[i].name) + '\').click(); return false;"/>' + LL.SelectFile + '</a>'
+				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="file" accept="' + escapeHtml(fields[i].accept?fields[i].accept:'') + '" style="display: none"/>'
+				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+
+			gi(form_id + fields[i].name).onchange = function(name) {
+				return function() {
+					gi(name + '-file').textContent = this.files.item(0).name;
+				}
+			}(form_id + fields[i].name);
+		}
+		else if(fields[i].type == 'spoiler')
+		{
+			spoiler_id++;
+
+			var wrapper = document.createElement('div');
+			wrapper.setAttribute('onclick', 'f_toggle_spoiler(\'' + escapeHtml(form_id + '_spoiler_' + spoiler_id) + '\');');
+			wrapper.className = 'spoiler';
+			wrapper.textContent = fields[i].title;
+			el.appendChild(wrapper);
+
+			wrapper = document.createElement('div');
+			wrapper.id = form_id + '_spoiler_' + spoiler_id;
+			wrapper.style.display = 'none';
+			el.appendChild(wrapper);
+
+			spoiler_id = f_append_fields(wrapper, fields[i].fields, form_id, spoiler_id);
+		}
+		else
+		{
+			var placeholder = '';
+			if(fields[i].placeholder)
+			{
+				placeholder = '" placeholder="' + fields[i].placeholder;
+			}
+
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+
+			if(fields[i].autocomplete)
+			{
+				autocomplete_create(gi(form_id + fields[i].name), fields[i].autocomplete);
+			}
+		}
+	}
+
+	return spoiler_id;
+}
+
 function on_received_form(data, form_id)
 {
 	gi('loading').style.display = 'none';
@@ -300,108 +607,13 @@ function on_received_form(data, form_id)
 		el = gi(form_id + '-fields');
 		el.innerHTML = '';
 		html = '';
-		for(i = 0; i < data.fields.length; i++)
-		{
-			if(data.fields[i].type == 'hidden')
-			{
-				html = '<input name="' + escapeHtml(data.fields[i].name) + '" type="hidden" value="' + escapeHtml(data.fields[i].value) + '" />';
 
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else if(data.fields[i].type == 'list' && data.fields[i].list)
-			{
-				html = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">'+ escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<select class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '">'
-					+ '<option value=""></option>';
-				for(j = 0; j < data.fields[i].list.length; j++)
-				{
-					selected = ''
-					if(data.fields[i].list[j] == data.fields[i].value)
-					{
-						selected = ' selected="selected"'
-					}
-					html += '<option value="' + escapeHtml(data.fields[i].list[j]) + '"' + selected + '>' + escapeHtml(data.fields[i].list[j]) + '</option>';
-				}
-				html += '</select>'
-					+ '<div id="' + escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else if(data.fields[i].type == 'flags' && data.fields[i].list)
-			{
-				value = parseInt(data.fields[i].value, 10);
-
-				html = '<div class="form-title">' + escapeHtml(data.fields[i].title) + ':</div>';
-				for(j = 0; j < data.fields[i].list.length; j++)
-				{
-					checked = '';
-					if(value & (0x01 << j))
-					{
-						checked = ' checked="checked"';
-					}
-
-					html += '<span><input id="' + escapeHtml(form_id + data.fields[i].name) + '[' + j +']" name="' + escapeHtml(data.fields[i].name) + '[' + j +']" type="checkbox" value="1"' + checked + '/><label for="'+ escapeHtml(form_id + data.fields[i].name) + '[' + j + ']">' + escapeHtml(data.fields[i].list[j]) + '</label></span>'
-				}
-				html += '<div id="' + escapeHtml(form_id + data.fields[i].name) + '[0]-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else if(data.fields[i].type == 'date')
-			{
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="'+ escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="' + escapeHtml(data.fields[i].value) + '"/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-				el.appendChild(wrapper);
-
-				var picker = new Pikaday({
-					field: document.getElementById(form_id + data.fields[i].name),
-					format: 'DD.MM.YYYY'
-				});
-			}
-			else if(data.fields[i].type == 'password')
-			{
-				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="password" value=""/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-			}
-			else
-			{
-				var placeholder = '';
-				if(data.fields[i].placeholder)
-				{
-					placeholder = '" placeholder="' + data.fields[i].placeholder;
-				}
-
-				html = '<div class="form-title"><label for="'+ escapeHtml(form_id + data.fields[i].name) + '">' + escapeHtml(data.fields[i].title) + ':</label></div>'
-					+ '<input class="form-field" id="' + escapeHtml(form_id + data.fields[i].name) + '" name="'+ escapeHtml(data.fields[i].name) + '" type="edit" value="'+ escapeHtml(data.fields[i].value) + placeholder + '"/>'
-					+ '<div id="'+ escapeHtml(form_id + data.fields[i].name) + '-error" class="form-error"></div>';
-
-				var wrapper = document.createElement('div');
-				wrapper.innerHTML = html;
-				el.appendChild(wrapper);
-				
-				if(data.fields[i].autocomplete)
-				{
-					autocomplete_create(gi(form_id + data.fields[i].name), data.fields[i].autocomplete);
-				}
-			}
-		}
+		f_append_fields(el, data.fields, form_id, 0);
 
 		html = '<br /><div class="f-right">'
-			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">OK</button>'
+			+ '<button class="button-accept" type="submit" onclick="return f_send_form(\'' + data.action + '\');">' + LL.OK + '</button>'
 			+ '&nbsp;'
-			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">Cancel</button>'
+			+ '<button class="button-decline" type="button" onclick="this.parentNode.parentNode.parentNode.parentNode.parentNode.style.display=\'none\'">' + LL.Cancel + '</button>'
 			+ '</div>';
 
 		var wrapper = document.createElement('div');
@@ -440,6 +652,7 @@ function f_send_form(action)
 				err.style.display = 'none';
 			}
 
+			/*
 			if(el.elements[i].type == 'checkbox')
 			{
 				if(el.elements[i].checked)
@@ -458,6 +671,7 @@ function f_send_form(action)
 			{
 				form_data[el.elements[i].name] = el.elements[i].value;
 			}
+			*/
 		}
 	}
 
@@ -466,7 +680,7 @@ function f_send_form(action)
 
 	gi('loading').style.display = 'block';
 	f_http(
-		'/websco/' + action,
+		g_link_prefix + action,
 		function(data, form_id)
 		{
 			gi('loading').style.display = 'none';
@@ -494,8 +708,8 @@ function f_send_form(action)
 			}
 		},
 		form_id,
-		'application/x-www-form-urlencoded',
-		json2url(form_data)
+		null,                                    //'application/x-www-form-urlencoded',
+		new FormData(gi(form_id + '-fields'))    //json2url(form_data)
 	);
 
 	return false;
@@ -503,18 +717,22 @@ function f_send_form(action)
 
 function on_saved(action, data)
 {
-	if(action == 'start_runbook')
+	if(action == 'runbook_start')
 	{
 		f_get_job(data.guid);
 	}
-	else if(action == 'save_permission')
+	else if(action == 'permission_save')
 	{
 		//f_get_perms(data.pid);
 		window.location = window.location;
 	}
-	else if(action == 'save_user')
+	else if(action == 'user_save')
 	{
 		window.location = window.location;
+	}
+	else if(action == 'register')
+	{
+		f_msg(data.message);
 	}
 }
 
@@ -556,35 +774,81 @@ function f_msg(text)
 	return false;
 }
 
-function f_delete(ev, action)
+function on_action_success(el, action, data)
+{
+	if(action == 'user_deactivate')
+	{
+		window.location = window.location;
+	}
+	else if(action == 'user_activate')
+	{
+		window.location = window.location;
+	}
+	else
+	{
+		var row = el.parentNode.parentNode;
+		row.parentNode.removeChild(row);
+	}
+}
+
+function f_call_action(ev, action)
 {
 	gi('loading').style.display = 'block';
 	var el_src = ev.target || ev.srcElement;
 	var id = el_src.parentNode.parentNode.getAttribute('data-id');
 	f_http(
-		'/websco/' + action + '/' + id,
-		function(data, el)
+		g_link_prefix + action,
+		function(data, params)
 		{
 			gi('loading').style.display = 'none';
 			f_notify(data.message, data.code?"error":"success");
 			if(!data.code)
 			{
-				var row = el.parentNode.parentNode;
-				row.parentNode.removeChild(row);
+				on_action_success(params.el, params.action, data);
 			}
 		},
-		el_src
+		{el: el_src, action: action},
+		'application/x-www-form-urlencoded',
+		json2url({id: id})
 	);
 }
 
 function f_delete_perm(ev)
 {
-	f_delete(ev, 'delete_permission');
+	if(window.confirm(LL.ConfirmDelete))
+	{
+		f_call_action(ev, 'permission_delete');
+	}
+
+	return false;
+}
+
+function f_deactivate_user(ev)
+{
+	f_call_action(ev, 'user_deactivate');
 }
 
 function f_delete_user(ev)
 {
-	f_delete(ev, 'delete_user');
+	if(window.confirm(LL.ConfirmDelete))
+	{
+		f_call_action(ev, 'user_delete');
+	}
+}
+
+function f_activate_user(ev)
+{
+	f_call_action(ev, 'user_activate');
+}
+
+function f_confirm_async(a)
+{
+	if(window.confirm(LL.ConfirmOperation))
+	{
+		return f_async_ex(a.href);
+	}
+
+	return false;
 }
 
 function f_async(a)
@@ -609,7 +873,7 @@ function f_async_ex(url)
 	return false;
 }
 
-function f_show_hide(url)
+function f_show_hide(url, id)
 {
 	gi('loading').style.display = 'block';
 	f_http(
@@ -623,8 +887,60 @@ function f_show_hide(url)
 				f_get_perms(data.id);
 			}
 		},
-		null
+		null,
+		'application/x-www-form-urlencoded',
+		json2url({id: id})
 	);
+
+	return false;
+}
+
+/*
+function f_search(url, query)
+{
+	//var fd = new FormData()
+	//fd.append('search', query);
+
+    var form = document.createElement('form');
+    var search = document.createElement('input');
+
+    form.method = 'POST';
+    form.action = url;
+
+    search.type = 'hidden';
+    search.name = 'search';
+    search.value = query;
+    form.appendChild(search);
+
+    document.body.appendChild(form);
+
+    form.submit();
+
+	return false;
+}
+*/
+
+function f_search(f)
+{
+    //f.action = f.action + '/' + encodeURIComponent(gi('search').value);
+    //f.submit();
+
+	window.location = f.action + '/' + encodeURIComponent(f.elements.search.value);
+
+	return false;
+}
+
+function f_toggle_spoiler(id)
+{
+	var el = gi(id);
+	if(el.style.display === 'none')
+	{
+		el.style.display = 'block';
+	}
+	else
+	{
+		el.style.display = 'none';
+	}
 
 	return false;
 }
@@ -635,7 +951,7 @@ function f_get_perms(id)
 	//a.parentNode.classList.add('active');
 
 	f_http(
-		'/websco/get_permissions/' + id,
+		g_link_prefix + 'permissions_get/' + id,
 		function(data, params)
 		{
 			gi('loading').style.display = 'none';
@@ -650,7 +966,7 @@ function f_get_perms(id)
 				g_pid = data.id;
 
 				el = gi('add_new_permission');
-				el.setAttribute('onclick', 'f_new_permission(' + data.id + ');');
+				el.setAttribute('onclick', 'f_show_form(\'new_permission/' + data.id + '\');');
 
 				el = gi('show_hide');
 				if(id == 0)
@@ -662,12 +978,12 @@ function f_get_perms(id)
 					if(data.flags & 0x0002)
 					{
 						el.innerText = 'Show folder in list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/show_folder/' + data.id + '\');');
+						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'folder_show\', ' + data.id + ');');
 					}
 					else
 					{
 						el.innerText = 'Hide folder from list';
-						el.setAttribute('onclick', 'f_show_hide(\'/websco/hide_folder/' + data.id + '\');');
+						el.setAttribute('onclick', 'f_show_hide(\'' + g_link_prefix + 'folder_hide\', ' + data.id + ');');
 					}
 					el.style.display = 'inline';
 				}
@@ -678,7 +994,7 @@ function f_get_perms(id)
 				for(i = 0; i < data.permissions.length; i++)
 				{
 					html = '<td>' + data.permissions[i].id + '</td><td>' + data.permissions[i].group + '</td><td>' + data.permissions[i].perms + '</td>'
-						+ '<td><span class="command" onclick="return f_show_form(\'/websco/get_permission/' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
+						+ '<td><span class="command" onclick="return f_show_form(\'' + g_link_prefix + 'permission_get/' + data.permissions[i].id + '\');">Edit</span> <span class="command" onclick="f_delete_perm(event);">Delete</span></td>';
 
 					var tr = document.createElement('tr');
 					tr.setAttribute("data-id", data.permissions[i].id);
@@ -692,70 +1008,6 @@ function f_get_perms(id)
 		'table-data'
 	);
 
-	return false;
-}
-
-function f_expand(self, _pid)
-{
-	var pid = _pid;
-	var el = gi('expand'+pid);
-	if(el)
-	{
-		el.parentNode.removeChild(el);
-		self.innerText = '+';
-	}
-	else
-	{
-		var xhr = f_xhr();
-		if(xhr)
-		{
-			xhr.open('get', '/websco/expand/' + pid, true);
-			xhr.onreadystatechange = function()
-			{
-				if(xhr.readyState == 4)
-				{
-					var result;
-					if(xhr.status == 200)
-					{
-						try
-						{
-							result = JSON.parse(xhr.responseText);
-						}
-						catch(e)
-						{
-							result = {code: 1, status: "Response: "+xhr.responseText};
-						}
-					}
-					else
-					{
-						result = {code: 1, status: "AJAX error code: "+xhr.status};
-					}
-					if(result.code)
-					{
-						f_notify(result.status, 'error');
-					}
-					else
-					{
-						var text = '<ul>';
-						for(var i = 0; i < result.list.length; i++)
-						{
-							text += '<li><span onclick="return f_expand(this, \'' + result.list[i].guid + '\');">+</span><a href="/websco/get_permissions/' + result.list[i].id + '" onclick="return f_get_perms(' + result.list[i].id + ');">'+escapeHtml(result.list[i].name)+'</a></li>';
-						}
-						text += '</ul>';
-						var div = document.createElement('div');
-						div.id = 'expand' + pid;
-						//div.className = 'expand-list';
-						div.innerHTML = text;
-						//gi("row"+id).cells[0].appendChild(div);
-						self.parentNode.appendChild(div);
-						//self.parentNode.insertBefore(div, self.nextSibling);
-						self.innerText = '-';
-					}
-				}
-			};
-			xhr.send(null);
-		}
-	}
 	return false;
 }
 
@@ -777,7 +1029,7 @@ function autocomplete_on_input(ev)
 	action = el.getAttribute('data-action');
 
 	f_http(
-		'/websco/' + action,
+		g_link_prefix + action,
 		function(data, el)
 		{
 			gi('loading').style.display = 'none';
@@ -825,12 +1077,12 @@ function autocomplete_on_keydown(e)
 	if(e.keyCode == 40)
 	{
 		autocomplete_current_focus++;
-		utocomplete_add_active(items);
+		autocomplete_add_active(items);
 	}
 	else if(e.keyCode == 38) //up
 	{
 		autocomplete_current_focus--;
-		utocomplete_add_active(items);
+		autocomplete_add_active(items);
 	}
 	else if (e.keyCode == 13)
 	{
@@ -844,16 +1096,16 @@ function autocomplete_on_keydown(e)
 		}
 	}
 }
-  
+
 function autocomplete_create(input, action)
 {
 	input.setAttribute('data-action', action);
-	//input.setAttribute('autocomplete', 'off');
+	input.setAttribute('autocomplete', 'off');
 	input.addEventListener('input', autocomplete_on_input);
 	input.addEventListener('keydown', autocomplete_on_keydown);
 }
 
-function utocomplete_add_active(items)
+function autocomplete_add_active(items)
 {
 	if(!items) return false;
 
@@ -863,12 +1115,12 @@ function utocomplete_add_active(items)
 	{
 		autocomplete_current_focus = 0;
 	}
-	
+
 	if(autocomplete_current_focus < 0)
 	{
 		autocomplete_current_focus = (items.length - 1);
 	}
-	
+
 	items[autocomplete_current_focus].classList.add('autocomplete-active');
 }
 
@@ -915,13 +1167,13 @@ function autocomplete_destroy(e)
 			}
         }
     }
-    
+
     function readyStateChange() {
         if ( document.readyState === "complete" ) {
             docReady();
         }
     }
-    
+
     // if document already ready to go, schedule the docReady function to run
     // IE only safe when readyState is "complete", others safe when readyState is "interactive"
     if (document.readyState === "complete" || (!document.attachEvent && document.readyState === "interactive")) {
@@ -940,6 +1192,5 @@ function autocomplete_destroy(e)
         }
     }
 })();
-
 
 

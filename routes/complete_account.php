@@ -1,8 +1,8 @@
 <?php
 
-function complete_account(&$core, $params)
+function complete_account(&$core, $params, $post_data)
 {
-	$search = @$_POST['search'];
+	$search = @$post_data['search'];
 
 	$result_json = array(
 		'code' => 0,

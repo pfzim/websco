@@ -1,6 +1,6 @@
 <?php
 
-function info(&$core, $params)
+function info(&$core, $params, $post_data)
 {
 	phpinfo();
 }

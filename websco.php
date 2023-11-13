@@ -17,6 +17,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+define('DB_VERSION', 2);
+define('Z_PROTECTED', 'YES');
+
+error_reporting(E_ALL);
+
 if(!defined('ROOT_DIR'))
 {
 	define('ROOT_DIR', dirname(__FILE__).DIRECTORY_SEPARATOR);
@@ -35,25 +40,43 @@ if(!file_exists(ROOT_DIR.'inc.config.php'))
 
 require_once(ROOT_DIR.'inc.config.php');
 
+if (defined('USE_PRETTY_LINKS') && USE_PRETTY_LINKS
+	&& (
+		(defined('USE_PRETTY_LINKS_FORCE') && (USE_PRETTY_LINKS_FORCE))
+		|| (function_exists('apache_get_modules') && in_array('mod_rewrite', apache_get_modules()))
+	))
+{
+	define('PRETTY_LINKS_BASE_PATH', WEB_LINK_BASE_PATH);
+	define('WEB_LINK_PREFIX', WEB_LINK_BASE_PATH);			// '/websco/'
+	define('WEB_LINK_STATIC_PREFIX', WEB_LINK_BASE_PATH);
+	define('WEB_LINK_EXTERNAL', WEB_URL);
+}
+else
+{
+	define('PRETTY_LINKS_BASE_PATH', '');
+	define('WEB_LINK_PREFIX', basename(__FILE__).'?path=');
+	define('WEB_LINK_STATIC_PREFIX', '');
+	define('WEB_LINK_EXTERNAL', WEB_URL.WEB_LINK_PREFIX);
+}
 
-	session_name('ZID');
-	session_start();
-	error_reporting(E_ALL);
-	define('Z_PROTECTED', 'YES');
+session_name('ZID');
+session_start(
+	array(
+		'cookie_path' => defined('WEB_LINK_BASE_PATH') ? WEB_LINK_BASE_PATH : '/'
+	)
+);
 
-	//$self = $_SERVER['PHP_SELF'];
+if(!empty($_SERVER['HTTP_CLIENT_IP'])) {
+	$ip = $_SERVER['HTTP_CLIENT_IP'];
+} elseif(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+	$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+} else {
+	$ip = @$_SERVER['REMOTE_ADDR'];
+}
 
-	if(!empty($_SERVER['HTTP_CLIENT_IP'])) {
-		$ip = $_SERVER['HTTP_CLIENT_IP'];
-	} elseif(!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-	} else {
-		$ip = @$_SERVER['REMOTE_ADDR'];
-	}
-
-	require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
-	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
-	require_once(ROOT_DIR.'inc.utils.php');
+require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
+require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
+require_once(ROOT_DIR.'inc.utils.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
 {
@@ -70,6 +93,11 @@ function log_db($operation, $params, $flags)
 {
 	global $core;
 
+	if(strlen($params) > 4096)
+	{
+		$params = substr($params, 0, 4093).'...';
+	}
+
 	$core->db->put(rpv('INSERT INTO @logs (`date`, `uid`, `operation`, `params`, `flags`) VALUES (NOW(), #, !, !, #)',
 		$core->UserAuth->get_id(),
 		$operation,
@@ -80,7 +108,10 @@ function log_db($operation, $params, $flags)
 
 function log_file($message)
 {
-	error_log(date('c').'  '.$message."\n", 3, '/var/log/websco/websco.log');
+	if(defined('LOG_FILE'))
+	{
+		error_log(date('c').'  '.$message."\n", 3, LOG_FILE);
+	}
 }
 
 function LL($key)
@@ -100,6 +131,16 @@ function L($key)
 	eh(LL($key));
 }
 
+function ln($path)
+{
+	eh(WEB_LINK_PREFIX.$path);
+}
+
+function ls($path)
+{
+	eh(WEB_LINK_STATIC_PREFIX.$path);
+}
+
 function exception_handler($exception)
 {
 	$error_msg = 'Exception: File: '.$exception->getFile().'['.$exception->getLine().']: '.$exception->getMessage().' Trace: '.$exception->getTraceAsString();
@@ -114,21 +155,31 @@ function exception_handler_ajax($exception)
 	log_file($error_msg);
 }
 
+	define('RBF_DELETED', 0x0001);
+	define('RBF_HIDED', 0x0002);
+	define('RBF_TYPE_CUSTOM', 0x0004);
+
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
 	
+	if(intval($core->Config->get_global('db_version', 0)) != DB_VERSION)
+	{
+		header('Location: '.WEB_LINK_STATIC_PREFIX.'upgrade.php');
+		exit;
+	}
+
 	define('RB_ACCESS_LIST', 1);
 	define('RB_ACCESS_EXECUTE', 2);
 	$core->UserAuth->set_bits_representation('lx');
 
 	$path = '';
+	$data = NULL;
 
 	if((php_sapi_name() == 'cli') && ($argc > 1) && !empty($argv[1]))
 	{
 		$user = '';
 		$password = '';
 		$token = '';
-		$path = '';
 		
 		$i = 1;
 		while($i < ($argc-1))
@@ -153,6 +204,11 @@ function exception_handler_ajax($exception)
 				case '--path':
 					{
 						$path = $argv[$i+1];
+					}
+					break;
+				case '--data':
+					{
+						parse_str($argv[$i+1], $data);
 					}
 					break;
 				default:
@@ -185,7 +241,8 @@ function exception_handler_ajax($exception)
 	}
 	elseif(isset($_GET['path']))
 	{
-		$path = $_GET['path'];
+		$path = &$_GET['path'];
+		$data = &$_POST;
 	}
 
 	$core->Router->set_exception_handler_regular('exception_handler');
@@ -200,38 +257,64 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
-		$core->Router->add_route('list_folder', 'list_folder');						// default route
-		$core->Router->add_route('delete_permission', 'delete_permission', TRUE);
-		$core->Router->add_route('expand', 'expand', TRUE);
-		$core->Router->add_route('get_job', 'get_job', TRUE);
-		$core->Router->add_route('get_permission', 'get_permission', TRUE);
-		$core->Router->add_route('new_permission', 'new_permission', TRUE);
-		$core->Router->add_route('get_permissions', 'get_permissions');
-		$core->Router->add_route('get_runbook', 'get_runbook', TRUE);
-		$core->Router->add_route('hide_folder', 'hide_folder', TRUE);
-		$core->Router->add_route('list_jobs', 'list_jobs');
-		$core->Router->add_route('list_tools', 'list_tools');
-		$core->Router->add_route('logoff', 'logoff');
-		$core->Router->add_route('permissions', 'permissions');
-		$core->Router->add_route('save_permission', 'save_permission', TRUE);
-		$core->Router->add_route('show_folder', 'show_folder', TRUE);
-		$core->Router->add_route('start_runbook', 'start_runbook', TRUE);
-		$core->Router->add_route('sync', 'sync', TRUE);
-		$core->Router->add_route('sync_jobs', 'sync_jobs', TRUE);
+		$core->Router->add_route('runbooks', 'runbooks');							// default route
+		$core->Router->add_route('runbooks_search', 'runbooks_search');
+		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
+		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
+		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
+
+		$core->Router->add_route('jobs', 'jobs');
+		$core->Router->add_route('jobs_sync', 'jobs_sync', TRUE);
+		$core->Router->add_route('job_get', 'job_get', TRUE);
+		$core->Router->add_route('job_activity_get', 'job_activity_get', TRUE);
+
 		$core->Router->add_route('complete_account', 'complete_account', TRUE);
 		$core->Router->add_route('complete_computer', 'complete_computer', TRUE);
 		$core->Router->add_route('complete_mail', 'complete_mail', TRUE);
-		$core->Router->add_route('change_password', 'change_password', TRUE);
-		$core->Router->add_route('password_form', 'password_form', TRUE);
-		$core->Router->add_route('list_users', 'list_users');
-		$core->Router->add_route('get_user', 'get_user', TRUE);
-		$core->Router->add_route('save_user', 'save_user', TRUE);
-		$core->Router->add_route('delete_user', 'delete_user', TRUE);
+		$core->Router->add_route('complete_group', 'complete_group', TRUE);
+		$core->Router->add_route('complete_group_sam', 'complete_group_sam', TRUE);
+
+		$core->Router->add_route('tools', 'tools');
+
+		$core->Router->add_route('folder_hide', 'folder_hide', TRUE);
+		$core->Router->add_route('folder_show', 'folder_show', TRUE);
+
+		$core->Router->add_route('permissions', 'permissions');
+		$core->Router->add_route('permissions_get', 'permissions_get', TRUE);
+		//$core->Router->add_route('permissions_convert', 'permissions_convert', TRUE);
+		$core->Router->add_route('permission_delete', 'permission_delete', TRUE);
+		$core->Router->add_route('permission_get', 'permission_get', TRUE);
+		$core->Router->add_route('permission_new', 'permission_new', TRUE);
+		$core->Router->add_route('permission_save', 'permission_save', TRUE);
+
+		$core->Router->add_route('users', 'users');
+		$core->Router->add_route('user_get', 'user_get', TRUE);
+		$core->Router->add_route('user_save', 'user_save', TRUE);
+		$core->Router->add_route('user_activate', 'user_activate', TRUE);
+		$core->Router->add_route('user_deactivate', 'user_deactivate', TRUE);
+		$core->Router->add_route('user_delete', 'user_delete', TRUE);
+
+		$core->Router->add_route('password_change_form', 'password_change_form', TRUE);
+		$core->Router->add_route('password_change', 'password_change', TRUE);
+
+		$core->Router->add_route('register_approve_form', 'register_approve_form');
+		$core->Router->add_route('register_approve', 'register_approve');
+		$core->Router->add_route('register_decline', 'register_decline');
+
+		$core->Router->add_route('memcached_flush', 'memcached_flush', TRUE);
+
+		$core->Router->add_route('custom', 'custom');
+		$core->Router->add_route('job_custom_get', 'job_custom_get');
 	}
 
-	$core->Router->add_route('form_ask_mail_for_reset', 'form_ask_mail_for_reset', TRUE);
-	$core->Router->add_route('reset_send_mail', 'reset_send_mail', TRUE);
-	$core->Router->add_route('reset_password', 'reset_password');
-	$core->Router->add_route('form_reset_password', 'form_reset_password');
+	$core->Router->add_route('logoff', 'logoff');
+	
+	$core->Router->add_route('password_reset_send_form', 'password_reset_send_form', TRUE);
+	$core->Router->add_route('password_reset_send', 'password_reset_send', TRUE);
+	$core->Router->add_route('password_reset_form', 'password_reset_form');
+	$core->Router->add_route('password_reset', 'password_reset');
 
-	$core->Router->process($path);
+	$core->Router->add_route('register_form', 'register_form', TRUE);
+	$core->Router->add_route('register', 'register', TRUE);
+
+	$core->Router->process($path, $data);

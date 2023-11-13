@@ -39,10 +39,13 @@
 			kinit -S HTTP/web.contoso.com -p <any_user>@CONTOSO.COM
 			klist
 		
-		kdestroy -A
-		
-		after update keytab run on client:
-			klist purge
+		Clearing Kerberos authorization tickets after adding a WebSCO service account to an AD group or updating a keytab:
+			Linux:
+				kdestroy -A
+				kdestroy -A -c /tmp/krb5cc_<user_id>
+			
+			Windows:
+				klist purge
 	*/
 
 	define('USE_GSSAPI', TRUE);
@@ -52,6 +55,7 @@
 	define('LDAP_USER', 'domain\\websco');
 	define('LDAP_PASSWD', '');
 	define('LDAP_BASE_DN', 'DC=contoso,DC=local');
+	define('LDAP_USE_SID', TRUE);
 
 	define('APP_LANGUAGE', 'en');
 
@@ -70,9 +74,15 @@
 	define('MAIL_VERIFY_PEER_NAME', TRUE);
 	define('MAIL_ALLOW_SELF_SIGNED', FALSE);
 
-	define('WS_URL', 'https://websco.contoso.com/websco');
 	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');
 
 	define('USE_MEMCACHED', TRUE);
+
+	define('WEB_URL', 'https://websco.contoso.com/websco/');
+	define('WEB_LINK_BASE_PATH', '/websco/');
+	define('USE_PRETTY_LINKS', FALSE);
+	define('USE_PRETTY_LINKS_FORCE', FALSE);
+	
+	define('LOG_FILE', '/var/log/websco/websco.log');

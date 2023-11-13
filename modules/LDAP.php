@@ -51,7 +51,7 @@ class LDAP
 
 		ldap_set_option($this->link, LDAP_OPT_PROTOCOL_VERSION, 3);
 		ldap_set_option($this->link, LDAP_OPT_REFERRALS, 0);
-		
+
 		if($this->use_gssapi)
 		{
 			$result = @ldap_sasl_bind($this->link, NULL, NULL, 'GSSAPI');
@@ -68,7 +68,7 @@ class LDAP
 			$this->link = NULL;
 			return FALSE;
 		}
-		
+
 		return TRUE;
 	}
 
@@ -95,7 +95,7 @@ class LDAP
 		$this->use_gssapi = FALSE;
 		$this->ldap_user = $ldap_user;
 		$this->ldap_passwd = $ldap_passwd;
-		
+
 		if($this->link)
 		{
 			if(!@ldap_bind($this->link, $this->ldap_user, $this->ldap_passwd))
@@ -109,17 +109,17 @@ class LDAP
 		{
 			return $this->connect();
 		}
-		
+
 		return TRUE;
 	}
-	
+
 	public function get_link()
 	{
 		if(!$this->link)
 		{
 			$this->connect();
 		}
-		
+
 		return $this->link;
 	}
 
@@ -127,14 +127,14 @@ class LDAP
 	{
 		$result = array();
 		$lnk = $this->get_link();
-	
+
 		$search_result = ldap_search($lnk, LDAP_BASE_DN, $query, $attrs);
 		if(!$search_result)
 		{
 			$this->core->error_ex(ldap_error($lnk), $this->rise_exception);
 			return FALSE;
 		}
-		
+
 		$i = 0;
 		$record = ldap_first_entry($lnk, $search_result);
 		while($record)
@@ -143,12 +143,14 @@ class LDAP
 			$i++;
 			$record = ldap_next_entry($lnk, $record);
 		}
-		
+
 		ldap_free_result($search_result);
+
+		//log_file('LDAP: '.$i.' : '.$query);
 
 		return $i;
 	}
-	
+
 	public function set_rise_exception($rise_exception)
 	{
 		$this->rise_exception = $rise_exception;
