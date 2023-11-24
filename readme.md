@@ -372,6 +372,8 @@ Generate self-signed certificate:
 sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/websco.key -out /etc/ssl/certs/websco.cer
 ```
 
+[What’s the Maximum Size of Parameters?](https://techcommunity.microsoft.com/t5/system-center-blog/orchestrator-quick-tip-what-8217-s-the-maximum-size-of/ba-p/345501)
+
 Increase IIS request limit (HTTP error 413): system.webServer/serverRuntime/uploadReadAheadSize = 10485760  
 C:\Program Files (x86)\Microsoft System Center\Orchestrator\Web Service\web.config
 ```
