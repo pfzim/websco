@@ -9,14 +9,14 @@
 	/*
 		USE_GSSAPI required for create keytab file.
 		
-		ktpass -princ <HTTP/web.contoso.com@CONTOSO.COM> -mapuser <svc_user> -crypto ALL -ptype KRB5_NT_PRINCIPAL -pass <password> -target dc.contoso.com -out c:\temp\server.keytab
+		ktpass -princ <HTTP/websco.contoso.com@CONTOSO.COM> -mapuser <svc_websco> -crypto ALL -ptype KRB5_NT_PRINCIPAL -pass <password> -target dc.contoso.com -out c:\temp\websco.keytab
 
 		configure krb5.conf:
 		[libdefaults]
 			default_realm = CONTOSO.COM
-			default_client_keytab_name = FILE:/etc/kerberos/server.keytab
+			default_client_keytab_name = FILE:/etc/kerberos/websco.keytab
 			default_ccache_name = FILE:/tmp/krb5cc_%{uid}
-			#default_keytab_name = FILE:/etc/kerberos/server.keytab
+			#default_keytab_name = FILE:/etc/kerberos/websco.keytab
 
 		[realms]
 			CONTOSO.COM = {
@@ -35,9 +35,16 @@
 			default = FILE:/var/log/krb5/krb5lib.log
 			
 		check:
-			ktinit -ki
-			kinit -S HTTP/web.contoso.com -p <any_user>@CONTOSO.COM
+			kinit -V -ki -S HTTP/websco.contoso.com
 			klist
+
+			ktinit -ki
+			kinit -S HTTP/websco.contoso.com -p <any_user>@CONTOSO.COM
+			klist
+			
+			check KVNO version:
+			  klist -k /etc/kerberos/websco.keytab
+			  Get-ADUser svc_websco -Property msDS-KeyVersionNumber
 		
 		Clearing Kerberos authorization tickets after adding a WebSCO service account to an AD group or updating a keytab:
 			Linux:
