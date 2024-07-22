@@ -534,9 +534,14 @@ EOT;
 
 	public function sync()
 	{
+		log_file('Starting sync...');
+		log_file('Retrieve servers list...');
 		$servers = $this->retrieve_servers();
+		log_file('Retrieve folders list...');
 		$folders = $this->retrieve_folders();
+		log_file('Retrieve activities list...');
 		$activities = $this->retrieve_activities();
+		log_file('Retrieve runbooks list...');
 		$runbooks = $this->retrieve_runbooks();
 
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0"));
