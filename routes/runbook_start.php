@@ -126,7 +126,14 @@ function runbook_start(&$core, $params, $post_data)
 			}
 		}
 
-		$params[$param['guid']] = $value;
+		if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022))
+		{
+			$params[$param['name_original']] = $value;
+		}
+		else
+		{
+			$params[$param['guid']] = $value;
+		}
 	}
 
 	if($result_json['code'])
@@ -136,15 +143,21 @@ function runbook_start(&$core, $params, $post_data)
 		exit;
 	}
 
-	$servers_list = '';
+	// $servers_list = '';
+	// if(!empty($post_data['servers']))
+	// {
+		// $delimeter = '';
+		// foreach($post_data['servers'] as $value)
+		// {
+			// $servers_list .= $delimeter.$value;
+			// $delimeter = ',';
+		// }
+	// }
+
+	$servers_list = NULL;
 	if(!empty($post_data['servers']))
 	{
-		$delimeter = '';
-		foreach($post_data['servers'] as $value)
-		{
-			$servers_list .= $delimeter.$value;
-			$delimeter = ',';
-		}
+		$servers_list = $post_data['servers'];
 	}
 
 	//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;

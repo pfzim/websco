@@ -82,6 +82,7 @@
 	define('MAIL_VERIFY_PEER_NAME', TRUE);
 	define('MAIL_ALLOW_SELF_SIGNED', FALSE);
 
+	//define('ORCHESTRATOR_VERSION', 2022);
 	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');

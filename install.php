@@ -202,6 +202,7 @@ $config = <<<'EOT'
 	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
 	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
 
+	define('ORCHESTRATOR_VERSION', '#scorch_ver#');
 	define('ORCHESTRATOR_URL', '#scorch_url#');
 	define('ORCHESTRATOR_USER', '#scorch_user#');
 	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
@@ -488,6 +489,52 @@ function get_http_xml($url, $user, $passwd, $use_gssapi)
 	return $xml;
 }
 
+function get_http_json($url, $user, $passwd, $use_gssapi)
+{
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_POST, false);
+
+	if($use_gssapi)
+	{
+		curl_setopt($ch, CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG);
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);
+		curl_setopt($ch, CURLOPT_USERPWD, ":");
+	}
+	else
+	{
+		curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+		curl_setopt($ch, CURLOPT_USERPWD, $user.':'.$passwd);
+	}
+
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json, text/plain, */*'));
+
+
+	$output = curl_exec($ch);
+	$result = curl_getinfo($ch);
+
+	//echo $output;
+	//log_file($url."\n".$output."\n\n\n");
+
+	curl_close($ch);
+
+	if(intval($result['http_code']) != 200)
+	{
+		$this->core->error('Unexpected HTTP '.$result['http_code'].' response code!');
+		return FALSE;
+	}
+
+	$json = @json_decode($output, TRUE);
+	if($json === NULL)
+	{
+		$this->core->error('JSON parse error!');
+		return FALSE;
+	}
+
+	return $json;
+}
+
 function build_config($config, $params)
 {
 	if(empty($params['db_host'])) throw new Exception('Host value not defined!');
@@ -496,6 +543,8 @@ function build_config($config, $params)
 
 	if(empty($params['ldap_uri'])) throw new Exception('LDAP Host value not defined!');
 	if(empty($params['ldap_base'])) throw new Exception('LDAP Base DN value not defined!');
+
+	$use_scorch2022_api = (!empty($params['use_scorch2022_api']) && intval($params['use_scorch2022_api']));
 
 	if(empty($params['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
 
@@ -552,6 +601,7 @@ function build_config($config, $params)
 			'#mail_verify_peer#',
 			'#mail_verify_peer_name#',
 			'#mail_allow_self_signed#',
+			'#scorch_ver#',
 			'#scorch_url#',
 			'#scorch_user#',
 			'#scorch_passwd#',
@@ -587,6 +637,7 @@ function build_config($config, $params)
 			$mail_verify_peer?'TRUE':'FALSE',
 			$mail_verify_peer_name?'TRUE':'FALSE',
 			$mail_allow_self_signed?'TRUE':'FALSE',
+			$use_scorch2022_api?'2022':'2016',
 			sql_escape(@$params['scorch_url']),
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
@@ -763,6 +814,7 @@ function build_config($config, $params)
 				{
 					if(empty($_POST['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
 
+					$use_scorch2022_api = (!empty($_POST['use_scorch2022_api']) && intval($_POST['use_scorch2022_api']));
 					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
 					{
 						$use_gssapi = TRUE;
@@ -774,15 +826,27 @@ function build_config($config, $params)
 						if(empty($_POST['scorch_passwd'])) throw new Exception('SCORCH Password value not defined!');
 					}
 
-					$xml = get_http_xml($_POST['scorch_url'].'/Runbooks?$inlinecount=allpages&$top=50&$skip=0', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
-					if(!$xml)
+					if($use_scorch2022_api)
 					{
-						throw new Exception('Unknown error!');
+						$json = get_http_json($_POST['scorch_url'].'/login', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
+						if(!$json)
+						{
+							throw new Exception('Unknown error!');
+						}
+						
+						echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
 					}
-					
-					$total = intval($xml->children('m', TRUE)->count);
-
-					echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
+					else
+					{
+						$xml = get_http_xml($_POST['scorch_url'].'/Runbooks?$inlinecount=allpages&$top=50&$skip=0', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
+						if(!$xml)
+						{
+							throw new Exception('Unknown error!');
+						}
+						
+						$total = intval($xml->children('m', TRUE)->count);
+						echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
+					}
 				}
 				exit;
 				//*
@@ -1602,6 +1666,12 @@ input:checked + .slider:after
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
 					<h3>Orchestrator settings</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="use_scorch2022_api" class="control-label col-sm-2">Use Orchestrator 2022 API:</label>
+				<div class="col-sm-5">
+					<label class="switch"><input id="use_scorch2022_api" name="use_scorch2022_api" class="form-control" type="checkbox" value="1"/><div class="slider round"></div></label>
 				</div>
 			</div>
 			<div class="form-group">

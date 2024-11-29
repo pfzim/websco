@@ -161,6 +161,11 @@ function exception_handler_ajax($exception)
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
+
+	if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022))
+	{
+		$core->load_ex('Runbooks', 'Runbooks2022');
+	}
 	
 	if(intval($core->Config->get_global('db_version', 0)) != DB_VERSION)
 	{

@@ -1,9 +1,9 @@
 <?php
 /*
-    Runbooks class - This class is intended for accessing the Microsoft
-	                 System CenterOrchestrator web service to get a list
-					 of ranbooks and launch them.
-    Copyright (C) 2021 Dmitry V. Zimin
+    Runbooks2022 class - This class is intended for accessing the Microsoft 
+	System Center Orchestrator 2022 web service to get a list of runbooks and
+	launch them.
+    Copyright (C) 2024 Dmitry V. Zimin
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 	Orchestrator web service to get a list of ranbooks and launch them.
 */
 
-class Runbooks
+class Runbooks2022
 {
 	private $core;
 
@@ -37,7 +37,7 @@ class Runbooks
 		$this->orchestrator_passwd = ORCHESTRATOR_PASSWD;
 	}
 
-	public function get_http_xml($url)
+	public function get_http_json($url)
 	{
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -56,7 +56,7 @@ class Runbooks
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml'));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json, text/plain, */*'));
 
 
 		$output = curl_exec($ch);
@@ -73,14 +73,14 @@ class Runbooks
 			return FALSE;
 		}
 
-		$xml = @simplexml_load_string($output);
-		if($xml == FALSE)
+		$json = @json_decode($output, TRUE);
+		if($json === NULL)
 		{
-			$this->core->error('XML parse error!');
+			$this->core->error('JSON parse error!');
 			return FALSE;
 		}
 
-		return $xml;
+		return $json;
 	}
 
 	/**
@@ -94,34 +94,25 @@ class Runbooks
 
 	public function start_runbook($guid, $params, $servers = NULL)
 	{
-		$request = <<<'EOT'
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
-    <content type="application/xml">
-        <m:properties>
-EOT;
-
-		$request .= '<d:RunbookId m:type="Edm.Guid">'.htmlspecialchars($guid).'</d:RunbookId>';
-
-		if($servers)
-		{
-			$request .= '<d:RunbookServers>'.htmlspecialchars(implode(',', $servers)).'</d:RunbookServers>';
-		}
-
+		$parameters = array();
+		
 		if(!empty($params))
 		{
-			$request .= '<d:Parameters><![CDATA[<Data>';
 			foreach($params as $key => $value)
 			{
-				$request .= '<Parameter><ID>{'.htmlspecialchars($key).'}</ID><Value>'.htmlspecialchars(str_replace('\'', '\'\'', $value)).'</Value></Parameter>';
+				$parameters[] = array(
+					'Name' => $key,
+					'Value' => $value
+				);
 			}
-			$request .= '</Data>]]></d:Parameters>';
 		}
-		$request .= <<<'EOT'
-        </m:properties>
-    </content>
-</entry>
-EOT;
+
+		$request = json_encode(array(
+			'RunbookId'			=> $guid,
+			'RunbookServers' 	=> &$servers,
+			'Parameters'		=> &$parameters,
+			'CreatedBy'			=> NULL
+		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		log_file($request);
 
@@ -143,7 +134,7 @@ EOT;
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml'));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Accept: application/json, text/plain, */*'));
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
 
 
@@ -165,13 +156,13 @@ EOT;
 			return FALSE;
 		}
 
-		$xml = @simplexml_load_string($output);
-		if($xml == FALSE)
+		$json_data = @json_decode($output, TRUE);
+		if($json_data === NULL)
 		{
 			return FALSE;
 		}
 
-		return $xml->content->children('m', TRUE)->properties->children('d', TRUE)->Id;
+		return $json_data['Id'];
 	}
 
 	/**
@@ -184,34 +175,30 @@ EOT;
 
 	public function retrieve_job_instances($guid)
 	{
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstances?$filter=JobID%20eq%20'.$guid);
 
 		$instances = array();
 
-		foreach($xml->entry as $entry)
+		foreach($json_data['value'] as $properties)
 		{
-			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 			$instance = array(
-				'guid' => (string) $properties->Id,
-				'status' => (string) $properties->Status,
+				'guid' => (string) $properties['Id'],
+				'status' => (string) $properties['Status'],
 				'params_in' => array(),
 				'params_out' => array(),
 				'activities' => array()
 			);
 
-			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.$instance['guid'].'\')/Parameters');
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstanceParameters?$filter=RunbookInstanceId%20eq%20'.$instance['guid']);
 
-			foreach($sub_xml->entry as $entry)
+			foreach($sub_json_data['value'] as $sub_properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$activity = array(
-					'name' => (string) $properties->Name,
-					'value' => (string) $properties->Value
+					'name' => (string) $sub_properties['Name'],
+					'value' => (string) $sub_properties['Value']
 				);
 
-				if(((string) $properties->Direction) == 'Out')
+				if(((string) $sub_properties['Direction']) == 'Out')
 				{
 					$instance['params_out'][] = $activity;
 				}
@@ -221,21 +208,19 @@ EOT;
 				}
 			}
 
-			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.$instance['guid'].'\')/ActivityInstances');
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstances?$filter=Id%20eq%20'.$instance['guid']);
 
-			foreach($sub_xml->entry as $entry)
+			foreach($sub_json_data['value'] as $sub_properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$activity = array(
-					'id' =>  (string) $properties->Id,
-					'guid' => (string) $properties->ActivityId,
+					'id' =>  (string) $sub_properties['Id'],
+					'guid' => (string) $sub_properties['ActivityId'],
 					'name' => '',
-					'sequence' => (string) $properties->SequenceNumber,
-					'status' => (string) $properties->Status
+					'sequence' => (string) $sub_properties['SequenceNumber'],
+					'status' => (string) $sub_properties['Status']
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $properties->ActivityId)))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $sub_properties['ActivityId'])))
 				{
 					$activity['name'] = $name[0][0];
 				}
@@ -254,25 +239,21 @@ EOT;
 
 	public function retrieve_job_first_instance_input_params($guid)
 	{
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstances?$filter=JobID%20eq%20'.$guid);
 
 		$params_in = array();
 
-		foreach($xml->entry as $entry)
+		foreach($json_data['value'] as $properties)
 		{
-			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstanceParameters?$filter=RunbookInstanceId%20eq%20'.((string) $properties['Id']));
 
-			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.((string) $properties->Id).'\')/Parameters');
-
-			foreach($sub_xml->entry as $sub_entry)
+			foreach($sub_json_data['value'] as $sub_properties)
 			{
-				$properties = $sub_entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
-				if(((string) $properties->Direction) == 'In')
+				if(((string) $sub_properties['Direction']) == 'In')
 				{
 					$params_in[] = array(
-						'guid' => (string) $properties->RunbookParameterId,
-						'value' => (string) $properties->Value
+						'guid' => (string) $sub_properties['RunbookParameterId'],
+						'value' => (string) $sub_properties['Value']
 					);
 				}
 			}
@@ -285,17 +266,15 @@ EOT;
 
 	public function retrieve_activity_data($guid)
 	{
-		$xml = $this->get_http_xml($this->orchestrator_url.'/ActivityInstances(guid\''.$guid.'\')/Data');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstances?$filter=Id%20eq%20'.$guid);
 
 		$params = array();
 
-		foreach($xml->entry as $entry)
+		foreach($json_data['value'] as $properties)
 		{
-			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 			$params[] = array(
-				'name' => (string) $properties->Name,
-				'value' => (string) $properties->Value
+				'name' => (string) $properties['Name'],
+				'value' => (string) $properties['Value']
 			);
 		}
 
@@ -305,32 +284,19 @@ EOT;
 	public function retrieve_folders()
 	{
 		$folders = array();
-		$skip = 0;
-		$total = 0;
 
-		do
+		$json_data = $this->get_http_json($this->orchestrator_url.'/folders');
+
+		foreach($json_data['value'] as $properties)
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Folders?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$folder = array(
+				'guid' => (string) $properties['Id'],
+				'name' => (string) $properties['Name'],
+				'pid' => (string) $properties['ParentId']
+			);
 
-			$total = intval($xml->children('m', TRUE)->count);
-
-			foreach($xml->entry as $entry)
-			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
-				$folder = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name,
-					'pid' => (string) $properties->ParentId
-				);
-
-				$folders[] = $folder;
-
-				//break;
-				$skip++;
-			}
+			$folders[] = $folder;
 		}
-		while($skip < $total);
 
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -341,31 +307,18 @@ EOT;
 	public function retrieve_servers()
 	{
 		$servers = array();
-		$skip = 0;
-		$total = 0;
 
-		do
+		$json_data = $this->get_http_json($this->orchestrator_url.'/runbookservers');
+
+		foreach($json_data['value'] as $properties)
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/RunbookServers?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$server = array(
+				'guid' => (string) $properties['Id'],
+				'name' => (string) $properties['Name']
+			);
 
-			$total = intval($xml->children('m', TRUE)->count);
-
-			foreach($xml->entry as $entry)
-			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
-				$server = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name
-				);
-
-				$servers[] = $server;
-
-				//break;
-				$skip++;
-			}
+			$servers[] = $server;
 		}
-		while($skip < $total);
 
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -383,23 +336,21 @@ EOT;
 
 		if(!empty($guid))
 		{
-			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+			$job_filter = '&$filter=RunbookId%20eq%20'.$guid;
 		}
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.$job_filter.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$count=true&$top=50&$skip='.$skip.$job_filter);
 
-			$total = intval($xml->children('m', TRUE)->count);
+			$total = intval($json_data['@odata.count']);
 
-			foreach($xml->entry as $entry)
+			foreach($json_data['value'] as $properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$job = array(
-					'guid' => (string) $properties->Id,
-					'pid' => (string) $properties->RunbookId,
-					'date' => (string) $properties->CreationTime
+					'guid' => (string) $properties['Id'],
+					'pid' => (string) $properties['RunbookId'],
+					'date' => (string) $properties['CreationTime']
 				);
 
 				$jobs[] = $job;
@@ -425,14 +376,12 @@ EOT;
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Activities?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$json_data = $this->get_http_json($this->orchestrator_url.'/Activities?$count=true&$top=50&$skip='.$skip);
 
-			$total = intval($xml->children('m', TRUE)->count);
+			$total = intval($json_data['@odata.count']);
 
-			foreach($xml->entry as $entry)
+			foreach($json_data['value'] as $properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				/*
 					<d:Id m:type="Edm.Guid">1423fe6f-7e0e-4e0a-bfd1-00af163cd522</d:Id>
 					<d:RunbookId m:type="Edm.Guid">b2862173-3bf0-4787-8f76-a04294ab1f55</d:RunbookId>
@@ -449,8 +398,8 @@ EOT;
 				*/
 
 				$activities[] = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name
+					'guid' => (string) $properties['Id'],
+					'name' => (string) $properties['Name']
 				);
 
 				//break;
@@ -468,63 +417,48 @@ EOT;
 	public function retrieve_runbooks()
 	{
 		$runbooks = array();
-		$skip = 0;
-		$total = 0;
 
-		do
+		$json_data = $this->get_http_json($this->orchestrator_url.'/Runbooks');
+
+		foreach($json_data['value'] as $properties)
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Runbooks?$inlinecount=allpages&$top=50&$skip='.$skip);
-
-			$total = intval($xml->children('m', TRUE)->count);
-
-			foreach($xml->entry as $entry)
+			$description = (string) $properties['Description'];
+			$wiki_url = '';
+			
+			if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-				//echo "\n".'Runbook: '.$properties->Name.' ('.$properties->Id.')'."\n";
-				
-				$description = (string) $properties->Description;
-				$wiki_url = '';
-				
-				if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
+				$wiki_url = trim($matches[1]);
+				$description = preg_replace('#\s*\[wiki\](.*?)\[/wiki\]#i', '', $description, 1);
+			}
+
+			$runbook = array(
+				'guid' => (string) $properties['Id'],
+				'name' => (string) $properties['Name'],
+				'description' => $description,
+				'wiki_url' => $wiki_url,
+				'folder_id' => (string) $properties['FolderId'],
+				'path' => (string) $properties['Path'],
+				'params' => array()
+			);
+
+			$json_runbook_params = $this->get_http_json($this->orchestrator_url.'/RunbookParameters?$filter=RunbookId%20eq%20' . $runbook['guid']);
+
+			if($json_runbook_params !== FALSE)
+			{
+				foreach($json_runbook_params['value'] as $params_entry)
 				{
-					$wiki_url = trim($matches[1]);
-					$description = preg_replace('#\s*\[wiki\](.*?)\[/wiki\]#i', '', $description, 1);
-				}
-
-				$runbook = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name,
-					'description' => $description,
-					'wiki_url' => $wiki_url,
-					'folder_id' => (string) $properties->FolderId,
-					'path' => (string) $properties->Path,
-					'params' => array()
-				);
-
-				$xml_runbook_params = $this->get_http_xml($this->orchestrator_url.'/Runbooks(guid\''.$properties->Id.'\')/Parameters');
-
-				if($xml_runbook_params !== FALSE)
-				{
-					foreach($xml_runbook_params->entry as $params_entry)
+					if($params_entry['Direction'] == 'In')
 					{
-						$properties = $params_entry->content->children('m', TRUE)->properties->children('d', TRUE);
-						if($properties->Direction == 'In')
-						{
-							$runbook['params'][] = array(
-								'guid' =>  (string) $properties->Id,
-								'name' => (string) $properties->Name
-							);
-						}
+						$runbook['params'][] = array(
+							'guid' =>  (string) $params_entry['Id'],
+							'name' => (string) $params_entry['Name']
+						);
 					}
 				}
-
-				$runbooks[] = $runbook;
-
-				//break;
-				$skip++;
 			}
+
+			$runbooks[] = $runbook;
 		}
-		while($skip < $total);
 
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -820,23 +754,21 @@ EOT;
 
 		if(!empty($guid))
 		{
-			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+			$job_filter = '&$filter=RunbookId%20eq%20'.$guid;
 		}
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.$job_filter.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$count=true&$top=50&$skip='.$skip.$job_filter);
 
-			$total = intval($xml->children('m', TRUE)->count);
+			$total = intval($json_data['@odata.count']);
 
-			foreach($xml->entry as $entry)
+			foreach($json_data['value'] as $properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$job = array(
-					'guid' => (string) $properties->Id,
-					'pid' => (string) $properties->RunbookId,
-					'date' => (string) $properties->CreationTime
+					'guid' => (string) $properties['Id'],
+					'pid' => (string) $properties['RunbookId'],
+					'date' => (string) $properties['CreationTime']
 				);
 
 				if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
@@ -937,11 +869,11 @@ EOT;
 
 		$job = &$job[0];
 
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$filter=Id%20eq%20'.$guid);
 
-		$properties = $xml->content->children('m', TRUE)->properties->children('d', TRUE);
+		$properties = $json_data['value'][0];
 
-		$sid = (string) $properties->CreatedBy;
+		$sid = (string) $properties['CreatedBy'];
 		$sid_name = '';
 		if(defined('USE_LDAP') && USE_LDAP && !empty($sid))
 		{
@@ -951,7 +883,7 @@ EOT;
 			}
 		}
 
-		$modified_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', (string) $properties->LastModifiedTime), new DateTimeZone('UTC'));
+		$modified_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', (string) $properties['LastModifiedTime']), new DateTimeZone('UTC'));
 		if($modified_date === FALSE)
 		{
 			$modified_date = '00.00.0000 00:00:00';
@@ -971,7 +903,7 @@ EOT;
 			'runbook_guid' => $job['runbook_guid'],
 			'folder_id' => $job['folder_id'],
 			'user' => $job['login'],
-			'status' => (string) $properties->Status,
+			'status' => (string) $properties['Status'],
 			'modified_date' => $modified_date,
 			'sid' => $sid,
 			'sid_name' => $sid_name,
