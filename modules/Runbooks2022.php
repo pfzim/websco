@@ -110,8 +110,8 @@ class Runbooks2022
 		$request = json_encode(array(
 			'RunbookId'			=> $guid,
 			'RunbookServers' 	=> &$servers,
-			'Parameters'		=> &$parameters,
-			'CreatedBy'			=> NULL
+			'Parameters'		=> &$parameters
+			//,'CreatedBy'			=> NULL
 		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		log_file($request);
@@ -194,6 +194,7 @@ class Runbooks2022
 			foreach($sub_json_data['value'] as $sub_properties)
 			{
 				$activity = array(
+					'guid' => (string) $sub_properties['RunbookParameterId'],
 					'name' => (string) $sub_properties['Name'],
 					'value' => (string) $sub_properties['Value']
 				);
@@ -232,6 +233,14 @@ class Runbooks2022
 			usort($instance['activities'], 'cmp_sequence');
 			usort($instance['params_out'], 'cmp_name');
 
+			if(!$this->core->db->select_assoc_ex($job, rpv('SELECT j.id, COUNT(jp.`guid`) AS `params_count` FROM @runbooks_jobs AS j LEFT JOIN @runbooks_jobs_params AS jp ON jp.`pid` = j.`id` WHERE j.`guid` = ! LIMIT 1', $guid)) || (intval($job[0]['params_count']) == 0))
+			{
+				foreach($instance['params_in'] as &$param)
+				{
+					$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job[0]['id'], $param['guid'], $param['value']));
+				}
+			}
+
 			$instances[] = $instance;
 		}
 		return $instances;
@@ -239,7 +248,7 @@ class Runbooks2022
 
 	public function retrieve_job_first_instance_input_params($guid)
 	{
-		$json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstances?$filter=JobID%20eq%20'.$guid);
+		$json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstances?$top=1&$skip=0&$count=true&$filter=JobID%20eq%20'.$guid);
 
 		$params_in = array();
 
