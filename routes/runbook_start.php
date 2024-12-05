@@ -32,7 +32,11 @@ function runbook_start(&$core, $params, $post_data)
 
 		if($param['type'] == 'who')
 		{
-			$params[$param['guid']] = $core->UserAuth->get_login();
+			$params[] = array(
+				'guid' => $param['guid'],
+				'name' => $param['name_original'],
+				'value' => $core->UserAuth->get_login()
+			);
 			continue;
 		}
 		elseif($param['type'] == 'flags')
@@ -56,7 +60,11 @@ function runbook_start(&$core, $params, $post_data)
 			}
 			else
 			{
-				$params[$param['guid']] = strval($flags);
+				$params[] = array(
+					'guid' => $param['guid'],
+					'name' => $param['name_original'],
+					'value' => strval($flags)
+				);
 			}
 
 			//log_file('Value: '.strval($flags));
@@ -126,14 +134,11 @@ function runbook_start(&$core, $params, $post_data)
 			}
 		}
 
-		if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022))
-		{
-			$params[$param['name_original']] = $value;
-		}
-		else
-		{
-			$params[$param['guid']] = $value;
-		}
+		$params[] = array(
+			'guid' => $param['guid'],
+			'name' => $param['name_original'],
+			'value' => $value
+		);
 	}
 
 	if($result_json['code'])
@@ -172,13 +177,14 @@ function runbook_start(&$core, $params, $post_data)
 		{
 			$job_id = $core->db->last_id();
 
-			foreach($params as $key => $value)
+			foreach($params as &$param)
 			{
+				$value = $param['value'];
 				if(strlen($value) > 4096)
 				{
 					$value = substr($value, 0, 4093).'...';
 				}
-				$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $key, $value));
+				$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
 			}
 		}
 

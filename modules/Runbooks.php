@@ -111,9 +111,9 @@ EOT;
 		if(!empty($params))
 		{
 			$request .= '<d:Parameters><![CDATA[<Data>';
-			foreach($params as $key => $value)
+			foreach($params as &$param)
 			{
-				$request .= '<Parameter><ID>{'.htmlspecialchars($key).'}</ID><Value>'.htmlspecialchars(str_replace('\'', '\'\'', $value)).'</Value></Parameter>';
+				$request .= '<Parameter><ID>{'.htmlspecialchars($param['guid']).'}</ID><Value>'.htmlspecialchars(str_replace('\'', '\'\'', $param['value'])).'</Value></Parameter>';
 			}
 			$request .= '</Data>]]></d:Parameters>';
 		}

@@ -98,11 +98,11 @@ class Runbooks2022
 		
 		if(!empty($params))
 		{
-			foreach($params as $key => $value)
+			foreach($params as &$param)
 			{
 				$parameters[] = array(
-					'Name' => $key,
-					'Value' => $value
+					'Name' => $param['name'],
+					'Value' => $param['value']
 				);
 			}
 		}
