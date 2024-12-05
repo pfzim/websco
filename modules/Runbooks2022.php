@@ -795,16 +795,28 @@ class Runbooks2022
 							$job_date = $job_date->format('Y-m-d H:i:s');
 						}
 
-						$this->core->db->put(rpv("
+						if($this->core->db->put(rpv("
 								INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
 								VALUES (!, #, !, NULL, 0x0000)
 							",
 							$job_date,
 							$rb[0][0],
 							$job['guid']
-						));
+						)))
+						{
+							// Load input params
 
-						$jobs_added++;
+							$job_id = $this->core->db->last_id();
+
+							$job_params = $core->Runbooks->retrieve_job_first_instance_input_params($job['guid']);
+
+							foreach($job_params as $param)
+							{
+								$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+							}
+
+							$jobs_added++;
+						}
 					}
 				}
 
