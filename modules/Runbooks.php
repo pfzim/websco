@@ -867,11 +867,11 @@ EOT;
 
 							$job_id = $this->core->db->last_id();
 
-							$job_params = $core->Runbooks->retrieve_job_first_instance_input_params($job['guid']);
+							$job_params = $this->retrieve_job_first_instance_input_params($job['guid']);
 
 							foreach($job_params as $param)
 							{
-								$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+								$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
 							}
 
 							$jobs_added++;
