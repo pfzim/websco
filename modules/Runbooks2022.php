@@ -237,7 +237,7 @@ class Runbooks2022
 			{
 				foreach($instance['params_in'] as &$param)
 				{
-					$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job[0]['id'], $param['guid'], $param['value']));
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job[0]['id'], $param['guid'], $param['value']));
 				}
 			}
 
