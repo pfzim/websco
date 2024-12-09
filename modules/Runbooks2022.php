@@ -275,7 +275,7 @@ class Runbooks2022
 
 	public function retrieve_activity_data($guid)
 	{
-		$json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstances?$filter=Id%20eq%20'.$guid);
+		$json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstanceData?$filter=ActivityInstanceId%20eq%20'.$guid);
 
 		$params = array();
 
