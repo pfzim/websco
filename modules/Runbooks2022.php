@@ -209,7 +209,7 @@ class Runbooks2022
 				}
 			}
 
-			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstances?$filter=Id%20eq%20'.$instance['guid']);
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstances/latestOf(runbookInstanceId='.$instance['guid'].')');
 
 			foreach($sub_json_data['value'] as $sub_properties)
 			{
