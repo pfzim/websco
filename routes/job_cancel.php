@@ -15,7 +15,7 @@ function job_cancel(&$core, $params, $post_data)
 	if($core->Runbooks->job_cancel($post_data['id']))
 	{
 		log_db('Job canceled: '.$post_data['id'], $post_data['id'], 0);
-		echo '{"code": 0, "guid": "'.json_escape($job_guid).'", "message": "'.LL('JobCanceled').' ID: '.json_escape($post_data['id']).'"}';
+		echo '{"code": 0, "guid": "'.json_escape($post_data['id']).'", "message": "'.LL('JobCanceled').' ID: '.json_escape($post_data['id']).'"}';
 	}
 	else
 	{

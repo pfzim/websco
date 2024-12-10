@@ -804,7 +804,7 @@ function on_action_success(el, action, data)
 	}
 	else if(action == 'job_cancel')
 	{
-		window.location = window.location;
+		f_get_job(data.guid);
 	}
 	else if(action == 'user_activate')
 	{
