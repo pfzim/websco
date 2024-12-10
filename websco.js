@@ -603,6 +603,19 @@ function on_received_form(data, form_id)
 			el.innerText = '';
 			el.style.display = 'none';
 		}
+		
+		var el = gi(form_id + '-url');
+		if(data.wiki_url && (data.wiki_url.length > 0))
+		{
+			el.style.display = 'block';
+			var el_a = gi(form_id + '-url-href');
+			el_a.href = data.wiki_url;
+		}
+		else
+		{
+			//el.innerText = '';
+			el.style.display = 'none';
+		}
 
 		el = gi(form_id + '-fields');
 		el.innerHTML = '';

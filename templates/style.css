@@ -475,13 +475,20 @@ body {
 }
 .form-description {
     padding: 5px;
-    margin-bottom: 15px;
+    /*margin-bottom: 15px;*/
     border: 1px solid #EEEEEE;
     border-radius: 4px;
     font-size: 8pt;
     color: #aaa;
     background-color: #F5F5F5;
     width: 500px;
+}
+.form-url {
+    font-size: 8pt;
+	text-align: right;
+}
+.form-fields {
+    margin-top: 15px;
 }
 .tooltip-user {
     position: absolute;
