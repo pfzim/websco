@@ -11,7 +11,7 @@
 				<?php L('JobSID') ?>: <span id="job_sid"></span><br />
 				<?php L('WhoRun') ?>: <span id="job_user"></span><br />
 				<br />
-				<?php L('Status') ?>: <span id="job_status"></span><br />
+				<?php L('Status') ?>: <span id="job_status"></span> <a id="job_cancel" href="#" onclick="return f_job_cancel(event);"><?php L('Stop') ?></a><br />
 				<br />
 
 				<table id="job_table">

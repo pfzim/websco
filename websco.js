@@ -139,13 +139,22 @@ function f_get_job(guid)
 				el.innerText = data.sid + ' (' + data.sid_name + ')';
 				el = gi('job_status');
 				el.innerText = data.status;
+				btn_cancel = gi('job_cancel');
 				if(data.status == 'Completed')
 				{
 					el.className = 'status-ok';
+					btn_cancel.style.display = 'none';
+				}
+				else if(data.status == 'Canceled')
+				{
+					el.className = 'status-warn';
+					btn_cancel.style.display = 'none';
 				}
 				else
 				{
 					el.className = 'status-warn';
+					btn_cancel.style.display = 'inline';
+					gi('job').setAttribute("data-id", data.guid);
 				}
 
 				el = gi('job_user');
@@ -793,6 +802,10 @@ function on_action_success(el, action, data)
 	{
 		window.location = window.location;
 	}
+	else if(action == 'job_cancel')
+	{
+		window.location = window.location;
+	}
 	else if(action == 'user_activate')
 	{
 		window.location = window.location;
@@ -847,6 +860,16 @@ function f_delete_user(ev)
 	{
 		f_call_action(ev, 'user_delete');
 	}
+}
+
+function f_job_cancel(ev)
+{
+	if(window.confirm(LL.ConfirmOperation))
+	{
+		f_call_action(ev, 'job_cancel');
+	}
+	
+	return false;
 }
 
 function f_activate_user(ev)

@@ -165,6 +165,64 @@ class Runbooks2022
 		return $json_data['Id'];
 	}
 
+	public function job_cancel($guid)
+	{
+		$request = json_encode(array(
+			'Id'			=> $guid
+		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+
+		log_file($request);
+
+		$ch = curl_init();
+
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs/'.$guid);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
+
+		if(defined('USE_GSSAPI') && USE_GSSAPI)
+		{
+			curl_setopt($ch, CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG);
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);
+			curl_setopt($ch, CURLOPT_USERPWD, ":");
+		}
+		else
+		{
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+			curl_setopt($ch, CURLOPT_USERPWD, $this->orchestrator_user.':'.$this->orchestrator_passwd);
+		}
+
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Accept: application/json, text/plain, */*'));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+
+
+		$output = curl_exec($ch);
+		$result = curl_getinfo($ch);
+
+		//echo $output;
+		//log_file($output);
+
+		if(intval($result['http_code']) != 200)
+		{
+			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$guid."\n".$output."\n\n");
+			/*
+				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+				  <code></code>
+				  <message xml:lang="ru-RU">The requested operation requires Publish permissions on the Runbook</message>
+				</error>
+			*/
+			return FALSE;
+		}
+
+		$json_data = @json_decode($output, TRUE);
+		if($json_data === NULL)
+		{
+			return FALSE;
+		}
+
+		return $json_data['Id'];
+	}
+
 	/**
 	 Get job instances list.
 
@@ -834,7 +892,7 @@ class Runbooks2022
 	{
 		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
 		{
-			$this->core->error('Runbook '.$guid.' not found!');
+			$this->core->error('Runbook '.$id.' not found!');
 			return FALSE;
 		}
 
@@ -846,6 +904,17 @@ class Runbooks2022
 		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $guid)))
 		{
 			$this->core->error('Runbook '.$guid.' not found!');
+			return FALSE;
+		}
+
+		return $runbook[0];
+	}
+
+	public function get_runbook_by_job_guid($guid)
+	{
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`guid` = ! LIMIT 1", $guid)))
+		{
+			$this->core->error('Job '.$guid.' not found!');
 			return FALSE;
 		}
 

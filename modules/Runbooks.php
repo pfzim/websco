@@ -174,6 +174,12 @@ EOT;
 		return $xml->content->children('m', TRUE)->properties->children('d', TRUE)->Id;
 	}
 
+	public function job_cancel($guid)
+	{
+		$this->core->error('Job cancel method is not implemented for Orchestrator version prior 2022!');
+		return FALSE;
+	}
+	
 	/**
 	 Get job instances list.
 
@@ -893,7 +899,7 @@ EOT;
 	{
 		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
 		{
-			$this->core->error('Runbook '.$guid.' not found!');
+			$this->core->error('Runbook '.$id.' not found!');
 			return FALSE;
 		}
 
@@ -905,6 +911,17 @@ EOT;
 		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $guid)))
 		{
 			$this->core->error('Runbook '.$guid.' not found!');
+			return FALSE;
+		}
+
+		return $runbook[0];
+	}
+
+	public function get_runbook_by_job_guid($guid)
+	{
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`guid` = ! LIMIT 1", $guid)))
+		{
+			$this->core->error('Job '.$guid.' not found!');
 			return FALSE;
 		}
 
