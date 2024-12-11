@@ -165,6 +165,14 @@ class Runbooks2022
 		return $json_data['Id'];
 	}
 
+	/**
+	 Stop job.
+
+		\param [in] $guid   - job ID
+
+		\return - TRUE | FALSE
+	*/
+
 	public function job_cancel($guid)
 	{
 		$request = json_encode(array(

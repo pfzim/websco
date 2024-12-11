@@ -155,7 +155,7 @@ EOT;
 
 		if(intval($result['http_code']) != 201)
 		{
-			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
+			log_file('ERROR: Start runbook '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
@@ -174,10 +174,75 @@ EOT;
 		return $xml->content->children('m', TRUE)->properties->children('d', TRUE)->Id;
 	}
 
+	/**
+	 Stop job.
+
+		\param [in] $guid   - job ID
+
+		\return - TRUE | FALSE
+	*/
+
 	public function job_cancel($guid)
 	{
-		$this->core->error('Job cancel method is not implemented for Orchestrator version prior 2022!');
-		return FALSE;
+		$request = <<<'EOT'
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
+    <content type="application/xml">
+        <m:properties>
+EOT;
+
+		$request .= '<d:Id m:type="Edm.Guid">'.htmlspecialchars($guid).'</d:Id>';
+		//$request .= '<d:RunbookId m:type="Edm.Guid">'.htmlspecialchars($runbook_guid).'</d:RunbookId>';
+
+		$request .= <<<'EOT'
+			<d:Status>Canceled</d:Status>
+        </m:properties>
+    </content>
+</entry>
+EOT;
+
+		log_file($request);
+
+		$ch = curl_init();
+
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs(guid'.$guid.')');
+		curl_setopt($ch, CURLOPT_POST, true);
+
+		if(defined('USE_GSSAPI') && USE_GSSAPI)
+		{
+			curl_setopt($ch, CURLOPT_GSSAPI_DELEGATION, CURLGSSAPI_DELEGATION_FLAG);
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_GSSNEGOTIATE);
+			curl_setopt($ch, CURLOPT_USERPWD, ":");
+		}
+		else
+		{
+			curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_NTLM);
+			curl_setopt($ch, CURLOPT_USERPWD, $this->orchestrator_user.':'.$this->orchestrator_passwd);
+		}
+
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml', 'X-HTTP-Method: MERGE', 'If-Match: *'));
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+
+		$output = curl_exec($ch);
+		$result = curl_getinfo($ch);
+
+		//echo $output;
+		//log_file($output);
+
+		if(intval($result['http_code']) != 204)
+		{
+			log_file('ERROR: Stop job '.$this->orchestrator_url.'/Jobs(guid'.$guid.')'."\n".$output."\n\n");
+			/*
+				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+				  <code></code>
+				  <message xml:lang="ru-RU">The requested operation requires Publish permissions on the Runbook</message>
+				</error>
+			*/
+			return FALSE;
+		}
+
+		return TRUE;
 	}
 	
 	/**
