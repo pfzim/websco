@@ -205,7 +205,7 @@ EOT;
 
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs(guid'.$guid.')');
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
 		curl_setopt($ch, CURLOPT_POST, true);
 
 		if(defined('USE_GSSAPI') && USE_GSSAPI)
@@ -232,7 +232,7 @@ EOT;
 
 		if(intval($result['http_code']) != 204)
 		{
-			log_file('ERROR: Stop job '.$this->orchestrator_url.'/Jobs(guid'.$guid.')'."\n".$output."\n\n");
+			log_file('ERROR: Stop job '.$this->orchestrator_url.'/Jobs(guid\''.$guid.'\')'."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
