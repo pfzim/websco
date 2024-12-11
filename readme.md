@@ -2,7 +2,7 @@
 
 [:ru:](#description-ru) [:us:](#description)  
 
-https://github.com/pfzim/other/blob/master/WebSCO.mp4
+https://raw.githubusercontent.com/pfzim/other/refs/heads/master/WebSCO.mp4
 
 ## System requirements
 - Apache or Nginx
