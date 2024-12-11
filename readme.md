@@ -2,6 +2,8 @@
 
 [:ru:](#description-ru) [:us:](#description)  
 
+[![Watch the video](/docs/screenshots/main.png)](https://github.com/pfzim/other/blob/master/WebSCO.mp4)
+
 ## System requirements
 - Apache or Nginx
 - MariaDB (MySQL)
