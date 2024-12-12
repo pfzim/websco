@@ -5,6 +5,7 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<title><?php L('Title') ?></title>
+        <link rel="icon" type="image/png" href="<?php ls('templates/favicon.png') ?>">
 		<link type="text/css" href="<?php ls('templates/style.css') ?>" rel="stylesheet" />
 		<link type="text/css" href="<?php ls('templates/flatpickr.material_red.css') ?>" rel="stylesheet" />
 		<script>
