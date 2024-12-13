@@ -255,6 +255,7 @@ function f_get_custom_job(id)
 				{
 					el.className = 'status-warn';
 				}
+				gi('job_cancel').style.display = 'none';
 
 				el = gi('job_user');
 				el.innerText = data.user;
@@ -280,6 +281,55 @@ function f_get_custom_job(id)
 	);
 
 	return false;
+}
+
+function si(ev, id)
+{
+	var el_src = ev.target || ev.srcElement;
+	var pX = ev.pageX || (ev.clientX + (document.documentElement && document.documentElement.scrollLeft || document.body && document.body.scrollLeft || 0) - (document.documentElement.clientLeft || 0));
+	var pY = ev.pageY || (ev.clientY + (document.documentElement && document.documentElement.scrollTop || document.body && document.body.scrollTop || 0) - (document.documentElement.clientTop || 0));
+
+	f_http(
+		g_link_prefix + 'job_params_get/' + id,
+		function(data, pos)
+		{
+			if(data.code)
+			{
+				//f_notify(data.message, 'error');
+			}
+			else
+			{
+				gi('popup').style.display = 'block';
+				gi('popup').style.left = (pos.x+10)  + "px";
+				gi('popup').style.top = (pos.y+10)  + "px";
+
+				el = gi('popup_table_data');
+				el.innerHTML = '';
+				html = '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
+				for(i = 0; i < data.params.length; i++)
+				{
+					html += '<tr><td>' + escapeHtml(data.params[i].name) +'</td><td>' + escapeHtml(data.params[i].value) +'</td></tr>';
+				}
+
+				el.innerHTML = html;
+			}
+		},
+		{x: pX, y: pY}
+	);
+
+	return false;
+}
+
+function mi(ev)
+{
+	var el = document.getElementById('popup');
+	if(el)
+	{
+		var pX = ev.pageX || (ev.clientX + (document.documentElement && document.documentElement.scrollLeft || document.body && document.body.scrollLeft || 0) - (document.documentElement.clientLeft || 0));
+		var pY = ev.pageY || (ev.clientY + (document.documentElement && document.documentElement.scrollTop || document.body && document.body.scrollTop || 0) - (document.documentElement.clientTop || 0));
+		el.style.left = (pX+10)  + "px";
+		el.style.top = (pY+10)  + "px";
+	}
 }
 
 function f_get_activity(url)

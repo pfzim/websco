@@ -929,6 +929,17 @@ class Runbooks2022
 		return $runbook[0];
 	}
 
+	public function get_runbook_by_job_id($id)
+	{
+		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`id` = # LIMIT 1", $id)))
+		{
+			$this->core->error('Job '.$id.' not found!');
+			return FALSE;
+		}
+
+		return $runbook[0];
+	}
+
 	public function get_servers()
 	{
 		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s ORDER BY s.`name`, s.`id`")))

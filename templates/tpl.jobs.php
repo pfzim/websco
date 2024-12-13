@@ -31,9 +31,9 @@
 						<td><?php eh($row['run_date']); ?></td>
 						<td>
 							<?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?>
-								<a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');"><?php eh($row['guid']); ?></a>
+								<a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid']); ?></a>
 							<?php } else { ?>
-								<a href="<?php ln('job_custom_get/'.$row['id']); ?>" onclick="return f_get_custom_job('<?php eh($row['id']); ?>');"><?php eh($row['guid'].'_'.$row['id']); ?></a>
+								<a href="<?php ln('job_custom_get/'.$row['id']); ?>" onclick="return f_get_custom_job('<?php eh($row['id']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid'].'_'.$row['id']); ?></a>
 							<?php } ?>
 						</td>
 						<td><?php eh($row['login']); ?></td>
@@ -66,6 +66,13 @@
 			}
 		?>
 	</div>
+</div>
+
+<div id="popup" class="tooltip-user" style="display: none;">
+	<table id="popup_table">
+		<tbody id="popup_table_data">
+		</tbody>
+	</table>
 </div>
 
 
