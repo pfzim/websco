@@ -509,6 +509,10 @@ body {
 	vertical-align: top;
 	border-bottom: thin solid lightgrey;
 }
+.tooltip-user tr:last-child td
+{
+   border-bottom: none;
+}
 .user-photo {
     position: fixed;
     display: none;
