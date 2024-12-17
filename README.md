@@ -416,9 +416,18 @@ C:\Program Files (x86)\Microsoft System Center\Orchestrator\Web Service\Orchestr
 	...
 ```
 
+In version 2016 and below of SC Orchestrartor: [Runbooks are executed in 32bit environment and with Powershell Version 2.0](https://learn.microsoft.com/en-us/answers/questions/1349344/orchestrator-powershell) per default.
+You can force to use the latest Version in registry with with OnlyUseLatestCLR in path HKLM\SOFTWARE\Wow6432Node\Microsoft\.NETFramework.
+
+```
+reg add "HKLM\SOFTWARE\WOW6432Node\Microsoft\.NETFramework" /f /v OnlyUseLatestCLR /t REG_DWORD /d 1
+```
+
 [Apache config example](/examples/apache-21-websco-ssl.conf)  
 [Nginx config example](/examples/nginx-01-websco.conf)  
 [Backup script example](/examples/backup.sh)  
 [logrotate config example](/examples/websco)  
 [crontab config example](/examples/crontab)  
 [inc.config.php and krb5.conf example](/examples/inc.config.php)  
+[Best Practice Template](https://automys.com/library/asset/powershell-system-center-orchestrator-practice-template)  
+[Runbook template](/examples/_TEMPLATE_Runbook.ps1)  

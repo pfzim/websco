@@ -14,7 +14,10 @@
 
 #>
 
+$ErrorActionPreference = 'Stop'
+
 #. c:\scripts\settings\config.ps1
+#$config = Get-Content -Path {git_path}\configs\orchestrator.json -Raw | ConvertFrom-Json
 
 # Все входящие параметры указываем в $rb_input,
 # чтобы в основном блоке не было никаких внешних переменных.
@@ -29,8 +32,8 @@ $rb_input = @{
 	ps_user = ''
 	ps_passwd = ''
 	who_start_runbook = ''
-	smtp_server = $global:smtp_server
-	smtp_from = $global:smtp_from
+	#smtp_server = $config.smtp_server
+	#smtp_from = $config.smtp_from
 	
 	debug_pref = 'SilentlyContinue'  # Change to Continue for show debug messages
 }
@@ -47,7 +50,6 @@ $result = @{
 }
 
 $DebugPreference = $rb_input.debug_pref
-$ErrorActionPreference = 'Stop'
 
 # Основной блок ранбука
 
