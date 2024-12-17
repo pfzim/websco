@@ -791,7 +791,7 @@ class Runbooks2022
 			{
 				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
 				{
-					$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
+					$job_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $job['date'], NULL);
 					if($job_date === FALSE)
 					{
 						$job_date = '0000-00-00 00:00:00';
@@ -850,7 +850,7 @@ class Runbooks2022
 				{
 					if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
 					{
-						$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
+						$job_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $job['date'], NULL);
 						if($job_date === FALSE)
 						{
 							$job_date = '0000-00-00 00:00:00';
@@ -992,7 +992,7 @@ class Runbooks2022
 			}
 		}
 
-		$modified_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', (string) $properties['LastModifiedTime']), new DateTimeZone('UTC'));
+		$modified_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, (string) $properties['LastModifiedTime'], NULL);
 		if($modified_date === FALSE)
 		{
 			$modified_date = '00.00.0000 00:00:00';
