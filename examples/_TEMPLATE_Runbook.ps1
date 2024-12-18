@@ -113,39 +113,47 @@ function main($rb_input)
 	}
 }
 
-
-# Выполняем ранбук, только если предыдущий завершился без ошибок
-
-if($result.errors -eq 0)
+try
 {
-	$output = main -rb_input $rb_input
+	# Выполняем ранбук, только если предыдущий завершился без ошибок
 
-	# Объединяем результат с предыдущим ранбуком
-
-	$result.errors += $output.errors
-	$result.warnings += $output.warnings
-	$result.messages += $output.messages
-
-	<# Return custom results
-	if($output.errors -eq 0)
+	if($result.errors -eq 0)
 	{
-		$data = $output.data
+		$output = main -rb_input $rb_input
+
+		# Объединяем результат с предыдущим ранбуком
+
+		$result.errors += $output.errors
+		$result.warnings += $output.warnings
+		$result.messages += $output.messages
+
+		<# Return custom results
+		if($output.errors -eq 0)
+		{
+			$data = $output.data
+		}
+		#>
 	}
-	#>
+
+	# Код выхода для обратной совместимости
+
+	$exit_code = 0
+	if($result.errors -gt 0 -or $result.warnings -gt 0)
+	{
+		$exit_code = 1
+	}
+
+	# Возврат значений
+
+	$errors = $result.errors
+	$warnings = $result.warnings
+	$message = $result.messages -join "`r`n"
 }
-
-# Код выхода для обратной совместимости
-
-$exit_code = 0
-if($result.errors -gt 0 -or $result.warnings -gt 0)
+catch
 {
-	$exit_code = 1
+	$errors = 999
+	$warnings = 0
+	$message = ("ERROR[{0},{1}]: {2}`r`nmain() output: {3}" -f $_.InvocationInfo.ScriptLineNumber, $_.InvocationInfo.OffsetInLine, $_.Exception.Message, ($output | Out-String));
 }
-
-# Возврат значений
-
-$errors = $result.errors
-$warnings = $result.warnings
-$message = $result.messages -join "`r`n"
 
 Write-Debug ('Errors: {0}, Warnings: {1}, Messages: {2}' -f $errors, $warnings, $message)
