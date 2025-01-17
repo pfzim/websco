@@ -113,7 +113,7 @@ EOT;
 			$request .= '<d:Parameters><![CDATA[<Data>';
 			foreach($params as &$param)
 			{
-				$request .= '<Parameter><ID>{'.htmlspecialchars($param['guid']).'}</ID><Value>'.htmlspecialchars(str_replace('\'', '\'\'', $param['value'])).'</Value></Parameter>';
+				$request .= '<Parameter><ID>{'.htmlspecialchars(htmlspecialchars($param['guid'])).'}</ID><Value>'.htmlspecialchars(htmlspecialchars(str_replace('\'', '\'\'', $param['value']))).'</Value></Parameter>';
 			}
 			$request .= '</Data>]]></d:Parameters>';
 		}
