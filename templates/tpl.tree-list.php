@@ -1,6 +1,6 @@
 <?php if(!defined('Z_PROTECTED')) exit;
 
-function print_folders_tree($location, &$current_folder_guid, $folders, $is_admin = FALSE)
+function print_folders_tree($location, $current_folder_guid, $folders, $is_admin = FALSE)
 {
 	if($folders)
 	{
@@ -21,7 +21,7 @@ function print_folders_tree($location, &$current_folder_guid, $folders, $is_admi
 	}
 }
 
-function print_folders_tree_id($location, &$current_folder_id, $folders, $is_admin = FALSE)
+function print_folders_tree_id($location, $current_folder_id, $folders, $is_admin = FALSE)
 {
 	if($folders)
 	{
