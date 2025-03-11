@@ -3,7 +3,7 @@ $ErrorActionPreference = 'Stop'
 
 # Define a hashtable with input parameters for running the runbook
 $rb_input = @{
-    runbook_file = '{git path}/runbooks/MyRunbook.ps1'  # Path to the runbook file
+    runbook_file = '{git_local_folder_path}/runbooks/MyRunbook.ps1'  # Path to the runbook file
 
     example_param1 = ''  # Example parameter 1
     example_param2 = ''  # Example parameter 2
