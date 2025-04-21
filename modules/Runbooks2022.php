@@ -553,7 +553,7 @@ class Runbooks2022
 		log_file('Retrieve runbooks list...');
 		$runbooks = $this->retrieve_runbooks();
 
-		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0"));
+		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED})"));
@@ -714,7 +714,7 @@ class Runbooks2022
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0 AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -725,7 +725,7 @@ class Runbooks2022
 					$runbook['name'],
 					$runbook['description'],
 					$runbook['wiki_url'],
-					0x0000
+					RBF_TYPE_SCO
 				)))
 				{
 					$runbook_id = $runbook['guid'];
@@ -968,7 +968,7 @@ class Runbooks2022
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
 				j.`guid` = !
-				AND (r.`flags` & {%RBF_TYPE_CUSTOM}) = 0
+				AND (r.`flags` & {%RBF_TYPE_SCO})
 			LIMIT 1
 		', $guid)))
 		{
@@ -1047,7 +1047,7 @@ class Runbooks2022
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
 				j.`id` = #
-				AND (r.`flags` & {%RBF_TYPE_CUSTOM})
+				AND (r.`flags` & {%RBF_TYPE_SCO})
 			LIMIT 1
 		', $id)))
 		{

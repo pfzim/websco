@@ -7,9 +7,9 @@ function runbook_get(&$core, $params, $post_data)
 	
 	$runbook = $core->Runbooks->get_runbook($guid);
 
-	if($runbook['flags'] & RBF_TYPE_CUSTOM)
+	if((intval($runbook['flags']) & RBF_TYPE_SCO) == 0)
 	{
-		$core->error('ERROR: Runbook with ID '.$filepath.' is a custom type!');
+		$core->error('ERROR: Runbook with ID '.$guid.' is a custom type!');
 		return NULL;
 	}
 

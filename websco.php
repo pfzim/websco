@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-define('DB_VERSION', 2);
+define('DB_VERSION', 3);
 define('Z_PROTECTED', 'YES');
 
 error_reporting(E_ALL);
@@ -158,6 +158,8 @@ function exception_handler_ajax($exception)
 	define('RBF_DELETED', 0x0001);
 	define('RBF_HIDED', 0x0002);
 	define('RBF_TYPE_CUSTOM', 0x0004);
+	define('RBF_TYPE_SCO', 0x0008);
+	define('RBF_TYPE_ANSIBLE', 0x0010);
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
