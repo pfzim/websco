@@ -4,9 +4,9 @@ function runbook_start(&$core, $params, $post_data)
 {
 	$runbook = $core->Runbooks->get_runbook($post_data['guid']);
 
-	if($runbook['flags'] & RBF_TYPE_CUSTOM)
+	if(($runbook['flags'] & RBF_TYPE_SCO) == 0)
 	{
-		$core->error('ERROR: Runbook with ID '.$filepath.' is a custom type!');
+		$core->error('ERROR: Runbook with ID ' . $runbook['guid'] . ' is a custom type!');
 		return NULL;
 	}
 

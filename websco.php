@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-define('DB_VERSION', 3);
+define('DB_VERSION', 6);
 define('Z_PROTECTED', 'YES');
 
 error_reporting(E_ALL);

@@ -34,57 +34,81 @@ if(!file_exists(ROOT_DIR.'inc.config.php'))
 require_once(ROOT_DIR.'inc.config.php');
 
 
-	if(!isset($_GET['action']) || ($_GET['action'] != 'upgrade'))
-	{
-		header("Content-Type: text/html; charset=utf-8");
+if(!isset($_POST['key']) || !defined('UPGRADE_ADMIN_KEY') || ($_POST['key'] !== UPGRADE_ADMIN_KEY))
+{
+	header("Content-Type: text/html; charset=utf-8");
+
 ?><!DOCTYPE html>
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<title>Upgrade WebSCO</title>
+		<title>Upgrade</title>
 	</head>
 	<body>
-	Start <a href="?action=upgrade">upgrade</a>
+	<form method="POST">
+		Enter UPGRADE_ADMIN_KEY from inc.config.php to start upgrade:<br />
+		<input type="text" name="key" value="" /><br />
+		<?php if(isset($_POST['key'])) { ?>
+		<p style="color: red">Key doesn't match</p>
+		<?php } ?>
+		<?php if(!defined('UPGRADE_ADMIN_KEY')) { ?>
+		<p style="color: red">Add parameter to inc.config.php: define('UPGRADE_ADMIN_KEY', 'YOU_SECRET_KEY_HERE');</p>
+		<?php } ?>
+		<input type="submit" value="Start upgrade" />
+	</form>
 	</body>
 </html>
 <?php
-		exit;
-	}
 
-	header("Content-Type: text/plain; charset=utf-8");
+	exit;
+}
 
-	require_once(ROOT_DIR.'inc.utils.php');
-	require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
+header("Content-Type: text/plain; charset=utf-8");
 
-	$core = new Core(TRUE);
-	$core->load_ex('db', 'MySQLDB');
-	$core->load('UserAuth');
+require_once(ROOT_DIR.'inc.utils.php');
+require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
 
-	echo "Upgrading...\n";
+$core = new Core(TRUE);
+$core->load_ex('db', 'MySQLDB');
+$core->load('UserAuth');
 
-	function db_upgrade($core, $version, $message, $query)
+echo "Upgrading...\n";
+
+function db_upgrade($core, $version, $message, $query)
+{
+	if(!$core->db->select_ex($cfg, rpv('SELECT m.`value` FROM @config AS m WHERE m.`name` = \'db_version\' AND m.`uid` = 0')))
 	{
-		if($version > intval($core->Config->get_global('db_version', 0)))
-		{
-			echo PHP_EOL . $message . PHP_EOL;
-			if(!$core->db->put($query))
-			{
-				throw 'Error upgrade to version '. $version . '. ERROR['.__LINE__.']: '.$core->db->get_last_error();
-			}
-			echo 'Setting db_version = '. $version . PHP_EOL;
-			if(!$core->db->put(rpv("UPDATE @config SET `value` = {d0} WHERE `name` = 'db_version' LIMIT 1", $version)))
-			{
-				throw 'Error set DB version '. $version . '. ERROR['.__LINE__.']: '.$core->db->get_last_error();
-			}
-			echo 'Upgrade to version '. $version .' complete!' . PHP_EOL;
-		}
+		throw 'Error get DB version: '.$core->db->get_last_error();
 	}
 
-	define('RBF_DELETED', 0x0001);
-	define('RBF_HIDED', 0x0002);
-	define('RBF_TYPE_CUSTOM', 0x0004);
-	define('RBF_TYPE_SCO', 0x0008);
-	define('RBF_TYPE_ANSIBLE', 0x0010);
+	if($version > intval($cfg[0][0]))
+	{
+		echo PHP_EOL . $message . PHP_EOL;
+		$core->db->start_transaction();
+		if(!$core->db->put($query))
+		{
+			throw 'Error upgrade to version '. $version . '. ERROR['.__LINE__.']: '.$core->db->get_last_error();
+		}
+		echo 'Setting db_version = '. $version . PHP_EOL;
+		if(!$core->db->put(rpv("UPDATE @config SET `value` = {d0} WHERE `name` = 'db_version' LIMIT 1", $version)))
+		{
+			throw 'Error set DB version '. $version . '. ERROR['.__LINE__.']: '.$core->db->get_last_error();
+		}
+		$core->db->commit();
+		echo 'Upgrade to version '. $version .' complete!' . PHP_EOL;
+	}
+}
 
-	db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO', 'UPDATE @runbooks SET `flags` = (`flags` | {%RBF_TYPE_SCO}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0');
+define('RBF_DELETED', 0x0001);
+define('RBF_HIDED', 0x0002);
+define('RBF_TYPE_CUSTOM', 0x0004);
+define('RBF_TYPE_SCO', 0x0008);
+define('RBF_TYPE_ANSIBLE', 0x0010);
+
+db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', 'UPDATE @runbooks SET `flags` = (`flags` | {%RBF_TYPE_SCO}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0');
+db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', 'UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_TYPE_SCO})');
+db_upgrade($core, 5, 'Update parent IDs', 'UPDATE @runbooks_folders AS f JOIN @runbooks_folders AS parent ON f.pid = parent.guid SET f.pid = parent.id');
+db_upgrade($core, 6, 'Change column type', 'ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL');
+
+echo 'Upgrade complete.' . PHP_EOL;

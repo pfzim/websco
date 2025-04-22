@@ -554,7 +554,7 @@ class Runbooks2022
 		$runbooks = $this->retrieve_runbooks();
 
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED})"));
 
@@ -607,8 +607,14 @@ class Runbooks2022
 		foreach($folders as &$folder)
 		{
 			//echo $folder['guid']."\r\n";
+			$folder_pid = 0;
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $folder['pid'])))
+			{
+				$folder_pid = $res[0][0];
+			}
+
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $folder['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $folder['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -617,7 +623,7 @@ class Runbooks2022
 					$folder['guid'],
 					$folder['pid'],
 					$folder['name'],
-					0x0000
+					RBF_TYPE_SCO
 				)))
 				{
 					$folder_id = $this->core->db->last_id();
@@ -625,6 +631,8 @@ class Runbooks2022
 			}
 			else
 			{
+				$folder_id = $res[0][0];
+
 				$this->core->db->put(rpv("
 						UPDATE
 							@runbooks_folders
@@ -633,15 +641,13 @@ class Runbooks2022
 							`name` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`guid` = !
+							`id` = !
 						LIMIT 1
 					",
 					$folder['pid'],
 					$folder['name'],
-					$res[0][0]
+					$folder_id
 				));
-
-				$folder_id = $res[0][0];
 			}
 		}
 
@@ -693,7 +699,7 @@ class Runbooks2022
 		foreach($runbooks as &$runbook)
 		{
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $runbook['folder_id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -714,7 +720,7 @@ class Runbooks2022
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -1241,11 +1247,11 @@ class Runbooks2022
 		return $form_fields;
 	}
 
-	public function load_tree_childs($guid, $check_permissions)
+	public function load_tree_childs($id, $check_permissions)
 	{
 		$childs = NULL;
 
-		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} AND (f.`flags` & {%RBF_DELETED}) = 0 ORDER BY f.`name`', $guid)))
+		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {d0} AND (f.`flags` & {%RBF_DELETED}) = 0 ORDER BY f.`name`', $id)))
 		{
 			$childs = array();
 
@@ -1258,7 +1264,7 @@ class Runbooks2022
 						'id' => $folder['id'],
 						'guid' => $folder['guid'],
 						'flags' => $folder['flags'],
-						'childs' => $this->load_tree_childs($folder['guid'], $check_permissions)
+						'childs' => $this->load_tree_childs($folder['id'], $check_permissions)
 					);
 				}
 			}
@@ -1275,7 +1281,7 @@ class Runbooks2022
 				'guid' => '00000000-0000-0000-0000-000000000000',
 				'id' => 0,
 				'flags' => 0,
-				'childs' => $this->load_tree_childs('00000000-0000-0000-0000-000000000000', $check_permissions)
+				'childs' => $this->load_tree_childs(0, $check_permissions)
 			)
 		);
 	}
