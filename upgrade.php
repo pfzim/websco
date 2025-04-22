@@ -31,6 +31,15 @@ if(!file_exists(ROOT_DIR.'inc.config.php'))
 	exit;
 }
 
+function exception_handler($exception)
+{
+	$error_msg = 'Exception: File: '.$exception->getFile().'['.$exception->getLine().']: '.$exception->getMessage().' Trace: '.$exception->getTraceAsString();
+	echo $error_msg;
+}
+
+set_exception_handler('exception_handler');
+
+
 require_once(ROOT_DIR.'inc.config.php');
 
 
@@ -84,7 +93,7 @@ function db_upgrade($core, $version, $message, $query)
 
 	if($version > intval($cfg[0][0]))
 	{
-		echo PHP_EOL . $message . PHP_EOL;
+		echo PHP_EOL . 'Upgrade to version '. $version . ': ' . $message . PHP_EOL;
 		$core->db->start_transaction();
 		if(!$core->db->put($query))
 		{
@@ -93,10 +102,10 @@ function db_upgrade($core, $version, $message, $query)
 		echo 'Setting db_version = '. $version . PHP_EOL;
 		if(!$core->db->put(rpv("UPDATE @config SET `value` = {d0} WHERE `name` = 'db_version' LIMIT 1", $version)))
 		{
-			throw 'Error set DB version '. $version . '. ERROR['.__LINE__.']: '.$core->db->get_last_error();
+			throw 'Error set DB version ' . $version . '. ERROR['.__LINE__.']: '.$core->db->get_last_error();
 		}
 		$core->db->commit();
-		echo 'Upgrade to version '. $version .' complete!' . PHP_EOL;
+		echo 'Upgrade to version ' . $version . ' complete!' . PHP_EOL;
 	}
 }
 
@@ -106,9 +115,9 @@ define('RBF_TYPE_CUSTOM', 0x0004);
 define('RBF_TYPE_SCO', 0x0008);
 define('RBF_TYPE_ANSIBLE', 0x0010);
 
-db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', 'UPDATE @runbooks SET `flags` = (`flags` | {%RBF_TYPE_SCO}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0');
-db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', 'UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_TYPE_SCO})');
-db_upgrade($core, 5, 'Update parent IDs', 'UPDATE @runbooks_folders AS f JOIN @runbooks_folders AS parent ON f.pid = parent.guid SET f.pid = parent.id');
-db_upgrade($core, 6, 'Change column type', 'ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL');
+db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', rpv('UPDATE @runbooks SET `flags` = (`flags` | {%RBF_TYPE_SCO}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0'));
+db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_TYPE_SCO})'));
+db_upgrade($core, 5, 'Update parent IDs', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
+db_upgrade($core, 6, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
 
-echo 'Upgrade complete.' . PHP_EOL;
+echo PHP_EOL . 'Upgrade complete.' . PHP_EOL;

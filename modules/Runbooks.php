@@ -670,7 +670,7 @@ EOT;
 		{
 			//echo $folder['guid']."\r\n";
 			$folder_pid = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $folder['pid'])))
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $folder['pid'])))
 			{
 				$folder_pid = $res[0][0];
 			}
@@ -680,11 +680,11 @@ EOT;
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
-						VALUES (!, !, !, #)
+						VALUES (!, #, !, #)
 					",
 					$folder['guid'],
-					$folder['pid'],
-					$folder['name'],
+					$folder_pid,
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Root folder' : '(undefined folder name)') : $folder['name'],
 					RBF_TYPE_SCO
 				)))
 				{
@@ -699,15 +699,15 @@ EOT;
 						UPDATE
 							@runbooks_folders
 						SET
-							`pid` = !,
+							`pid` = #,
 							`name` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
 							`id` = !
 						LIMIT 1
 					",
-					$folder['pid'],
-					$folder['name'],
+					$folder_pid,
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Root folder' : '(undefined folder name)') : $folder['name'],
 					$folder_id
 				));
 			}
@@ -768,9 +768,9 @@ EOT;
 						VALUES (!, !, !, #)
 					",
 					$runbook['folder_id'],
-					'00000000-0000-0000-0000-000000000000',
+					0,
 					$runbook['path'],
-					0x0000
+					RBF_TYPE_SCO
 				)))
 				{
 					$folder_id = $this->core->db->last_id();
@@ -1326,7 +1326,7 @@ EOT;
 					$childs[] = array(
 						'name' => $folder['name'],
 						'id' => $folder['id'],
-						'guid' => $folder['guid'],
+						// 'guid' => $folder['guid'],
 						'flags' => $folder['flags'],
 						'childs' => $this->load_tree_childs($folder['id'], $check_permissions)
 					);
@@ -1342,7 +1342,7 @@ EOT;
 		return array(
 			array(
 				'name' => 'Root folder',
-				'guid' => '00000000-0000-0000-0000-000000000000',
+				// 'guid' => '00000000-0000-0000-0000-000000000000',
 				'id' => 0,
 				'flags' => 0,
 				'childs' => $this->load_tree_childs(0, $check_permissions)
