@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-define('DB_VERSION', 6);
+define('DB_VERSION', 9);
 define('Z_PROTECTED', 'YES');
 
 error_reporting(E_ALL);
@@ -269,6 +269,8 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
 		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
+
+		$core->Router->add_route('playbooks_sync', 'playbooks_sync', TRUE);
 
 		$core->Router->add_route('jobs', 'jobs');
 		$core->Router->add_route('jobs_all', 'jobs_all');

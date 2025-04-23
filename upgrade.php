@@ -119,5 +119,8 @@ db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', rpv('UPDATE @runbooks 
 db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_TYPE_SCO})'));
 db_upgrade($core, 5, 'Update parent IDs', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
 db_upgrade($core, 6, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 7, 'Change PRIMARY KEY for table `@runbooks_params`', rpv('ALTER TABLE `@runbooks_params` DROP PRIMARY KEY, ADD PRIMARY KEY (`pid`, `guid`)'));
+db_upgrade($core, 8, 'Update parent IDs', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & {%RBF_TYPE_SCO} SET rp.`pid` = r.`id`'));
+db_upgrade($core, 9, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
 
 echo PHP_EOL . 'Upgrade complete.' . PHP_EOL;

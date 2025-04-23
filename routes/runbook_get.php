@@ -38,7 +38,7 @@ function runbook_get(&$core, $params, $post_data)
 		)
 	);
 
-	$params = $core->Runbooks->get_runbook_params($runbook['guid']);
+	$params = $core->Runbooks->get_runbook_params($runbook['id']);
 
 	$job_params = NULL;
 

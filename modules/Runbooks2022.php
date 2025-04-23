@@ -720,7 +720,7 @@ class Runbooks2022
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -734,11 +734,13 @@ class Runbooks2022
 					RBF_TYPE_SCO
 				)))
 				{
-					$runbook_id = $runbook['guid'];
+					$runbook_id = $this->core->db->last_id();
 				}
 			}
 			else
 			{
+				$runbook_id = $res[0][0];
+				
 				$this->core->db->put(rpv("
 						UPDATE
 							@runbooks
@@ -749,28 +751,26 @@ class Runbooks2022
 							`wiki_url` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`guid` = !
+							`guid` = #
 						LIMIT 1
 					",
 					$folder_id,
 					$runbook['name'],
 					$runbook['description'],
 					$runbook['wiki_url'],
-					$res[0][0]
+					$runbook_id
 				));
-
-				$runbook_id = $res[0][0];
 			}
 
 			if($runbook_id)
 			{
-				$this->core->db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = !", $runbook_id));
+				$this->core->db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = #", $runbook_id));
 
 				foreach($runbook['params'] as &$params)
 				{
 					$this->core->db->put(rpv("
 							INSERT INTO @runbooks_params (`pid`, `guid`, `name`, `flags`)
-							VALUES (!, !, !, #)
+							VALUES (#, !, !, #)
 						",
 						$runbook_id,
 						$params['guid'],
@@ -1121,9 +1121,9 @@ class Runbooks2022
 		return $activity_info;
 	}
 
-	public function get_runbook_params($guid)
+	public function get_runbook_params($id)
 	{
-		$this->core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $guid));
+		$this->core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = # ORDER BY p.`name`", $id));
 
 		$form_fields = array();
 

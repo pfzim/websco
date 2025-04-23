@@ -21,7 +21,7 @@ function runbook_start(&$core, $params, $post_data)
 	$params = array(
 	);
 
-	$runbook_params = $core->Runbooks->get_runbook_params($runbook['guid']);
+	$runbook_params = $core->Runbooks->get_runbook_params($runbook['id']);
 
 	//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
