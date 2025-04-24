@@ -799,10 +799,6 @@ function on_saved(action, data)
 	{
 		f_get_job(data.id);
 	}
-	else if(action == 'playbook_start')
-	{
-		f_get_job(data.id);
-	}
 	else if(action == 'permission_save')
 	{
 		//f_get_perms(data.pid);

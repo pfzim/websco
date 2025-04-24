@@ -38,10 +38,8 @@
 						</td>
 						<td><?php eh($row['login']); ?></td>
 						<td>
-							<?php if(intval($runbook['flags']) & RBF_TYPE_SCO) { ?>
+							<?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?>
 								<a href="<?php ln('runbook_get/'.$runbook['id'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a>
-							<?php } else  if(intval($runbook['flags']) & RBF_TYPE_ANSIBLE) { ?>
-								<a href="<?php ln('playbook_get/'.$runbook['id'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a>
 							<?php } ?></td>
 					</tr>
 				<?php } ?>

@@ -125,6 +125,195 @@ class AnsibleAWX
 		return ($this->awx_api_request('POST', '/api/v2/jobs/' . $job_id . '/cancel/', NULL, TRUE) !== FALSE);
 	}
 
+	public function parse_form_and_start_runbook($post_data, &$result_json)
+	{
+		$result_json = array(
+			'code' => 0,
+			'message' => '',
+			'errors' => array()
+		);
+
+		$params = array();
+
+		$playbook = $this->core->Runbooks->get_runbook_by_id($post_data['id']);
+		$playbook_params = $this->get_playbook_params($post_data['id']);
+
+		//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+		foreach($playbook_params as &$param)
+		{
+			$value = '';
+			//$params[$param['guid']] = $value;
+
+			if($param['type'] == 'who')
+			{
+				$params[] = array(
+					'guid' => $param['guid'],
+					'name' => $param['name'],
+					'value' => $this->core->UserAuth->get_login()
+				);
+				continue;
+			}
+			elseif($param['type'] == 'flags')
+			{
+				$value = array();
+				if(isset($post_data['param'][$param['guid']]))
+				{
+					foreach($post_data['param'][$param['guid']] as $bit => $bit_value)
+					{
+						$value[] = $bit_value;
+					}
+				}
+
+				if($param['required'] && (count($value) == 0))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
+				}
+				else
+				{
+					$params[] = array(
+						'guid' => $param['guid'],
+						'name' => $param['name'],
+						'value' => $value
+					);
+				}
+
+				//log_file('Value: '.strval($flags));
+				continue;
+			}
+			elseif($param['type'] == 'upload')
+			{
+				if(isset($_FILES['param_'.$param['guid']]['tmp_name']) && file_exists($_FILES['param_'.$param['guid']]['tmp_name']))
+				{
+					if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > $param['max_size'])
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge').' (max '.$param['max_size'].' bytes)');
+						continue;
+					}
+
+					$value = base64_encode(file_get_contents($_FILES['param_'.$param['guid']]['tmp_name']));
+				}
+				elseif($param['required'])
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('ThisFieldRequired'));
+					continue;
+				}
+			}
+			elseif(isset($post_data['param'][$param['guid']]))
+			{
+				$value = trim($post_data['param'][$param['guid']]);
+			}
+
+			if($param['required'] && empty($value))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ThisFieldRequired'));
+				continue;
+			}
+			elseif($param['type'] == 'date')
+			{
+				if(!empty($value))
+				{
+					list($nd, $nm, $ny) = explode('.', $value, 3);
+
+					if(!datecheck($nd, $nm, $ny))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('IncorrectDate').' DD.MM.YYYY');
+						continue;
+					}
+				}
+			}
+			elseif($param['type'] == 'list')
+			{
+				if(!in_array($value, $param['list']))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ValueNotFromList').' ('.implode(', ', $param['list']).')');
+					continue;
+				}
+			}
+			elseif($param['type'] == 'integer')
+			{
+				if(!empty($value) && !preg_match('/^\d+$/i', $value))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('OnlyNumbers'));
+					continue;
+				}
+
+				$params[] = array(
+					'guid' => $param['guid'],
+					'name' => $param['name'],
+					'value' => intval($value)
+				);
+				continue;
+			}
+
+			$params[] = array(
+				'guid' => $param['guid'],
+				'name' => $param['name'],
+				'value' => $value
+			);
+		}
+
+		if($result_json['code'])
+		{
+			$result_json['message'] = LL('NotAllFilled');
+			return FALSE;
+		}
+
+		// $servers_list = '';
+		// if(!empty($post_data['servers']))
+		// {
+			// $delimeter = '';
+			// foreach($post_data['servers'] as $value)
+			// {
+				// $servers_list .= $delimeter.$value;
+				// $delimeter = ',';
+			// }
+		// }
+
+		$servers_list = NULL;
+		if(!empty($post_data['servers']))
+		{
+			$servers_list = $post_data['servers'];
+		}
+
+		//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
+
+		// echo json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		// echo json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+		// return;
+
+		// log_db('Run: '.$playbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+
+		$job_guid = $this->start_playbook($playbook['guid'], $params);
+
+		if($job_guid !== FALSE)
+		{
+			if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $playbook['id'], $job_guid, $this->core->UserAuth->get_id())))
+			{
+				$job_id = $this->core->db->last_id();
+
+				foreach($params as &$param)
+				{
+					$value = $param['value'];
+					if(strlen((string) $value) > 4096)
+					{
+						$value = substr((string) $value, 0, 4093).'...';
+					}
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode(', ', $value) : $value));
+				}
+			}
+		}
+
+		return $job_id;
+	}
+
 	private function param_type_to_flag($type)
 	{
 		switch($type)
@@ -305,28 +494,6 @@ class AnsibleAWX
 		return $total;
 	}
 
-	public function get_playbook($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Runbook '.$id.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_playbook_by_job_id($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Job '.$id.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
 	public function get_job($id)
 	{
 		if(!$this->core->db->select_assoc_ex($job, rpv('
@@ -457,11 +624,111 @@ class AnsibleAWX
 
 		return $form_fields;
 	}
-}
 
-/*
-  Добавить колонки в таблицу runbook_params - choises, для pid не использовать GUID
-  Избавится от использования GUID в ссылках
-  Добавить флаги RBF_TYPE_SCORCH, RBF_TYPE_ANSIBLE
-  Подумать над папками для Ansible
-*/
+	public function get_runbook_form($id, $job_id)
+	{
+		$playbook = $this->core->Runbooks->get_runbook_by_id($id);
+
+		$result_json = array(
+			'code' => 0,
+			'message' => '',
+			'title' => $playbook['name'],
+			'description' => $playbook['description'],
+			'wiki_url' => $playbook['wiki_url'],
+			'action' => 'runbook_start',
+			'fields' => array(
+				/*
+				array(
+					'type' => 'hidden',
+					'name' => 'action',
+					'value' => 'start_runbook'
+				),
+				*/
+				array(
+					'type' => 'hidden',
+					'name' => 'id',
+					'value' => $playbook['id']
+				)
+			)
+		);
+
+		$params = $this->get_playbook_params($playbook['id']);
+
+		$job_params = NULL;
+
+		// if(!empty($job_id))
+		// {
+			// if(!$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
+			// {
+				// if($core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
+				// {
+					// $job_params = $core->Runbooks->retrieve_job_first_instance_input_params($job[0]['guid']);
+
+					// foreach($job_params as $param)
+					// {
+						// $core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+					// }
+				// }
+			// }
+		// }
+
+		foreach($params as &$param)
+		{
+			 $field = array(
+				'type' => $param['type'],
+				'name' => 'param['.$param['guid'].']',
+				'title' => $param['name'],
+				'description' => $param['description'],
+				'value' => $job_params ? '' : $param['default']
+			);
+
+			if(($param['type'] == 'list') || ($param['type'] == 'flags'))
+			{
+				$field['list'] = $param['list'];
+				$field['values'] = $param['list'];
+			}
+			elseif(($param['type'] == 'samaccountname'))
+			{
+				$field['autocomplete'] = 'complete_account';
+			}
+			elseif(($param['type'] == 'computer'))
+			{
+				$field['autocomplete'] = 'complete_computer';
+			}
+			elseif(($param['type'] == 'group'))
+			{
+				$field['autocomplete'] = 'complete_group_sam';
+			}
+			elseif(($param['type'] == 'mail'))
+			{
+				$field['autocomplete'] = 'complete_mail';
+			}
+			elseif(($param['type'] == 'upload'))
+			{
+				$field['name'] = 'param_'.$param['guid'];
+				$field['max_size'] = $param['max_size'];
+				$field['accept'] = $param['accept'];
+			}
+			elseif(($param['type'] == 'who'))
+			{
+				continue;
+			}
+
+			if($job_params)
+			{
+				foreach($job_params as &$row)
+				{
+					if($row['guid'] == $param['guid'])
+					{
+						$field['value'] = $row['value'];
+						break;
+					}
+				}
+			}
+
+			$result_json['fields'][] = $field;
+		}
+
+		return $result_json;
+	}
+}

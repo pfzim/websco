@@ -10,7 +10,7 @@ function jobs(&$core, $params, $post_data)
 	{
 		$offset = $params[2];
 	}
-	
+
 	$search_job = '';
 	$where = '';
 	if(!empty($params[3]))

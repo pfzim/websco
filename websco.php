@@ -172,7 +172,7 @@ function exception_handler_ajax($exception)
 
 	if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022))
 	{
-		$core->load_ex('Runbooks', 'Runbooks2022');
+		$core->load_ex('Orchestrator', 'Orchestrator2022');
 	}
 	
 	if(intval($core->Config->get_global('db_version', 0)) != DB_VERSION)
@@ -278,8 +278,6 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
 
 		$core->Router->add_route('playbooks_sync', 'playbooks_sync', TRUE);
-		$core->Router->add_route('playbook_get', 'playbook_get', TRUE);
-		$core->Router->add_route('playbook_start', 'playbook_start', TRUE);
 
 		$core->Router->add_route('jobs', 'jobs');
 		$core->Router->add_route('jobs_all', 'jobs_all');
@@ -325,7 +323,7 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('memcached_flush', 'memcached_flush', TRUE);
 
 		$core->Router->add_route('custom', 'custom');
-		$core->Router->add_route('job_custom_get', 'job_custom_get');
+		$core->Router->add_route('job_custom_get', 'job_custom_get', TRUE);
 	}
 
 	$core->Router->add_route('logoff', 'logoff');

@@ -1,9 +1,9 @@
 <?php
 /*
-    Runbooks class - This class is intended for accessing the Microsoft
-	                 System CenterOrchestrator web service to get a list
-					 of ranbooks and launch them.
-    Copyright (C) 2021 Dmitry V. Zimin
+    Runbooks2022 class - This class is intended for accessing the Microsoft 
+	System Center Orchestrator 2022 web service to get a list of runbooks and
+	launch them.
+    Copyright (C) 2024 Dmitry V. Zimin
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 	Orchestrator web service to get a list of ranbooks and launch them.
 */
 
-class Runbooks
+class Orchestrator2022
 {
 	private $core;
 
@@ -37,7 +37,7 @@ class Runbooks
 		$this->orchestrator_passwd = ORCHESTRATOR_PASSWD;
 	}
 
-	public function get_http_xml($url)
+	public function get_http_json($url)
 	{
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
@@ -56,7 +56,7 @@ class Runbooks
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml'));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json, text/plain, */*'));
 
 
 		$output = curl_exec($ch);
@@ -73,14 +73,14 @@ class Runbooks
 			return FALSE;
 		}
 
-		$xml = @simplexml_load_string($output);
-		if($xml == FALSE)
+		$json = @json_decode($output, TRUE);
+		if($json === NULL)
 		{
-			$this->core->error('XML parse error!');
+			$this->core->error('JSON parse error!');
 			return FALSE;
 		}
 
-		return $xml;
+		return $json;
 	}
 
 	/**
@@ -94,34 +94,25 @@ class Runbooks
 
 	public function start_runbook($guid, $params, $servers = NULL)
 	{
-		$request = <<<'EOT'
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
-    <content type="application/xml">
-        <m:properties>
-EOT;
-
-		$request .= '<d:RunbookId m:type="Edm.Guid">'.htmlspecialchars($guid).'</d:RunbookId>';
-
-		if($servers)
-		{
-			$request .= '<d:RunbookServers>'.htmlspecialchars(implode(',', $servers)).'</d:RunbookServers>';
-		}
-
+		$parameters = array();
+		
 		if(!empty($params))
 		{
-			$request .= '<d:Parameters><![CDATA[<Data>';
 			foreach($params as &$param)
 			{
-				$request .= '<Parameter><ID>{'.htmlspecialchars(htmlspecialchars($param['guid'])).'}</ID><Value>'.htmlspecialchars(htmlspecialchars(str_replace('\'', '\'\'', $param['value']))).'</Value></Parameter>';
+				$parameters[] = array(
+					'Name' => $param['name'],
+					'Value' => $param['value']
+				);
 			}
-			$request .= '</Data>]]></d:Parameters>';
 		}
-		$request .= <<<'EOT'
-        </m:properties>
-    </content>
-</entry>
-EOT;
+
+		$request = json_encode(array(
+			'RunbookId'			=> $guid,
+			'RunbookServers' 	=> &$servers,
+			'Parameters'		=> &$parameters
+			//,'CreatedBy'			=> NULL
+		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		log_file($request);
 
@@ -143,7 +134,7 @@ EOT;
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml'));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Accept: application/json, text/plain, */*'));
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
 
 
@@ -155,7 +146,7 @@ EOT;
 
 		if(intval($result['http_code']) != 201)
 		{
-			log_file('ERROR: Start runbook '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
+			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
@@ -165,13 +156,13 @@ EOT;
 			return FALSE;
 		}
 
-		$xml = @simplexml_load_string($output);
-		if($xml == FALSE)
+		$json_data = @json_decode($output, TRUE);
+		if($json_data === NULL)
 		{
 			return FALSE;
 		}
 
-		return $xml->content->children('m', TRUE)->properties->children('d', TRUE)->Id;
+		return $json_data['Id'];
 	}
 
 	/**
@@ -184,29 +175,17 @@ EOT;
 
 	public function job_cancel($guid)
 	{
-		$request = <<<'EOT'
-<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<entry xmlns:d="http://schemas.microsoft.com/ado/2007/08/dataservices" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata" xmlns="http://www.w3.org/2005/Atom">
-    <content type="application/xml">
-        <m:properties>
-EOT;
-
-		$request .= '<d:Id m:type="Edm.Guid">'.htmlspecialchars($guid).'</d:Id>';
-		//$request .= '<d:RunbookId m:type="Edm.Guid">'.htmlspecialchars($runbook_guid).'</d:RunbookId>';
-
-		$request .= <<<'EOT'
-			<d:Status>Canceled</d:Status>
-        </m:properties>
-    </content>
-</entry>
-EOT;
+		$request = json_encode(array(
+			'Id'			=> $guid
+		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		log_file($request);
 
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs/'.$guid);
 		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
 
 		if(defined('USE_GSSAPI') && USE_GSSAPI)
 		{
@@ -221,8 +200,9 @@ EOT;
 		}
 
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/atom+xml', 'X-HTTP-Method: MERGE', 'If-Match: *'));
+		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json', 'Accept: application/json, text/plain, */*'));
 		curl_setopt($ch, CURLOPT_POSTFIELDS, $request);
+
 
 		$output = curl_exec($ch);
 		$result = curl_getinfo($ch);
@@ -230,9 +210,9 @@ EOT;
 		//echo $output;
 		//log_file($output);
 
-		if(intval($result['http_code']) != 204)
+		if(intval($result['http_code']) != 200)
 		{
-			log_file('ERROR: Stop job '.$this->orchestrator_url.'/Jobs(guid\''.$guid.'\')'."\n".$output."\n\n");
+			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$guid."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
@@ -242,9 +222,196 @@ EOT;
 			return FALSE;
 		}
 
-		return TRUE;
+		$json_data = @json_decode($output, TRUE);
+		if($json_data === NULL)
+		{
+			return FALSE;
+		}
+
+		return $json_data['Id'];
 	}
-	
+
+	public function parse_form_and_start_runbook($form_data, &$result_json)
+	{
+		$result_json = array(
+			'code' => 0,
+			'message' => '',
+			'errors' => array()
+		);
+
+		$params = array();
+
+		$runbook = $this->core->Runbooks->get_runbook_by_id($post_data['id']);
+		$runbook_params = $this->get_runbook_params($form_data['id']);
+
+		//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+		foreach($runbook_params as &$param)
+		{
+			$value = '';
+			//$params[$param['guid']] = $value;
+
+			if($param['type'] == 'who')
+			{
+				$params[] = array(
+					'guid' => $param['guid'],
+					'name' => $param['name_original'],
+					'value' => $core->UserAuth->get_login()
+				);
+				continue;
+			}
+			elseif($param['type'] == 'flags')
+			{
+				$flags = 0;
+				if(isset($post_data['param'][$param['guid']]))
+				{
+					foreach($post_data['param'][$param['guid']] as $bit => $bit_value)
+					{
+						if(intval($bit_value))
+						{
+							$flags |= 0x01 << intval($bit);
+						}
+					}
+				}
+
+				if($param['required'] && ($flags == 0))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
+				}
+				else
+				{
+					$params[] = array(
+						'guid' => $param['guid'],
+						'name' => $param['name_original'],
+						'value' => strval($flags)
+					);
+				}
+
+				//log_file('Value: '.strval($flags));
+				continue;
+			}
+			elseif($param['type'] == 'upload')
+			{
+				if(isset($_FILES['param_'.$param['guid']]['tmp_name']) && file_exists($_FILES['param_'.$param['guid']]['tmp_name']))
+				{
+					if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > $param['max_size'])
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge').' (max '.$param['max_size'].' bytes)');
+						continue;
+					}
+
+					$value = base64_encode(file_get_contents($_FILES['param_'.$param['guid']]['tmp_name']));
+				}
+				elseif($param['required'])
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('ThisFieldRequired'));
+					continue;
+				}
+			}
+			elseif(isset($post_data['param'][$param['guid']]))
+			{
+				$value = trim($post_data['param'][$param['guid']]);
+			}
+
+			if($param['required'] && empty($value))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ThisFieldRequired'));
+				continue;
+			}
+			elseif($param['type'] == 'date')
+			{
+				if(!empty($value))
+				{
+					list($nd, $nm, $ny) = explode('.', $value, 3);
+
+					if(!datecheck($nd, $nm, $ny))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('IncorrectDate').' DD.MM.YYYY');
+						continue;
+					}
+				}
+			}
+			elseif($param['type'] == 'list')
+			{
+				if(!in_array($value, $param['list']))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ValueNotFromList').' ('.implode(', ', $param['list']).')');
+					continue;
+				}
+			}
+			elseif($param['type'] == 'integer')
+			{
+				if(!empty($value) && !preg_match('/^\d+$/i', $value))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('OnlyNumbers'));
+					continue;
+				}
+			}
+
+			$params[] = array(
+				'guid' => $param['guid'],
+				'name' => $param['name_original'],
+				'value' => $value
+			);
+		}
+
+		if($result_json['code'])
+		{
+			$result_json['message'] = LL('NotAllFilled');
+			return FALSE;
+		}
+
+		// $servers_list = '';
+		// if(!empty($post_data['servers']))
+		// {
+			// $delimeter = '';
+			// foreach($post_data['servers'] as $value)
+			// {
+				// $servers_list .= $delimeter.$value;
+				// $delimeter = ',';
+			// }
+		// }
+
+		$servers_list = NULL;
+		if(!empty($post_data['servers']))
+		{
+			$servers_list = $post_data['servers'];
+		}
+
+		//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
+
+		log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+
+		$job_guid = $this->start_runbook($runbook['guid'], $params, $servers_list);
+
+		if($job_guid !== FALSE)
+		{
+			if($core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $core->UserAuth->get_id())))
+			{
+				$job_id = $core->db->last_id();
+
+				foreach($params as &$param)
+				{
+					$value = $param['value'];
+					if(strlen($value) > 4096)
+					{
+						$value = substr($value, 0, 4093).'...';
+					}
+					$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
+				}
+			}
+		}
+		
+		return $job_id;
+	}
+
 	/**
 	 Get job instances list.
 
@@ -255,34 +422,31 @@ EOT;
 
 	public function retrieve_job_instances($guid)
 	{
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstances?$filter=JobID%20eq%20'.$guid);
 
 		$instances = array();
 
-		foreach($xml->entry as $entry)
+		foreach($json_data['value'] as $properties)
 		{
-			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 			$instance = array(
-				'guid' => (string) $properties->Id,
-				'status' => (string) $properties->Status,
+				'guid' => (string) $properties['Id'],
+				'status' => (string) $properties['Status'],
 				'params_in' => array(),
 				'params_out' => array(),
 				'activities' => array()
 			);
 
-			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.$instance['guid'].'\')/Parameters');
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstanceParameters?$filter=RunbookInstanceId%20eq%20'.$instance['guid']);
 
-			foreach($sub_xml->entry as $entry)
+			foreach($sub_json_data['value'] as $sub_properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$activity = array(
-					'name' => (string) $properties->Name,
-					'value' => (string) $properties->Value
+					'guid' => (string) $sub_properties['RunbookParameterId'],
+					'name' => (string) $sub_properties['Name'],
+					'value' => (string) $sub_properties['Value']
 				);
 
-				if(((string) $properties->Direction) == 'Out')
+				if(((string) $sub_properties['Direction']) == 'Out')
 				{
 					$instance['params_out'][] = $activity;
 				}
@@ -292,21 +456,19 @@ EOT;
 				}
 			}
 
-			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.$instance['guid'].'\')/ActivityInstances');
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstances/latestOf(runbookInstanceId='.$instance['guid'].')');
 
-			foreach($sub_xml->entry as $entry)
+			foreach($sub_json_data['value'] as $sub_properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$activity = array(
-					'id' =>  (string) $properties->Id,
-					'guid' => (string) $properties->ActivityId,
+					'id' =>  (string) $sub_properties['Id'],
+					'guid' => (string) $sub_properties['ActivityId'],
 					'name' => '',
-					'sequence' => (string) $properties->SequenceNumber,
-					'status' => (string) $properties->Status
+					'sequence' => (string) $sub_properties['SequenceNumber'],
+					'status' => (string) $sub_properties['Status']
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $properties->ActivityId)))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $sub_properties['ActivityId'])))
 				{
 					$activity['name'] = $name[0][0];
 				}
@@ -318,6 +480,14 @@ EOT;
 			usort($instance['activities'], 'cmp_sequence');
 			usort($instance['params_out'], 'cmp_name');
 
+			if(!$this->core->db->select_assoc_ex($job, rpv('SELECT j.id, COUNT(jp.`guid`) AS `params_count` FROM @runbooks_jobs AS j LEFT JOIN @runbooks_jobs_params AS jp ON jp.`pid` = j.`id` WHERE j.`guid` = ! LIMIT 1', $guid)) || (intval($job[0]['params_count']) == 0))
+			{
+				foreach($instance['params_in'] as &$param)
+				{
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job[0]['id'], $param['guid'], $param['value']));
+				}
+			}
+
 			$instances[] = $instance;
 		}
 		return $instances;
@@ -325,25 +495,21 @@ EOT;
 
 	public function retrieve_job_first_instance_input_params($guid)
 	{
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')/Instances');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstances?$top=1&$skip=0&$count=true&$filter=JobID%20eq%20'.$guid);
 
 		$params_in = array();
 
-		foreach($xml->entry as $entry)
+		foreach($json_data['value'] as $properties)
 		{
-			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
+			$sub_json_data = $this->get_http_json($this->orchestrator_url.'/RunbookInstanceParameters?$filter=RunbookInstanceId%20eq%20'.((string) $properties['Id']));
 
-			$sub_xml = $this->get_http_xml($this->orchestrator_url.'/RunbookInstances(guid\''.((string) $properties->Id).'\')/Parameters');
-
-			foreach($sub_xml->entry as $sub_entry)
+			foreach($sub_json_data['value'] as $sub_properties)
 			{
-				$properties = $sub_entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
-				if(((string) $properties->Direction) == 'In')
+				if(((string) $sub_properties['Direction']) == 'In')
 				{
 					$params_in[] = array(
-						'guid' => (string) $properties->RunbookParameterId,
-						'value' => (string) $properties->Value
+						'guid' => (string) $sub_properties['RunbookParameterId'],
+						'value' => (string) $sub_properties['Value']
 					);
 				}
 			}
@@ -356,17 +522,15 @@ EOT;
 
 	public function retrieve_activity_data($guid)
 	{
-		$xml = $this->get_http_xml($this->orchestrator_url.'/ActivityInstances(guid\''.$guid.'\')/Data');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/ActivityInstanceData?$filter=ActivityInstanceId%20eq%20'.$guid);
 
 		$params = array();
 
-		foreach($xml->entry as $entry)
+		foreach($json_data['value'] as $properties)
 		{
-			$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 			$params[] = array(
-				'name' => (string) $properties->Name,
-				'value' => (string) $properties->Value
+				'name' => (string) $properties['Name'],
+				'value' => (string) $properties['Value']
 			);
 		}
 
@@ -376,32 +540,19 @@ EOT;
 	public function retrieve_folders()
 	{
 		$folders = array();
-		$skip = 0;
-		$total = 0;
 
-		do
+		$json_data = $this->get_http_json($this->orchestrator_url.'/folders');
+
+		foreach($json_data['value'] as $properties)
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Folders?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$folder = array(
+				'guid' => (string) $properties['Id'],
+				'name' => (string) $properties['Name'],
+				'pid' => (string) $properties['ParentId']
+			);
 
-			$total = intval($xml->children('m', TRUE)->count);
-
-			foreach($xml->entry as $entry)
-			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
-				$folder = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name,
-					'pid' => (string) $properties->ParentId
-				);
-
-				$folders[] = $folder;
-
-				//break;
-				$skip++;
-			}
+			$folders[] = $folder;
 		}
-		while($skip < $total);
 
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -412,31 +563,18 @@ EOT;
 	public function retrieve_servers()
 	{
 		$servers = array();
-		$skip = 0;
-		$total = 0;
 
-		do
+		$json_data = $this->get_http_json($this->orchestrator_url.'/runbookservers');
+
+		foreach($json_data['value'] as $properties)
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/RunbookServers?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$server = array(
+				'guid' => (string) $properties['Id'],
+				'name' => (string) $properties['Name']
+			);
 
-			$total = intval($xml->children('m', TRUE)->count);
-
-			foreach($xml->entry as $entry)
-			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
-				$server = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name
-				);
-
-				$servers[] = $server;
-
-				//break;
-				$skip++;
-			}
+			$servers[] = $server;
 		}
-		while($skip < $total);
 
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -454,23 +592,21 @@ EOT;
 
 		if(!empty($guid))
 		{
-			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+			$job_filter = '&$filter=RunbookId%20eq%20'.$guid;
 		}
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.$job_filter.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$count=true&$top=50&$skip='.$skip.$job_filter);
 
-			$total = intval($xml->children('m', TRUE)->count);
+			$total = intval($json_data['@odata.count']);
 
-			foreach($xml->entry as $entry)
+			foreach($json_data['value'] as $properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$job = array(
-					'guid' => (string) $properties->Id,
-					'pid' => (string) $properties->RunbookId,
-					'date' => (string) $properties->CreationTime
+					'guid' => (string) $properties['Id'],
+					'pid' => (string) $properties['RunbookId'],
+					'date' => (string) $properties['CreationTime']
 				);
 
 				$jobs[] = $job;
@@ -496,14 +632,12 @@ EOT;
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Activities?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$json_data = $this->get_http_json($this->orchestrator_url.'/Activities?$count=true&$top=50&$skip='.$skip);
 
-			$total = intval($xml->children('m', TRUE)->count);
+			$total = intval($json_data['@odata.count']);
 
-			foreach($xml->entry as $entry)
+			foreach($json_data['value'] as $properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				/*
 					<d:Id m:type="Edm.Guid">1423fe6f-7e0e-4e0a-bfd1-00af163cd522</d:Id>
 					<d:RunbookId m:type="Edm.Guid">b2862173-3bf0-4787-8f76-a04294ab1f55</d:RunbookId>
@@ -520,8 +654,8 @@ EOT;
 				*/
 
 				$activities[] = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name
+					'guid' => (string) $properties['Id'],
+					'name' => (string) $properties['Name']
 				);
 
 				//break;
@@ -539,63 +673,48 @@ EOT;
 	public function retrieve_runbooks()
 	{
 		$runbooks = array();
-		$skip = 0;
-		$total = 0;
 
-		do
+		$json_data = $this->get_http_json($this->orchestrator_url.'/Runbooks');
+
+		foreach($json_data['value'] as $properties)
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.'/Runbooks?$inlinecount=allpages&$top=50&$skip='.$skip);
-
-			$total = intval($xml->children('m', TRUE)->count);
-
-			foreach($xml->entry as $entry)
+			$description = (string) $properties['Description'];
+			$wiki_url = '';
+			
+			if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-				//echo "\n".'Runbook: '.$properties->Name.' ('.$properties->Id.')'."\n";
-				
-				$description = (string) $properties->Description;
-				$wiki_url = '';
-				
-				if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
+				$wiki_url = trim($matches[1]);
+				$description = preg_replace('#\s*\[wiki\](.*?)\[/wiki\]#i', '', $description, 1);
+			}
+
+			$runbook = array(
+				'guid' => (string) $properties['Id'],
+				'name' => (string) $properties['Name'],
+				'description' => $description,
+				'wiki_url' => $wiki_url,
+				'folder_id' => (string) $properties['FolderId'],
+				'path' => (string) $properties['Path'],
+				'params' => array()
+			);
+
+			$json_runbook_params = $this->get_http_json($this->orchestrator_url.'/RunbookParameters?$filter=RunbookId%20eq%20' . $runbook['guid']);
+
+			if($json_runbook_params !== FALSE)
+			{
+				foreach($json_runbook_params['value'] as $params_entry)
 				{
-					$wiki_url = trim($matches[1]);
-					$description = preg_replace('#\s*\[wiki\](.*?)\[/wiki\]#i', '', $description, 1);
-				}
-
-				$runbook = array(
-					'guid' => (string) $properties->Id,
-					'name' => (string) $properties->Name,
-					'description' => $description,
-					'wiki_url' => $wiki_url,
-					'folder_id' => (string) $properties->FolderId,
-					'path' => (string) $properties->Path,
-					'params' => array()
-				);
-
-				$xml_runbook_params = $this->get_http_xml($this->orchestrator_url.'/Runbooks(guid\''.$properties->Id.'\')/Parameters');
-
-				if($xml_runbook_params !== FALSE)
-				{
-					foreach($xml_runbook_params->entry as $params_entry)
+					if($params_entry['Direction'] == 'In')
 					{
-						$properties = $params_entry->content->children('m', TRUE)->properties->children('d', TRUE);
-						if($properties->Direction == 'In')
-						{
-							$runbook['params'][] = array(
-								'guid' =>  (string) $properties->Id,
-								'name' => (string) $properties->Name
-							);
-						}
+						$runbook['params'][] = array(
+							'guid' =>  (string) $params_entry['Id'],
+							'name' => (string) $params_entry['Name']
+						);
 					}
 				}
-
-				$runbooks[] = $runbook;
-
-				//break;
-				$skip++;
 			}
+
+			$runbooks[] = $runbook;
 		}
-		while($skip < $total);
 
 		//echo $output;
 		//echo json_encode($runbooks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -684,7 +803,7 @@ EOT;
 					",
 					$folder['guid'],
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Root folder' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Runbooks' : '(undefined folder name)') : $folder['name'],
 					RBF_TYPE_SCO
 				)))
 				{
@@ -707,7 +826,7 @@ EOT;
 						LIMIT 1
 					",
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Root folder' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Runbooks' : '(undefined folder name)') : $folder['name'],
 					$folder_id
 				));
 			}
@@ -761,11 +880,11 @@ EOT;
 		foreach($runbooks as &$runbook)
 		{
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $runbook['folder_id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
-						VALUES (!, !, !, #)
+						VALUES (!, #, !, #)
 					",
 					$runbook['folder_id'],
 					0,
@@ -782,7 +901,7 @@ EOT;
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -802,7 +921,7 @@ EOT;
 			else
 			{
 				$runbook_id = $res[0][0];
-
+				
 				$this->core->db->put(rpv("
 						UPDATE
 							@runbooks
@@ -813,7 +932,7 @@ EOT;
 							`wiki_url` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`id` = !
+							`id` = #
 						LIMIT 1
 					",
 					$folder_id,
@@ -859,7 +978,7 @@ EOT;
 			{
 				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
 				{
-					$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
+					$job_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $job['date'], NULL);
 					if($job_date === FALSE)
 					{
 						$job_date = '0000-00-00 00:00:00';
@@ -897,30 +1016,28 @@ EOT;
 
 		if(!empty($guid))
 		{
-			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+			$job_filter = '&$filter=RunbookId%20eq%20'.$guid;
 		}
 
 		do
 		{
-			$xml = $this->get_http_xml($this->orchestrator_url.$job_filter.'/Jobs?$inlinecount=allpages&$top=50&$skip='.$skip);
+			$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$count=true&$top=50&$skip='.$skip.$job_filter);
 
-			$total = intval($xml->children('m', TRUE)->count);
+			$total = intval($json_data['@odata.count']);
 
-			foreach($xml->entry as $entry)
+			foreach($json_data['value'] as $properties)
 			{
-				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
-
 				$job = array(
-					'guid' => (string) $properties->Id,
-					'pid' => (string) $properties->RunbookId,
-					'date' => (string) $properties->CreationTime
+					'guid' => (string) $properties['Id'],
+					'pid' => (string) $properties['RunbookId'],
+					'date' => (string) $properties['CreationTime']
 				);
 
 				if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
 				{
 					if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
 					{
-						$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
+						$job_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $job['date'], NULL);
 						if($job_date === FALSE)
 						{
 							$job_date = '0000-00-00 00:00:00';
@@ -966,50 +1083,6 @@ EOT;
 		return $jobs_added;
 	}
 
-	public function get_runbook_by_id($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Runbook '.$id.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_runbook($guid)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_SCO} LIMIT 1", $guid)))
-		{
-			$this->core->error('Runbook '.$guid.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_runbook_by_job_guid($guid)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`guid` = ! LIMIT 1", $guid)))
-		{
-			$this->core->error('Job '.$guid.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_runbook_by_job_id($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Job '.$id.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
 	public function get_servers()
 	{
 		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s ORDER BY s.`name`, s.`id`")))
@@ -1037,7 +1110,7 @@ EOT;
 			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
-				j.`guid` = #
+				j.`id` = #
 				AND (r.`flags` & {%RBF_TYPE_SCO})
 			LIMIT 1
 		', $id)))
@@ -1048,11 +1121,11 @@ EOT;
 
 		$job = &$job[0];
 
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$job['guid'].'\')');
+		$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$filter=Id%20eq%20'.$job['guid']);
 
-		$properties = $xml->content->children('m', TRUE)->properties->children('d', TRUE);
+		$properties = $json_data['value'][0];
 
-		$sid = (string) $properties->CreatedBy;
+		$sid = (string) $properties['CreatedBy'];
 		$sid_name = '';
 		if(defined('USE_LDAP') && USE_LDAP && !empty($sid))
 		{
@@ -1062,7 +1135,7 @@ EOT;
 			}
 		}
 
-		$modified_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', (string) $properties->LastModifiedTime), new DateTimeZone('UTC'));
+		$modified_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, (string) $properties['LastModifiedTime'], NULL);
 		if($modified_date === FALSE)
 		{
 			$modified_date = '00.00.0000 00:00:00';
@@ -1082,7 +1155,7 @@ EOT;
 			'runbook_guid' => $job['runbook_guid'],
 			'folder_id' => $job['folder_id'],
 			'user' => $job['login'],
-			'status' => (string) $properties->Status,
+			'status' => (string) $properties['Status'],
 			'modified_date' => $modified_date,
 			'sid' => $sid,
 			'sid_name' => $sid_name,
@@ -1095,58 +1168,6 @@ EOT;
 		{
 			$job_info['instances'] = &$instances;
 		}
-
-		return $job_info;
-	}
-
-	public function get_custom_job($id)
-	{
-		if(!$this->core->db->select_assoc_ex($job, rpv('
-			SELECT
-				j.`id`,
-				j.`guid`,
-				DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
-				r.`name`,
-				r.`id` AS `runbook_id`,
-				r.`guid` AS `runbook_guid`,
-				r.`folder_id`,
-				r.`flags`,
-				u.`login`
-			FROM @runbooks_jobs AS j
-			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
-			LEFT JOIN @users AS u ON u.`id` = j.`uid`
-			WHERE
-				j.`id` = #
-				AND (r.`flags` & {%RBF_TYPE_SCO})
-			LIMIT 1
-		', $id)))
-		{
-			$this->core->error('Job '.$id.' not found!');
-			return FALSE;
-		}
-
-		$job = &$job[0];
-
-		!$this->core->db->select_assoc_ex($job_params, rpv('
-			SELECT
-				jp.`guid`,
-				jp.`value`
-			FROM @runbooks_jobs_params AS jp
-			WHERE jp.`pid` = #
-		', $job['id']));
-
-		$job_info = array(
-			'id' => $job['id'],
-			'guid' => $job['guid'],
-			'name' => $job['name'],
-			'run_date' => $job['run_date'],
-			'runbook_id' => $job['runbook_id'],
-			'runbook_guid' => $job['runbook_guid'],
-			'status' => 'Completed',
-			'folder_id' => $job['folder_id'],
-			'user' => $job['login'],
-			'params' => &$job_params
-		);
 
 		return $job_info;
 	}
@@ -1311,43 +1332,132 @@ EOT;
 		return $form_fields;
 	}
 
-	public function load_tree_childs($id, $check_permissions)
+	public function get_runbook_form($id, $job_id)
 	{
-		$childs = NULL;
+		$runbook = $this->core->Runbooks->get_runbook_by_id($id);
 
-		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {d0} AND (f.`flags` & {%RBF_DELETED}) = 0 ORDER BY f.`name`', $id)))
+		$result_json = array(
+			'code' => 0,
+			'message' => '',
+			'title' => $runbook['name'],
+			'description' => $runbook['description'],
+			'wiki_url' => $runbook['wiki_url'],
+			'action' => 'runbook_start',
+			'fields' => array(
+				/*
+				array(
+					'type' => 'hidden',
+					'name' => 'action',
+					'value' => 'start_runbook'
+				),
+				*/
+				array(
+					'type' => 'hidden',
+					'name' => 'id',
+					'value' => $runbook['id']
+				)
+			)
+		);
+
+		$params = $this->get_runbook_params($runbook['id']);
+
+		$job_params = NULL;
+
+		if(!empty($job_id))
 		{
-			$childs = array();
-
-			foreach($folders as $folder)
+			if(!$this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
 			{
-				if(!$check_permissions || $this->core->UserAuth->check_permission($folder['id'], RB_ACCESS_LIST))     // || ($folder['id'] == 0) - if top level always allow list
+				if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
 				{
-					$childs[] = array(
-						'name' => $folder['name'],
-						'id' => $folder['id'],
-						// 'guid' => $folder['guid'],
-						'flags' => $folder['flags'],
-						'childs' => $this->load_tree_childs($folder['id'], $check_permissions)
-					);
+					$job_params = $this->retrieve_job_first_instance_input_params($job[0]['guid']);
+
+					foreach($job_params as $param)
+					{
+						$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+					}
 				}
 			}
 		}
 
-		return $childs;
-	}
+		foreach($params as &$param)
+		{
+			 $field = array(
+				'type' => $param['type'],
+				'name' => 'param['.$param['guid'].']',
+				'title' => $param['name'],
+				'value' => ''
+			);
 
-	public function get_folders_tree($check_permissions)
-	{
-		return array(
-			array(
-				'name' => 'Root folder',
-				// 'guid' => '00000000-0000-0000-0000-000000000000',
-				'id' => 0,
-				'flags' => 0,
-				'childs' => $this->load_tree_childs(0, $check_permissions)
+			if(($param['type'] == 'list') || ($param['type'] == 'flags'))
+			{
+				$field['list'] = $param['list'];
+			}
+			elseif(($param['type'] == 'samaccountname'))
+			{
+				$field['autocomplete'] = 'complete_account';
+			}
+			elseif(($param['type'] == 'computer'))
+			{
+				$field['autocomplete'] = 'complete_computer';
+			}
+			elseif(($param['type'] == 'group'))
+			{
+				$field['autocomplete'] = 'complete_group_sam';
+			}
+			elseif(($param['type'] == 'mail'))
+			{
+				$field['autocomplete'] = 'complete_mail';
+			}
+			elseif(($param['type'] == 'upload'))
+			{
+				$field['name'] = 'param_'.$param['guid'];
+				$field['max_size'] = $param['max_size'];
+				$field['accept'] = $param['accept'];
+			}
+			elseif(($param['type'] == 'who'))
+			{
+				continue;
+			}
+
+			if($job_params)
+			{
+				foreach($job_params as &$row)
+				{
+					if($row['guid'] == $param['guid'])
+					{
+						$field['value'] = $row['value'];
+						break;
+					}
+				}
+			}
+
+			$result_json['fields'][] = $field;
+		}
+
+		$servers = $this->get_servers();
+
+		$servers_list = array();
+		foreach($servers as $server)
+		{
+			$servers_list[] = $server['name'];
+		}
+
+		$result_json['fields'][] = array(
+			'type' => 'spoiler',
+			'title' => LL('AdvancedSettings'),
+			'fields' => array(
+				array(
+					'type' => 'flags',
+					'name' => 'servers',
+					'title' => LL('SelectRunbookServers'),
+					'value' => '',
+					'list' => $servers_list,
+					'values' => $servers_list
+				)
 			)
 		);
+		
+		return $result_json;
 	}
 }
 
