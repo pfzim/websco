@@ -1,4 +1,4 @@
-# WebSCO - alternative web interface for System Center Orchestrator
+# WebSCO - alternative web interface for System Center Orchestrator and AWX (Ansible)
 
 [:ru:](#description-ru) [:us:](#description)  
 
@@ -8,7 +8,7 @@
 - Apache or Nginx
 - MariaDB (MySQL)
 - PHP
-- Microsoft System Center Orchestrator
+- Microsoft System Center Orchestrator and/or Ansible AWX
 - Active Directory (optional)
 - memcached (optional)
 - Kerberos (optional)
