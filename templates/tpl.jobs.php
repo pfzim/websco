@@ -7,7 +7,7 @@
 		<?php print_folders_tree_id('runbooks', $current_folder['id'], $folders_tree, $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) ?>
 	</div>
 	<div class="content-box">
-		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?><?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?> (<a href="<?php ln('jobs_sync/'.$runbook['guid']); ?>" onclick="return f_async(this);">Sync</a>)<?php } ?></h3>
+		<h3><?php L('JobsForRunbook') ?>: <?php eh($runbook['name']); ?><?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?> (<a href="<?php ln('jobs_sync/'.$runbook['id']); ?>" onclick="return f_async(this);">Sync</a>)<?php } ?></h3>
 
 		<form id="search_form" action="<?php ln('jobs/'.$runbook['id'].'/0'); ?>" method="get" onsubmit="return f_search(this);">
 			<?php L('FindJobs') ?>: <input type="text" name="search" class="form-field" placeholder="<?php L('LookingValue') ?>..." value="<?php if(isset($search_job)) eh($search_job); ?>">
@@ -31,7 +31,7 @@
 						<td><?php eh($row['run_date']); ?></td>
 						<td>
 							<?php if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0) { ?>
-								<a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid']); ?></a>
+								<a href="<?php ln('job_get/'.$row['id']); ?>" onclick="return f_get_job('<?php eh($row['id']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid']); ?></a>
 							<?php } else { ?>
 								<a href="<?php ln('job_custom_get/'.$row['id']); ?>" onclick="return f_get_custom_job('<?php eh($row['id']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid'].'_'.$row['id']); ?></a>
 							<?php } ?>
@@ -39,9 +39,9 @@
 						<td><?php eh($row['login']); ?></td>
 						<td>
 							<?php if(intval($runbook['flags']) & RBF_TYPE_SCO) { ?>
-								<a href="<?php ln('runbook_get/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a>
+								<a href="<?php ln('runbook_get/'.$runbook['id'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a>
 							<?php } else  if(intval($runbook['flags']) & RBF_TYPE_ANSIBLE) { ?>
-								<a href="<?php ln('playbook_get/'.$runbook['guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a>
+								<a href="<?php ln('playbook_get/'.$runbook['id'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a>
 							<?php } ?></td>
 					</tr>
 				<?php } ?>

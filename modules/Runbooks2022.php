@@ -956,7 +956,7 @@ class Runbooks2022
 		return $servers;
 	}
 
-	public function get_job($guid)
+	public function get_job($id)
 	{
 		if(!$this->core->db->select_assoc_ex($job, rpv('
 			SELECT
@@ -973,18 +973,18 @@ class Runbooks2022
 			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
-				j.`guid` = !
+				j.`id` = #
 				AND (r.`flags` & {%RBF_TYPE_SCO})
 			LIMIT 1
-		', $guid)))
+		', $id)))
 		{
-			$this->core->error('Job '.$guid.' not found! Try to sync jobs.');
+			$this->core->error('Job '.$id.' not found!');
 			return FALSE;
 		}
 
 		$job = &$job[0];
 
-		$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$filter=Id%20eq%20'.$guid);
+		$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$filter=Id%20eq%20'.$job['guid']);
 
 		$properties = $json_data['value'][0];
 
@@ -1025,7 +1025,7 @@ class Runbooks2022
 			'instances' => array()
 		);
 
-		$instances = $this->retrieve_job_instances($guid);
+		$instances = $this->retrieve_job_instances($job['guid']);
 
 		if($instances !== FALSE)
 		{

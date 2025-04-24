@@ -1,16 +1,16 @@
 <?php
 
-function runbook_start(&$core, $params, $post_data)
+function playbook_start(&$core, $params, $post_data)
 {
-	$runbook = $core->Runbooks->get_runbook_by_id($post_data['id']);
+	$playbook = $core->AnsibleAWX->get_playbook($post_data['id']);
 
-	if(($runbook['flags'] & RBF_TYPE_SCO) == 0)
+	if(($playbook['flags'] & RBF_TYPE_ANSIBLE) == 0)
 	{
-		$core->error('ERROR: Runbook with ID ' . $runbook['id'] . ' is a custom type!');
+		$core->error('ERROR: Playbook with ID ' . $playbook['id'] . ' is a custom type!');
 		return NULL;
 	}
 
-	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
+	assert_permission_ajax($playbook['folder_id'], RB_ACCESS_EXECUTE);
 
 	$result_json = array(
 		'code' => 0,
@@ -21,11 +21,11 @@ function runbook_start(&$core, $params, $post_data)
 	$params = array(
 	);
 
-	$runbook_params = $core->Runbooks->get_runbook_params($runbook['id']);
+	$playbook_params = $core->AnsibleAWX->get_playbook_params($playbook['id']);
 
 	//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-	foreach($runbook_params as &$param)
+	foreach($playbook_params as &$param)
 	{
 		$value = '';
 		//$params[$param['guid']] = $value;
@@ -34,26 +34,23 @@ function runbook_start(&$core, $params, $post_data)
 		{
 			$params[] = array(
 				'guid' => $param['guid'],
-				'name' => $param['name_original'],
+				'name' => $param['name'],
 				'value' => $core->UserAuth->get_login()
 			);
 			continue;
 		}
 		elseif($param['type'] == 'flags')
 		{
-			$flags = 0;
+			$value = array();
 			if(isset($post_data['param'][$param['guid']]))
 			{
 				foreach($post_data['param'][$param['guid']] as $bit => $bit_value)
 				{
-					if(intval($bit_value))
-					{
-						$flags |= 0x01 << intval($bit);
-					}
+					$value[] = $bit_value;
 				}
 			}
 
-			if($param['required'] && ($flags == 0))
+			if($param['required'] && (count($value) == 0))
 			{
 				$result_json['code'] = 1;
 				$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
@@ -62,8 +59,8 @@ function runbook_start(&$core, $params, $post_data)
 			{
 				$params[] = array(
 					'guid' => $param['guid'],
-					'name' => $param['name_original'],
-					'value' => strval($flags)
+					'name' => $param['name'],
+					'value' => $value
 				);
 			}
 
@@ -132,11 +129,18 @@ function runbook_start(&$core, $params, $post_data)
 				$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('OnlyNumbers'));
 				continue;
 			}
+
+			$params[] = array(
+				'guid' => $param['guid'],
+				'name' => $param['name'],
+				'value' => intval($value)
+			);
+			continue;
 		}
 
 		$params[] = array(
 			'guid' => $param['guid'],
-			'name' => $param['name_original'],
+			'name' => $param['name'],
 			'value' => $value
 		);
 	}
@@ -145,7 +149,7 @@ function runbook_start(&$core, $params, $post_data)
 	{
 		$result_json['message'] = LL('NotAllFilled');
 		echo json_encode($result_json);
-		exit;
+		return;
 	}
 
 	// $servers_list = '';
@@ -167,32 +171,36 @@ function runbook_start(&$core, $params, $post_data)
 
 	//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
 
-	log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+	// echo json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	// echo json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	// return;
 
-	$job_guid = $core->Runbooks->start_runbook($runbook['guid'], $params, $servers_list);
+	log_db('Run: '.$playbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+
+	$job_guid = $core->AnsibleAWX->start_playbook($playbook['guid'], $params);
 
 	if($job_guid !== FALSE)
 	{
-		if($core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $core->UserAuth->get_id())))
+		if($core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $playbook['id'], $job_guid, $core->UserAuth->get_id())))
 		{
 			$job_id = $core->db->last_id();
 
 			foreach($params as &$param)
 			{
 				$value = $param['value'];
-				if(strlen($value) > 4096)
+				if(strlen((string) $value) > 4096)
 				{
-					$value = substr($value, 0, 4093).'...';
+					$value = substr((string) $value, 0, 4093).'...';
 				}
-				$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
+				$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode(', ', $value) : $value));
 			}
 		}
 
-		log_db('Job created: '.$runbook['name'], $job_guid, 0);
+		log_db('Job created: '.$playbook['name'], (string) $job_guid, 0);
 		echo '{"code": 0, "id": '.intval($job_id).', "guid": "'.json_escape($job_guid).'", "message": "'.LL('CreatedJob').' ID: '.json_escape($job_guid).'"}';
 	}
 	else
 	{
-		echo '{"code": 1, "message": "Failed: Runbook not started"}';
+		echo '{"code": 1, "message": "Failed: Playbook not started"}';
 	}
 }

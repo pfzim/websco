@@ -140,12 +140,12 @@ function f_get_job(guid)
 				el = gi('job_status');
 				el.innerText = data.status;
 				btn_cancel = gi('job_cancel');
-				if(data.status == 'Completed')
+				if(data.status == 'Completed' || data.status == 'successful')
 				{
 					el.className = 'status-ok';
 					btn_cancel.style.display = 'none';
 				}
-				else if(data.status == 'Canceled')
+				else if(data.status == 'Canceled' || data.status == 'failed' || data.status == 'canceled' || data.status == 'error')
 				{
 					el.className = 'status-warn';
 					btn_cancel.style.display = 'none';
@@ -154,7 +154,7 @@ function f_get_job(guid)
 				{
 					el.className = 'status-warn';
 					btn_cancel.style.display = 'inline';
-					gi('job').setAttribute("data-id", data.guid);
+					gi('job').setAttribute("data-id", data.id);
 				}
 
 				el = gi('job_user');
@@ -163,7 +163,7 @@ function f_get_job(guid)
 				el.setAttribute('onclick', 'f_get_job(\'' + escapeHtml(guid) + '\');');
 				el.style.display = 'inline-block';
 				el = gi('job_restart');
-				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_guid) + '\', ' + data.id + ');');
+				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_id) + '\', ' + data.id + ');');
 				el.style.display = 'inline-block';
 				gi('job').style.display = 'block';
 				el = gi('job_table_data');
@@ -210,6 +210,12 @@ function f_get_job(guid)
 					{
 						html += '<tr><td>' + escapeHtml(data.instances[i].params_out[j].name) +'</td><td><pre>' + escapeHtml(data.instances[i].params_out[j].value) +'</pre></td></tr>';
 					}
+				}
+
+				if(data.output)
+				{
+					html += '<b>Output:</b><br />';
+					html += '<pre>' + escapeHtml(data.output) +'</pre>';
 				}
 
 				el.innerHTML = html;
@@ -449,7 +455,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'list' && fields[i].list)
 		{
-			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">'+ escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<select class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '">'
 				+ '<option value=""></option>';
 			for(j = 0; j < fields[i].list.length; j++)
@@ -479,7 +485,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		{
 			value = parseInt(fields[i].value, 10);
 
-			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':</div>';
+			html = '<div class="form-title"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</div>';
 			for(j = 0; j < fields[i].list.length; j++)
 			{
 				checked = '';
@@ -499,7 +505,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'datetime')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -522,7 +528,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'time')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -547,7 +553,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'date')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -572,7 +578,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'password')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="password" value=""/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
@@ -582,7 +588,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'upload')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<span class="form-upload" id="' + escapeHtml(form_id + fields[i].name) + '-file">&nbsp;</span> <a href="#" onclick="gi(\'' + escapeHtml(form_id + fields[i].name) + '\').click(); return false;"/>' + LL.SelectFile + '</a>'
 				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="file" accept="' + escapeHtml(fields[i].accept?fields[i].accept:'') + '" style="display: none"/>'
 				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
@@ -622,7 +628,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 				placeholder = '" placeholder="' + fields[i].placeholder;
 			}
 
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
@@ -791,7 +797,11 @@ function on_saved(action, data)
 {
 	if(action == 'runbook_start')
 	{
-		f_get_job(data.guid);
+		f_get_job(data.id);
+	}
+	else if(action == 'playbook_start')
+	{
+		f_get_job(data.id);
 	}
 	else if(action == 'permission_save')
 	{
@@ -854,7 +864,7 @@ function on_action_success(el, action, data)
 	}
 	else if(action == 'job_cancel')
 	{
-		f_get_job(data.guid);
+		f_get_job(data.id);
 	}
 	else if(action == 'user_activate')
 	{

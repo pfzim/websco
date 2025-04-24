@@ -2,6 +2,8 @@
 
 <h3><?php L('Tools') ?></h3>
 
+<a href="<?php ln('playbooks_sync'); ?>" onclick="return f_async(this);"><?php L('SyncPlaybooks') ?></a><br />
+
 <a href="<?php ln('runbooks_sync'); ?>" onclick="return f_async(this);"><?php L('SyncRunbooks') ?></a><br />
 <a href="<?php ln('jobs_sync'); ?>" onclick="return f_confirm_async(this);"><?php L('SyncJobs') ?></a><br />
 

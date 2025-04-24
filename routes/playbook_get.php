@@ -9,7 +9,7 @@ function playbook_get(&$core, $params, $post_data)
 
 	if((intval($playbook['flags']) & RBF_TYPE_ANSIBLE) == 0)
 	{
-		$core->error('ERROR: Playbook with ID '.$guid.' is a not Ansible type!');
+		$core->error('ERROR: Playbook with ID '.$id.' is a not Ansible type!');
 		return NULL;
 	}
 
@@ -64,12 +64,14 @@ function playbook_get(&$core, $params, $post_data)
 			'type' => $param['type'],
 			'name' => 'param['.$param['guid'].']',
 			'title' => $param['name'],
-			'value' => ''
+			'description' => $param['description'],
+			'value' => $job_params ? '' : $param['default']
 		);
 
 		if(($param['type'] == 'list') || ($param['type'] == 'flags'))
 		{
 			$field['list'] = $param['list'];
+			$field['values'] = $param['list'];
 		}
 		elseif(($param['type'] == 'samaccountname'))
 		{

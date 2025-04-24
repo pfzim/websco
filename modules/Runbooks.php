@@ -1020,7 +1020,7 @@ EOT;
 		return $servers;
 	}
 
-	public function get_job($guid)
+	public function get_job($id)
 	{
 		if(!$this->core->db->select_assoc_ex($job, rpv('
 			SELECT
@@ -1037,18 +1037,18 @@ EOT;
 			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
-				j.`guid` = !
+				j.`guid` = #
 				AND (r.`flags` & {%RBF_TYPE_SCO})
 			LIMIT 1
-		', $guid)))
+		', $id)))
 		{
-			$this->core->error('Job '.$guid.' not found! Try to sync jobs.');
+			$this->core->error('Job '.$id.' not found!');
 			return FALSE;
 		}
 
 		$job = &$job[0];
 
-		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
+		$xml = $this->get_http_xml($this->orchestrator_url.'/Jobs(guid\''.$job['guid'].'\')');
 
 		$properties = $xml->content->children('m', TRUE)->properties->children('d', TRUE);
 
@@ -1089,7 +1089,7 @@ EOT;
 			'instances' => array()
 		);
 
-		$instances = $this->retrieve_job_instances($guid);
+		$instances = $this->retrieve_job_instances($job['guid']);
 
 		if($instances !== FALSE)
 		{
