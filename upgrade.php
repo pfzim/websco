@@ -114,6 +114,11 @@ define('RBF_HIDED', 0x0002);
 define('RBF_TYPE_CUSTOM', 0x0004);
 define('RBF_TYPE_SCO', 0x0008);
 define('RBF_TYPE_ANSIBLE', 0x0010);
+define('RBF_FIELD_TYPE_REQUIRED', 0x01000000);
+define('RBF_FIELD_TYPE_PASSWORD', 0x02000000);
+define('RBF_FIELD_TYPE_NUMBER', 0x04000000);
+define('RBF_FIELD_TYPE_LIST', 0x08000000);
+define('RBF_FIELD_TYPE_FLAGS', 0x10000000);
 
 db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', rpv('UPDATE @runbooks SET `flags` = (`flags` | {%RBF_TYPE_SCO}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0'));
 db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_TYPE_SCO})'));
