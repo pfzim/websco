@@ -2,14 +2,14 @@
 
 function runbook_get(&$core, $params, $post_data)
 {
-	$guid = @$params[1];
+	$id = @$params[1];
 	$job_id = @$params[2];
 	
-	$runbook = $core->Runbooks->get_runbook($guid);
+	$runbook = $core->Runbooks->get_runbook_by_id($id);
 
 	if((intval($runbook['flags']) & RBF_TYPE_SCO) == 0)
 	{
-		$core->error('ERROR: Runbook with ID '.$guid.' is a custom type!');
+		$core->error('ERROR: Runbook with ID '.$id.' is a custom type!');
 		return NULL;
 	}
 
@@ -32,8 +32,8 @@ function runbook_get(&$core, $params, $post_data)
 			*/
 			array(
 				'type' => 'hidden',
-				'name' => 'guid',
-				'value' => $runbook['guid']
+				'name' => 'id',
+				'value' => $runbook['id']
 			)
 		)
 	);

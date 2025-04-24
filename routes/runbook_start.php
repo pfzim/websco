@@ -2,11 +2,11 @@
 
 function runbook_start(&$core, $params, $post_data)
 {
-	$runbook = $core->Runbooks->get_runbook($post_data['guid']);
+	$runbook = $core->Runbooks->get_runbook_by_id($post_data['id']);
 
 	if(($runbook['flags'] & RBF_TYPE_SCO) == 0)
 	{
-		$core->error('ERROR: Runbook with ID ' . $runbook['guid'] . ' is a custom type!');
+		$core->error('ERROR: Runbook with ID ' . $runbook['id'] . ' is a custom type!');
 		return NULL;
 	}
 
