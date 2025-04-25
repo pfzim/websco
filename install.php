@@ -219,7 +219,7 @@ $config = <<<'EOT'
 EOT;
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+// use PHPMailer\PHPMailer\Exception;
 
 require_once ROOT_DIR.'libs/PHPMailer/src/Exception.php';
 require_once ROOT_DIR.'libs/PHPMailer/src/PHPMailer.php';
@@ -535,6 +535,43 @@ function get_http_json($url, $user, $passwd, $use_gssapi)
 	return $json;
 }
 
+function get_http_awx_json($url, $user, $passwd)
+{
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_POST, false);
+
+	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+	curl_setopt($ch, CURLOPT_USERPWD, $user.':'.$passwd);
+
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+
+
+	$output = curl_exec($ch);
+	$result = curl_getinfo($ch);
+
+	//echo $output;
+	//log_file($url."\n".$output."\n\n\n");
+
+	curl_close($ch);
+
+	if(intval($result['http_code']) != 200)
+	{
+		$this->core->error('Unexpected HTTP '.$result['http_code'].' response code!');
+		return FALSE;
+	}
+
+	$json = @json_decode($output, TRUE);
+	if($json === NULL)
+	{
+		$this->core->error('JSON parse error!');
+		return FALSE;
+	}
+
+	return $json;
+}
+
 function build_config($config, $params)
 {
 	if(empty($params['db_host'])) throw new Exception('Host value not defined!');
@@ -605,6 +642,9 @@ function build_config($config, $params)
 			'#scorch_url#',
 			'#scorch_user#',
 			'#scorch_passwd#',
+			'#awx_url#',
+			'#awx_user#',
+			'#awx_passwd#',
 			'#log_file#',
 			'#web_url#',
 			'#pretty_links_base_path#',
@@ -641,6 +681,9 @@ function build_config($config, $params)
 			sql_escape(@$params['scorch_url']),
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
+			sql_escape(@$params['awx_url']),
+			sql_escape(@$params['awx_user']),
+			sql_escape(@$params['awx_passwd']),
 			sql_escape(@$params['log_file']),
 			sql_escape(@$params['web_url']),
 			sql_escape(@$params['pretty_links_base_path']),
@@ -847,6 +890,21 @@ function build_config($config, $params)
 						$total = intval($xml->children('m', TRUE)->count);
 						echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
 					}
+				}
+				exit;
+				case 'check_awx':
+				{
+					if(empty($_POST['awx_url'])) throw new Exception('AWX URL value not defined!');
+					if(empty($_POST['awx_user'])) throw new Exception('AWX User value not defined!');
+					if(empty($_POST['awx_passwd'])) throw new Exception('AWX Password value not defined!');
+
+					$json = get_http_awx_json($_POST['awx_url'].'/api/v2/config/', $_POST['awx_user'], $_POST['awx_passwd']);
+					if(!$json)
+					{
+						throw new Exception('Unknown error!');
+					}
+
+					echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
 				}
 				exit;
 				//*
@@ -1696,6 +1754,36 @@ input:checked + .slider:after
 				<div class="col-sm-offset-2 col-sm-5">
 					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++) ?>. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
+				</div>
+			</div>
+<!-- -->
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<h3>Ansible AWX settings</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="awx_url" class="control-label col-sm-2">AWX URL:</label>
+				<div class="col-sm-5">
+					<input id="awx_url" name="awx_url" class="form-control" type="text" value="https://awx.contoso.com/" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="awx_user" class="control-label col-sm-2">User:</label>
+				<div class="col-sm-5">
+					<input id="awx_user" name="awx_user" class="form-control" type="text" value="domain\user" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="awx_passwd" class="control-label col-sm-2">Password:</label>
+				<div class="col-sm-5">
+					<input id="awx_passwd" name="awx_passwd" class="form-control" type="password" value="" />
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_awx');"><?php eh($n++) ?>. Check AWX connection</button>
+					<div id="result_check_awx" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 <!-- -->

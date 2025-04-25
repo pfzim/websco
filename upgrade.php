@@ -129,5 +129,6 @@ db_upgrade($core, 7, 'Change PRIMARY KEY for table `@runbooks_params`', rpv('ALT
 db_upgrade($core, 8, 'Update parent IDs', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & {%RBF_TYPE_SCO} SET rp.`pid` = r.`id`'));
 db_upgrade($core, 9, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 10, 'Add `extra_data_json` column', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
+db_upgrade($core, 11, 'Change PRIMARY KEY for table `@runbooks_folders`', rpv('ALTER TABLE `@runbooks_folders` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
 
 echo PHP_EOL . 'Upgrade complete.' . PHP_EOL;
