@@ -212,10 +212,19 @@ function f_get_job(guid)
 					}
 				}
 
+				if(data.input_params)
+				{
+					html += '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
+					for(j = 0; j < data.input_params.length; j++)
+					{
+						html += '<tr><td>' + escapeHtml(data.input_params[j].name) +'</td><td>' + escapeHtml(data.input_params[j].value) +'</td></tr>';
+					}
+				}
+
 				if(data.output)
 				{
-					html += '<b>Output:</b><br />';
-					html += '<pre>' + escapeHtml(data.output) +'</pre>';
+					html += '<tr><td colspan="2"><b>' + LL.Output + '</b></td></tr>';
+					html += '<tr><td colspan="2"><pre>' + escapeHtml(data.output) +'</pre></td></tr>';
 				}
 
 				el.innerHTML = html;
@@ -495,6 +504,27 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 				}
 
 				html += '<span><input id="' + escapeHtml(form_id + fields[i].name) + '[' + j +']" name="' + escapeHtml(fields[i].name) + '[' + j +']" type="checkbox" value="' + escapeHtml(fields[i].values?fields[i].values[j]:'1') + '"' + checked + '/><label for="'+ escapeHtml(form_id + fields[i].name) + '[' + j + ']">' + escapeHtml(fields[i].list[j]) + '</label></span>'
+			}
+			html += '<div id="' + escapeHtml(form_id + fields[i].name) + '[0]-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'multiselect' && fields[i].list)
+		{
+			value = parseInt(fields[i].value, 10);
+
+			html = '<div class="form-title"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</div>';
+			for(j = 0; j < fields[i].list.length; j++)
+			{
+				checked = '';
+				if(fields[i].selected.indexOf(fields[i].values[j]) !== -1)
+				{
+					checked = ' checked="checked"';
+				}
+
+				html += '<span><input id="' + escapeHtml(form_id + fields[i].name) + '[' + j +']" name="' + escapeHtml(fields[i].name) + '[' + j +']" type="checkbox" value="' + escapeHtml(fields[i].values[j]) + '"' + checked + '/><label for="'+ escapeHtml(form_id + fields[i].name) + '[' + j + ']">' + escapeHtml(fields[i].list[j]) + '</label></span>'
 			}
 			html += '<div id="' + escapeHtml(form_id + fields[i].name) + '[0]-error" class="form-error"></div>';
 

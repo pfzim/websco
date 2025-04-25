@@ -156,6 +156,37 @@ class AnsibleAWX
 			}
 			elseif($param['type'] == 'flags')
 			{
+				$flags = 0;
+				if(isset($post_data['param'][$param['guid']]))
+				{
+					foreach($post_data['param'][$param['guid']] as $bit => $bit_value)
+					{
+						if(intval($bit_value))
+						{
+							$flags |= 0x01 << intval($bit);
+						}
+					}
+				}
+
+				if($param['required'] && (count($value) == 0))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
+				}
+				else
+				{
+					$params[] = array(
+						'guid' => $param['guid'],
+						'name' => $param['name'],
+						'value' => strval($flags)
+					);
+				}
+
+				//log_file('Value: '.strval($flags));
+				continue;
+			}
+			elseif($param['type'] == 'multiselect')
+			{
 				$value = array();
 				if(isset($post_data['param'][$param['guid']]))
 				{
@@ -306,7 +337,7 @@ class AnsibleAWX
 					{
 						$value = substr((string) $value, 0, 4093).'...';
 					}
-					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode(', ', $value) : $value));
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode("\n", $value) : $value));
 				}
 			}
 		}
@@ -551,8 +582,19 @@ class AnsibleAWX
 			'instances' => array()
 		);
 
+		if($this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $id)))
+		{
+			$job_info['input_params'] = array();
+			foreach($job_params as &$job_param)
+			{
+				$job_info['input_params'][] = array(
+					'name' => $job_param['guid'],
+					'value' => $job_param['value']
+				);
+			}
+		}
+
 		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/stdout/?format=txt', NULL, TRUE);
-		// $instances = $this->retrieve_job_instances($job['guid']);
 
 		if($result !== FALSE)
 		{
@@ -568,7 +610,7 @@ class AnsibleAWX
 		{
 			case RBF_FIELD_TYPE_NUMBER: return 'number';
 			case RBF_FIELD_TYPE_LIST: return 'list';
-			case RBF_FIELD_TYPE_FLAGS: return 'flags';
+			case RBF_FIELD_TYPE_FLAGS: return 'multiselect';
 		}
 		return 'string';
 	}
@@ -607,7 +649,7 @@ class AnsibleAWX
 				$form_field['max_size'] = 102400;
 			}
 
-			if(($type == 'list') || ($type == 'flags') || ($type == 'upload'))
+			if(($type == 'list') || ($type == 'flags') || ($type == 'multiselect') || ($type == 'upload'))
 			{
 				if($type == 'upload')
 				{
@@ -656,21 +698,21 @@ class AnsibleAWX
 
 		$job_params = NULL;
 
-		// if(!empty($job_id))
-		// {
-			// if(!$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
-			// {
-				// if($core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
+		if(!empty($job_id))
+		{
+			if(!$this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
+			{
+				// if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
 				// {
-					// $job_params = $core->Runbooks->retrieve_job_first_instance_input_params($job[0]['guid']);
+					// $job_params = $this->core->Runbooks->retrieve_job_first_instance_input_params($job[0]['guid']);
 
 					// foreach($job_params as $param)
 					// {
-						// $core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+						// $this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
 					// }
 				// }
-			// }
-		// }
+			}
+		}
 
 		foreach($params as &$param)
 		{
@@ -686,6 +728,12 @@ class AnsibleAWX
 			{
 				$field['list'] = $param['list'];
 				$field['values'] = $param['list'];
+			}
+			elseif($param['type'] == 'multiselect')
+			{
+				$field['list'] = $param['list'];
+				$field['values'] = $param['list'];
+				if(!$job_params) $field['selected'] = empty($param['default']) ? [] : array_map('trim', explode("\n", $param['default']));;
 			}
 			elseif(($param['type'] == 'samaccountname'))
 			{
@@ -720,7 +768,14 @@ class AnsibleAWX
 				{
 					if($row['guid'] == $param['guid'])
 					{
-						$field['value'] = $row['value'];
+						if($param['type'] == 'multiselect')
+						{
+							$field['selected'] = empty($row['value']) ? [] : array_map('trim', explode(',', $row['value']));;
+						}
+						else
+						{
+							$field['value'] = $row['value'];
+						}
 						break;
 					}
 				}

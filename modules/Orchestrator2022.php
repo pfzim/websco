@@ -256,7 +256,7 @@ class Orchestrator2022
 				$params[] = array(
 					'guid' => $param['guid'],
 					'name' => $param['name_original'],
-					'value' => $core->UserAuth->get_login()
+					'value' => $this->core->UserAuth->get_login()
 				);
 				continue;
 			}
@@ -274,7 +274,7 @@ class Orchestrator2022
 					}
 				}
 
-				if($param['required'] && ($flags == 0))
+				if($param['required'] && (count($value) == 0))
 				{
 					$result_json['code'] = 1;
 					$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
@@ -393,9 +393,9 @@ class Orchestrator2022
 
 		if($job_guid !== FALSE)
 		{
-			if($core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $core->UserAuth->get_id())))
+			if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $this->core->UserAuth->get_id())))
 			{
-				$job_id = $core->db->last_id();
+				$job_id = $this->core->db->last_id();
 
 				foreach($params as &$param)
 				{
@@ -404,7 +404,7 @@ class Orchestrator2022
 					{
 						$value = substr($value, 0, 4093).'...';
 					}
-					$core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
 				}
 			}
 		}

@@ -7,5 +7,6 @@ const LL = {
 	Activities:				'Activities',
 	ConfirmDelete:			'Are you confirming the delete operation?',
 	ConfirmOperation:		'Do you confirm the operation?',
-	OutputParameters:		'Output parameters'
+	OutputParameters:		'Output parameters',
+	Output:					'Output'
 };
