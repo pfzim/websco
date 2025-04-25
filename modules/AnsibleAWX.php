@@ -337,7 +337,7 @@ class AnsibleAWX
 					{
 						$value = substr((string) $value, 0, 4093).'...';
 					}
-					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode("\n", $value) : $value));
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode(', ', $value) : $value));
 				}
 			}
 		}
@@ -415,7 +415,7 @@ class AnsibleAWX
 		$total = 0;
 
 		$folder_id = 0;
-		if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`name` = 'Ansible' AND f.`pid` = 0 LIMIT 1")))
+		if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`name` = 'Unassigned Ansible playbooks' AND (f.`flags` & ({%RBF_DELETED} | {%RBF_TYPE_CUSTOM})) = {%RBF_TYPE_CUSTOM} LIMIT 1")))
 		{
 			//throw 'ERROR: Create under root level folder with name \'Ansible\' before start sync!';
 			if($this->core->db->put(rpv("
@@ -424,8 +424,8 @@ class AnsibleAWX
 				",
 				0,
 				0,
-				'Ansible',
-				RBF_TYPE_ANSIBLE
+				'Unassigned Ansible playbooks',
+				RBF_TYPE_CUSTOM
 			)))
 			{
 				$folder_id = $this->core->db->last_id();
@@ -445,7 +445,7 @@ class AnsibleAWX
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
-						VALUES (!, #, !, !, !, #)
+						VALUES (#, #, !, !, !, #)
 					",
 					intval($playbook['id']),
 					$folder_id,
@@ -466,16 +466,14 @@ class AnsibleAWX
 						UPDATE
 							@runbooks
 						SET
-							`folder_id` = #,
 							`name` = !,
 							`description` = !,
 							`wiki_url` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`id` = !
+							`id` = #
 						LIMIT 1
 					",
-					$folder_id,
 					$playbook['name'],
 					$playbook['description'],
 					$playbook['wiki_url'],

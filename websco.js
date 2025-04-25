@@ -382,6 +382,39 @@ function f_get_activity(url)
 	return false;
 }
 
+function f_set_input_value(el, id, value)
+{
+	gi(id).value = value;
+	const elements = gi(id + '-tree').getElementsByClassName('active');
+    for(let i = 0, j = elements.length; i < j; i++)
+	{
+		elements[i].classList.remove('active');
+    }
+	el.className = 'active';
+	return false;
+}
+
+function f_print_tree(tree, edit_id)
+{
+	let html = '';
+	if(tree)
+	{
+		html +='<ul>';
+
+		for(let i = 0, j = tree.length; i < j; i++)
+		{
+			html += '<li><a class="' + (tree[i].selected ? 'active' : '') + '" href="#" onclick="return f_set_input_value(this, \'' + escapeHtml(edit_id) + '\', \'' + escapeHtml(tree[i].id) + '\');">' + escapeHtml(tree[i].name) + '</a>';
+			html += f_print_tree(tree[i].childs, edit_id);
+
+			html += '</li>';
+		}
+
+		html += '</ul>';
+	}
+
+	return html;
+}
+
 // make fake empty form
 function f_new_permission(pid)
 {
@@ -611,6 +644,35 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
 				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="password" value=""/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'tree')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="hidden" value="'+ escapeHtml(fields[i].value) + '"/>'
+				+ '<div class="tree-menu" id="' + escapeHtml(form_id + fields[i].name) + '-tree" style="float: unset; width: unset;">' + f_print_tree(fields[i].tree, form_id + fields[i].name) + '</div>'
+				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'readonly')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="text" readonly="readonly" value="'+ escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'description')
+		{
+			html = '<div class="form-description">'+ escapeHtml(fields[i].value) + '</div>';
 
 			var wrapper = document.createElement('div');
 			wrapper.innerHTML = html;
@@ -1013,6 +1075,31 @@ function f_show_hide(url, id)
 		'application/x-www-form-urlencoded',
 		json2url({id: id})
 	);
+
+	return false;
+}
+
+function f_delete_folder(url, id)
+{
+	if(window.confirm(LL.ConfirmOperation))
+	{
+		gi('loading').style.display = 'block';
+		f_http(
+			url,
+			function(data, el)
+			{
+				gi('loading').style.display = 'none';
+				f_notify(data.message, data.code?"error":"success");
+				if(!data.code)
+				{
+					window.location = window.location;
+				}
+			},
+			null,
+			'application/x-www-form-urlencoded',
+			json2url({id: id})
+		);
+	}
 
 	return false;
 }

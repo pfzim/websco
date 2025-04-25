@@ -155,17 +155,17 @@ function exception_handler_ajax($exception)
 	log_file($error_msg);
 }
 
-	define('RBF_DELETED', 0x0001);
-	define('RBF_HIDED', 0x0002);
-	define('RBF_TYPE_CUSTOM', 0x0004);
-	define('RBF_TYPE_SCO', 0x0008);
-	define('RBF_TYPE_ANSIBLE', 0x0010);
-	define('RBF_FIELD_TYPE_REQUIRED', 0x01000000);
-	define('RBF_FIELD_TYPE_PASSWORD', 0x02000000);
-	define('RBF_FIELD_TYPE_NUMBER', 0x04000000);
-	define('RBF_FIELD_TYPE_LIST', 0x08000000);
-	define('RBF_FIELD_TYPE_FLAGS', 0x10000000);
-	define('RBF_FIELD_TYPE_STRING', 0x20000000);
+	define('RBF_DELETED',				0x00000001);
+	define('RBF_HIDED',					0x00000002);
+	define('RBF_TYPE_CUSTOM',			0x00000004);
+	define('RBF_TYPE_SCO',				0x00000008);
+	define('RBF_TYPE_ANSIBLE',			0x00000010);
+	define('RBF_FIELD_TYPE_REQUIRED',	0x01000000);
+	define('RBF_FIELD_TYPE_PASSWORD',	0x02000000);
+	define('RBF_FIELD_TYPE_NUMBER',		0x04000000);
+	define('RBF_FIELD_TYPE_LIST',		0x08000000);
+	define('RBF_FIELD_TYPE_FLAGS',		0x10000000);
+	define('RBF_FIELD_TYPE_STRING',		0x20000000);
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
@@ -277,6 +277,9 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
 
+		$core->Router->add_route('runbook_move', 'runbook_move', TRUE);
+		$core->Router->add_route('runbook_move_form', 'runbook_move_form', TRUE);
+
 		$core->Router->add_route('playbooks_sync', 'playbooks_sync', TRUE);
 
 		$core->Router->add_route('jobs', 'jobs');
@@ -297,6 +300,9 @@ function exception_handler_ajax($exception)
 
 		$core->Router->add_route('folder_hide', 'folder_hide', TRUE);
 		$core->Router->add_route('folder_show', 'folder_show', TRUE);
+		$core->Router->add_route('folder_get', 'folder_get', TRUE);
+		$core->Router->add_route('folder_save', 'folder_save', TRUE);
+		$core->Router->add_route('folder_delete', 'folder_delete', TRUE);
 
 		$core->Router->add_route('permissions', 'permissions');
 		$core->Router->add_route('permissions_get', 'permissions_get', TRUE);

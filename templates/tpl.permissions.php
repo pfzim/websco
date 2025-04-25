@@ -8,11 +8,18 @@
 	<div class="content-box">
 		<h3><?php L('AccessRightsManagement') ?>: <span id="section_name"><?php eh($current_folder['name']);?></span></h3>
 		<span id="add_new_permission" class="command" onclick="f_show_form('<?php ln('permission_new/'.$current_folder['id']) ?>');"><?php L('AddPermission') ?></span>
-		<?php if($current_folder['id'] != 0) { if($current_folder['flags'] & 0x0002) { ?>
+		<?php if($current_folder['id'] != 0) { if($current_folder['flags'] & RBF_HIDED) { ?>
 			<span id="show_hide" class="command" onclick="f_show_hide('<?php ln('folder_show') ?>', <?php eh($current_folder['id']) ?>);"><?php L('ShowFolder') ?></span>
 		<?php } else { ?>
 			<span id="show_hide" class="command" onclick="f_show_hide('<?php ln('folder_hide') ?>', <?php eh($current_folder['id']) ?>);"><?php L('HideFolder') ?></span>
 		<?php } } ?>
+		<?php if(($current_folder['flags'] & RBF_TYPE_CUSTOM) || $current_folder['id'] == 0) { ?>
+			<span class="command" onclick="f_show_form('<?php ln('folder_get/0/'.$current_folder['id']) ?>');"><?php L('CreateFolder') ?></span>
+		<?php } ?>
+		<?php if($current_folder['flags'] & RBF_TYPE_CUSTOM) { ?>
+			<span class="command" onclick="f_show_form('<?php ln('folder_get/'.$current_folder['id'].'/0') ?>');"><?php L('EditFolder') ?></span>
+			<span class="command" onclick="f_delete_folder('<?php ln('folder_delete') ?>', <?php eh($current_folder['id']) ?>);"><?php L('DeleteFolder') ?></span>
+		<?php } ?>
 		<table id="table" class="main-table" width="100%">
 			<thead>
 			<tr>

@@ -11,29 +11,28 @@ function permissions(&$core, $params, $post_data)
 		exit;
 	}
 
-	if(empty($id) || intval($id) == 0)
+	$current_folder = array(
+		'name' => LL('RootLevel'),
+		'id' => 0,
+		'pid' => 0,
+		'guid' => '00000000-0000-0000-0000-000000000000',
+		'flags' => 0,
+		'childs' => NULL
+	);
+	
+	if(!empty($id) && intval($id) != 0)
 	{
-		$current_folder = array(
-			'name' => LL('RootLevel'),
-			'id' => 0,
-			'pid' => '00000000-0000-0000-0000-000000000000',
-			'guid' => '00000000-0000-0000-0000-000000000000',
-			'flags' => 0,
-			'childs' => NULL
-		);
-	}
-	else
-	{
-		$core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name`, f.`flags` FROM `@runbooks_folders` AS f WHERE f.`id` = # ORDER BY f.`name`', $id));
-
-		$current_folder = array(
-			'name' => $folder[0]['name'],
-			'id' => $folder[0]['id'],
-			'pid' => $folder[0]['pid'],
-			'guid' => $folder[0]['guid'],
-			'flags' => $folder[0]['flags'],
-			'childs' => NULL
-		);
+		if($core->db->select_assoc_ex($folder, rpv('SELECT f.`id`, f.`guid`, f.`pid`, f.`name`, f.`flags` FROM `@runbooks_folders` AS f WHERE f.`id` = # AND (f.`flags` & {%RBF_DELETED}) = 0  LIMIT 1', $id)))
+		{
+			$current_folder = array(
+				'name' => $folder[0]['name'],
+				'id' => $folder[0]['id'],
+				'pid' => $folder[0]['pid'],
+				'guid' => $folder[0]['guid'],
+				'flags' => $folder[0]['flags'],
+				'childs' => NULL
+			);
+		}
 	}
 
 	$folders_tree = $core->Runbooks->get_folders_tree(FALSE);
