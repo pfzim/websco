@@ -1,6 +1,6 @@
 <?php
 /*
-    Runbooks2022 class - This class is intended for accessing the Microsoft 
+    Runbooks2022 class - This class is intended for accessing the Microsoft
 	System Center Orchestrator 2022 web service to get a list of runbooks and
 	launch them.
     Copyright (C) 2024 Dmitry V. Zimin
@@ -95,7 +95,7 @@ class Orchestrator2022
 	public function start_runbook($guid, $params, $servers = NULL)
 	{
 		$parameters = array();
-		
+
 		if(!empty($params))
 		{
 			foreach($params as &$param)
@@ -408,7 +408,7 @@ class Orchestrator2022
 				}
 			}
 		}
-		
+
 		return $job_id;
 	}
 
@@ -680,7 +680,7 @@ class Orchestrator2022
 		{
 			$description = (string) $properties['Description'];
 			$wiki_url = '';
-			
+
 			if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
 			{
 				$wiki_url = trim($matches[1]);
@@ -734,10 +734,10 @@ class Orchestrator2022
 		log_file('Retrieve runbooks list...');
 		$runbooks = $this->retrieve_runbooks();
 
-		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED})"));
+		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
 
 		$total = 0;
 
@@ -747,7 +747,7 @@ class Orchestrator2022
 		{
 			//echo $folder['guid']."\r\n";
 			$server_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_servers AS f WHERE f.`guid` = ! LIMIT 1", $server['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT s.`guid` FROM @runbooks_servers AS s WHERE s.`guid` = ! AND (s.`flags` & {%RBF_TYPE_SCO2022}) LIMIT 1", $server['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_servers (`guid`, `name`, `flags`)
@@ -755,7 +755,7 @@ class Orchestrator2022
 					",
 					$server['guid'],
 					$server['name'],
-					0x0000
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$server_id = $this->core->db->last_id();
@@ -789,13 +789,13 @@ class Orchestrator2022
 		{
 			//echo $folder['guid']."\r\n";
 			$folder_pid = 0;
-			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $folder['pid'])))
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1", $folder['pid'])))
 			{
 				$folder_pid = $res[0][0];
 			}
 
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $folder['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & {%RBF_TYPE_SCO2022}) LIMIT 1", $folder['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -803,8 +803,8 @@ class Orchestrator2022
 					",
 					$folder['guid'],
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Runbooks' : '(undefined folder name)') : $folder['name'],
-					RBF_TYPE_SCO
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator 2022' : '(undefined folder name)') : $folder['name'],
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$folder_id = $this->core->db->last_id();
@@ -822,11 +822,11 @@ class Orchestrator2022
 							`name` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`id` = !
+							`id` = #
 						LIMIT 1
 					",
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Runbooks' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator 2022' : '(undefined folder name)') : $folder['name'],
 					$folder_id
 				));
 			}
@@ -839,7 +839,7 @@ class Orchestrator2022
 		foreach($activities as &$activity)
 		{
 			$activity_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT a.`id`, a.`guid` FROM @runbooks_activities AS a WHERE a.`guid` = ! LIMIT 1", $activity['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT a.`id`, a.`guid` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND a.`flags` & {%RBF_TYPE_SCO2022} LIMIT 1", $activity['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_activities (`guid`, `name`, `flags`)
@@ -847,7 +847,7 @@ class Orchestrator2022
 					",
 					$activity['guid'],
 					$activity['name'],
-					0x0000
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$activity_id = $this->core->db->last_id();
@@ -880,7 +880,7 @@ class Orchestrator2022
 		foreach($runbooks as &$runbook)
 		{
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $runbook['folder_id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1", $runbook['folder_id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -889,7 +889,7 @@ class Orchestrator2022
 					$runbook['folder_id'],
 					0,
 					$runbook['path'],
-					RBF_TYPE_SCO
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$folder_id = $this->core->db->last_id();
@@ -901,7 +901,7 @@ class Orchestrator2022
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO2022}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -912,7 +912,7 @@ class Orchestrator2022
 					$runbook['name'],
 					$runbook['description'],
 					$runbook['wiki_url'],
-					RBF_TYPE_SCO
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$runbook_id = $this->core->db->last_id();
@@ -921,7 +921,7 @@ class Orchestrator2022
 			else
 			{
 				$runbook_id = $res[0][0];
-				
+
 				$this->core->db->put(rpv("
 						UPDATE
 							@runbooks
@@ -1111,7 +1111,7 @@ class Orchestrator2022
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
 				j.`id` = #
-				AND (r.`flags` & {%RBF_TYPE_SCO})
+				AND (r.`flags` & {%RBF_TYPE_SCO2022})
 			LIMIT 1
 		', $id)))
 		{
@@ -1456,7 +1456,7 @@ class Orchestrator2022
 				)
 			)
 		);
-		
+
 		return $result_json;
 	}
 }

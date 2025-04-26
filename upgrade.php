@@ -109,24 +109,27 @@ function db_upgrade($core, $version, $message, $query)
 	}
 }
 
-define('RBF_DELETED', 0x0001);
-define('RBF_HIDED', 0x0002);
-define('RBF_TYPE_CUSTOM', 0x0004);
-define('RBF_TYPE_SCO', 0x0008);
-define('RBF_TYPE_ANSIBLE', 0x0010);
-define('RBF_FIELD_TYPE_REQUIRED', 0x01000000);
-define('RBF_FIELD_TYPE_PASSWORD', 0x02000000);
-define('RBF_FIELD_TYPE_NUMBER', 0x04000000);
-define('RBF_FIELD_TYPE_LIST', 0x08000000);
-define('RBF_FIELD_TYPE_FLAGS', 0x10000000);
-define('RBF_FIELD_TYPE_STRING', 0x20000000);
+define('RBF_DELETED',				0x00000001);
+define('RBF_HIDED',					0x00000002);
+define('RBF_TYPE_CUSTOM',			0x00000004);
+define('RBF_TYPE_SCO',				0x00000008);
+define('RBF_TYPE_SCO2022',			0x00000010);
+define('RBF_TYPE_ANSIBLE',			0x00000020);
+define('RBF_FIELD_TYPE_REQUIRED',	0x01000000);
+define('RBF_FIELD_TYPE_PASSWORD',	0x02000000);
+define('RBF_FIELD_TYPE_NUMBER',		0x04000000);
+define('RBF_FIELD_TYPE_LIST',		0x08000000);
+define('RBF_FIELD_TYPE_FLAGS',		0x10000000);
+define('RBF_FIELD_TYPE_STRING',		0x20000000);
 
-db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', rpv('UPDATE @runbooks SET `flags` = (`flags` | {%RBF_TYPE_SCO}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0'));
-db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_TYPE_SCO})'));
+$runbook_type = (defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022)) ? RBF_TYPE_SCO2022 : RBF_TYPE_SCO;
+
+db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', rpv('UPDATE @runbooks SET `flags` = (`flags` | #) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0', $runbook_type));
+db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | #)', $runbook_type));
 db_upgrade($core, 5, 'Update parent IDs', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
 db_upgrade($core, 6, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 7, 'Change PRIMARY KEY for table `@runbooks_params`', rpv('ALTER TABLE `@runbooks_params` DROP PRIMARY KEY, ADD PRIMARY KEY (`pid`, `guid`)'));
-db_upgrade($core, 8, 'Update parent IDs', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & {%RBF_TYPE_SCO} SET rp.`pid` = r.`id`'));
+db_upgrade($core, 8, 'Update parent IDs', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & # SET rp.`pid` = r.`id`', $runbook_type));
 db_upgrade($core, 9, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 10, 'Add `extra_data_json` column', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
 db_upgrade($core, 11, 'Change PRIMARY KEY for table `@runbooks_folders`', rpv('ALTER TABLE `@runbooks_folders` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));

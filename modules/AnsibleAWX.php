@@ -417,19 +417,42 @@ class AnsibleAWX
 		$folder_id = 0;
 		if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`name` = 'Unassigned Ansible playbooks' AND (f.`flags` & ({%RBF_DELETED} | {%RBF_TYPE_CUSTOM})) = {%RBF_TYPE_CUSTOM} LIMIT 1")))
 		{
+			// Create folders:
+			// - Ansible
+			//   |- Unassigned Ansible playbooks
+
 			//throw 'ERROR: Create under root level folder with name \'Ansible\' before start sync!';
-			if($this->core->db->put(rpv("
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`name` = 'Ansible' AND (f.`flags` & ({%RBF_DELETED} | {%RBF_TYPE_CUSTOM})) = {%RBF_TYPE_CUSTOM} LIMIT 1")))
+			{
+				if(!$this->core->db->put(rpv("
+						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
+						VALUES (!, #, !, #)
+					",
+					0,
+					0,
+					'Ansible',
+					RBF_TYPE_CUSTOM
+				)))
+				{
+					throw 'ERROR: Create folder with name \'Unassigned Ansible playbooks\' before start sync!';
+				}
+
+				$folder_id = $this->core->db->last_id();
+			}
+			if(!$this->core->db->put(rpv("
 					INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
 					VALUES (!, #, !, #)
 				",
 				0,
-				0,
+				$folder_id,
 				'Unassigned Ansible playbooks',
-				RBF_TYPE_CUSTOM
+				RBF_TYPE_CUSTOM | RBF_HIDED
 			)))
 			{
-				$folder_id = $this->core->db->last_id();
+				throw 'ERROR: Create folder with name \'Unassigned Ansible playbooks\' before start sync!';
 			}
+
+			$folder_id = $this->core->db->last_id();
 		}
 		else
 		{
@@ -441,7 +464,7 @@ class AnsibleAWX
 		foreach($playbooks as &$playbook)
 		{
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $playbook['id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id`, r.`folder_id`, f.`flags` AS `folder_flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $playbook['id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -466,6 +489,7 @@ class AnsibleAWX
 						UPDATE
 							@runbooks
 						SET
+							`folder_id` = #,
 							`name` = !,
 							`description` = !,
 							`wiki_url` = !,
@@ -474,6 +498,7 @@ class AnsibleAWX
 							`id` = #
 						LIMIT 1
 					",
+					(intval($res[0][2]) & RBF_DELETED) ? $folder_id : $res[0][1],
 					$playbook['name'],
 					$playbook['description'],
 					$playbook['wiki_url'],

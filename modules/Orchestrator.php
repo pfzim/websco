@@ -422,10 +422,10 @@ EOT;
 				}
 			}
 		}
-		
+
 		return $job_id;
 	}
-	
+
 	/**
 	 Get job instances list.
 
@@ -733,10 +733,10 @@ EOT;
 			{
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
 				//echo "\n".'Runbook: '.$properties->Name.' ('.$properties->Id.')'."\n";
-				
+
 				$description = (string) $properties->Description;
 				$wiki_url = '';
-				
+
 				if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
 				{
 					$wiki_url = trim($matches[1]);
@@ -798,8 +798,8 @@ EOT;
 
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
 		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO})"));
 
 		$total = 0;
 
@@ -809,7 +809,7 @@ EOT;
 		{
 			//echo $folder['guid']."\r\n";
 			$server_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_servers AS f WHERE f.`guid` = ! LIMIT 1", $server['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT s.`guid` FROM @runbooks_servers AS s WHERE s.`guid` = ! AND (s.`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $server['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_servers (`guid`, `name`, `flags`)
@@ -817,7 +817,7 @@ EOT;
 					",
 					$server['guid'],
 					$server['name'],
-					0x0000
+					RBF_TYPE_SCO
 				)))
 				{
 					$server_id = $this->core->db->last_id();
@@ -857,7 +857,7 @@ EOT;
 			}
 
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $folder['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $folder['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -865,7 +865,7 @@ EOT;
 					",
 					$folder['guid'],
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Root folder' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator' : '(undefined folder name)') : $folder['name'],
 					RBF_TYPE_SCO
 				)))
 				{
@@ -888,7 +888,7 @@ EOT;
 						LIMIT 1
 					",
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Root folder' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator' : '(undefined folder name)') : $folder['name'],
 					$folder_id
 				));
 			}
@@ -901,7 +901,7 @@ EOT;
 		foreach($activities as &$activity)
 		{
 			$activity_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT a.`id`, a.`guid` FROM @runbooks_activities AS a WHERE a.`guid` = ! LIMIT 1", $activity['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT a.`id`, a.`guid` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $activity['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_activities (`guid`, `name`, `flags`)
@@ -909,7 +909,7 @@ EOT;
 					",
 					$activity['guid'],
 					$activity['name'],
-					0x0000
+					RBF_TYPE_SCO
 				)))
 				{
 					$activity_id = $this->core->db->last_id();
@@ -942,7 +942,7 @@ EOT;
 		foreach($runbooks as &$runbook)
 		{
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & {%RBF_TYPE_SCO}) LIMIT 1", $runbook['folder_id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
@@ -963,7 +963,7 @@ EOT;
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -994,7 +994,7 @@ EOT;
 							`wiki_url` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`id` = !
+							`id` = #
 						LIMIT 1
 					",
 					$folder_id,
@@ -1520,7 +1520,7 @@ EOT;
 				)
 			)
 		);
-		
+
 		return $result_json;
 	}
 }

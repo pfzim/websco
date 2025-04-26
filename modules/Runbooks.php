@@ -1,6 +1,6 @@
 <?php
 /*
-    RunbookBase class - This class is intended for accessing the Microsoft 
+    RunbookBase class - This class is intended for accessing the Microsoft
 	System Center Orchestrator 2022 web service to get a list of runbooks and
 	launch them.
     Copyright (C) 2024 Dmitry V. Zimin
@@ -40,8 +40,14 @@ class Runbooks
 			$this->core->error('Runbook '.$id.' not found!');
 			return NULL;
 		}
-		
+
 		$flags = intval($runbook[0][0]);
+
+		if($flags & RBF_TYPE_SCO2022)
+		{
+			return $this->core->Orchestrator2022;
+		}
+
 		if($flags & RBF_TYPE_SCO)
 		{
 			return $this->core->Orchestrator;
@@ -51,11 +57,11 @@ class Runbooks
 		{
 			return $this->core->AnsibleAWX;
 		}
-		
+
 		$this->core->error('Runbook '.$id.' has unknown type!');
-		return NULL;		
+		return NULL;
 	}
-	
+
 	private function get_runbook_class_by_job_id($id)
 	{
 		if(!$this->core->db->select_ex($runbook, rpv("SELECT r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` WHERE j.`id` = # LIMIT 1", $id)))
@@ -63,7 +69,7 @@ class Runbooks
 			$this->core->error('Runbook '.$id.' not found!');
 			return NULL;
 		}
-		
+
 		$flags = intval($runbook[0][0]);
 		if($flags & RBF_TYPE_SCO)
 		{
@@ -74,8 +80,8 @@ class Runbooks
 		{
 			return $this->core->AnsibleAWX;
 		}
-		
-		return NULL;		
+
+		return NULL;
 	}
 
 	/**
