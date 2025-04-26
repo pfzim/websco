@@ -6,7 +6,8 @@ function runbooks_sync(&$core, $params, $post_data)
 
 	log_db('Sync started', '', 0);
 
-	$total = $core->Runbooks->sync();
+	//$total = $core->Orchestartor->sync();
+	$total = $core->Orchestartor2022->sync();
 
 	echo '{"code": 0, "message": "'.json_escape('Runbooks loaded: '.$total).'"}';
 }
