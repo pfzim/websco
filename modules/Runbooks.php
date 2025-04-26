@@ -71,6 +71,11 @@ class Runbooks
 		}
 
 		$flags = intval($runbook[0][0]);
+		if($flags & RBF_TYPE_SCO2022)
+		{
+			return $this->core->Orchestrator2022;
+		}
+
 		if($flags & RBF_TYPE_SCO)
 		{
 			return $this->core->Orchestrator;
