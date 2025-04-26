@@ -88,7 +88,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks` (
   `description` varchar(4096) NOT NULL,
   `wiki_url` varchar(1024) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -98,18 +98,18 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`)
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `pid` varchar(36) NOT NULL,
+  `pid`  int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -121,7 +121,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
   `guid` varchar(36) NOT NULL,
   `uid` int(10) unsigned DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -130,15 +130,16 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
   `pid` int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
   `value` varchar(4096) NOT NULL,
-  PRIMARY KEY (`pid`,`guid`)
+  PRIMARY KEY (`pid`, `guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
-  `pid` varchar(36) NOT NULL,
+  `pid` int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `extra_data_json` varchar(4096) NOT NULL DEFAULT '',
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -150,7 +151,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -159,12 +160,13 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
   `uid` int(10) unsigned NOT NULL,
   `name` varchar(255) NOT NULL DEFAULT '',
   `value` varchar(8192) NOT NULL DEFAULT '',
+  `description` varchar(2048) DEFAULT NULL,
   PRIMARY KEY (`name`,`uid`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 2);
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 16, 'DB schema version. Do not change!');
 EOT
 );
 
@@ -1750,7 +1752,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="scorch_url" class="control-label col-sm-2">WebSvc URL:</label>
 				<div class="col-sm-5">
-					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
+					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scorch-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1778,9 +1780,9 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="scorch2022_url" class="control-label col-sm-2">WebSvc URL:</label>
+				<label for="scorch2022_url" class="control-label col-sm-2">API URL:</label>
 				<div class="col-sm-5">
-					<input id="scorch2022_url" name="scorch2022_url" class="form-control" type="text" value="http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
+					<input id="scorch2022_url" name="scorch2022_url" class="form-control" type="text" value="https://srv-scorch-02.contoso.com:8443/api" />
 				</div>
 			</div>
 			<div class="form-group">

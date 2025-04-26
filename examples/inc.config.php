@@ -83,9 +83,17 @@
 	define('MAIL_ALLOW_SELF_SIGNED', FALSE);
 
 	//define('ORCHESTRATOR_VERSION', 2022);
-	define('ORCHESTRATOR_URL', 'http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
+	define('ORCHESTRATOR_URL', 'http://srv-scorh-01.contoso.com:81/Orchestrator2012/Orchestrator.svc');
 	define('ORCHESTRATOR_USER', 'domain\\websco');
 	define('ORCHESTRATOR_PASSWD', '');
+
+	define('ORCHESTRATOR2022_URL', 'https://srv-scorh-02.contoso.com:8443/api');
+	define('ORCHESTRATOR2022_USER', 'domain\\websco');
+	define('ORCHESTRATOR2022_PASSWD', '');
+
+	define('AWX_URL', 'https://awx.contoso.com');
+	define('AWX_USER', 'websco');
+	define('AWX_PASSWD', '');
 
 	define('USE_MEMCACHED', TRUE);
 

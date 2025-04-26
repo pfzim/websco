@@ -32,9 +32,9 @@ class Orchestrator2022
 	{
 		$this->core = &$core;
 
-		$this->orchestrator_url = ORCHESTRATOR_URL;
-		$this->orchestrator_user = ORCHESTRATOR_USER;
-		$this->orchestrator_passwd = ORCHESTRATOR_PASSWD;
+		$this->orchestrator_url = ORCHESTRATOR2022_URL;
+		$this->orchestrator_user = ORCHESTRATOR2022_USER;
+		$this->orchestrator_passwd = ORCHESTRATOR2022_PASSWD;
 	}
 
 	public function get_http_json($url)

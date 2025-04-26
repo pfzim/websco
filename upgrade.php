@@ -133,5 +133,23 @@ db_upgrade($core, 8, 'Update parent IDs', rpv('UPDATE `@runbooks_params` AS rp J
 db_upgrade($core, 9, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 10, 'Add `extra_data_json` column', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
 db_upgrade($core, 11, 'Change PRIMARY KEY for table `@runbooks_folders`', rpv('ALTER TABLE `@runbooks_folders` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 12, 'Change PRIMARY KEY for table `@runbooks`', rpv('ALTER TABLE `@runbooks` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 13, 'Change PRIMARY KEY for table `@runbooks_activities`', rpv('ALTER TABLE `@runbooks_activities` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 14, 'Change PRIMARY KEY for table `@runbooks_jobs`', rpv('ALTER TABLE `@runbooks_jobs` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 15, 'Change PRIMARY KEY for table `@runbooks_servers`', rpv('ALTER TABLE `@runbooks_servers` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 16, 'Add `description` column', rpv('ALTER TABLE `@config` ADD COLUMN `description` VARCHAR(2048) DEFAULT NULL AFTER `value`'));
+
+if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022) && !defined('ORCHESTRATOR2022_URL'))
+{
+	echo PHP_EOL . 'You must add new configuration parameters to inc.config.php:' . PHP_EOL;
+	echo '  define(\'ORCHESTRATOR2022_URL\', \'https://scorch.example.org\');' . PHP_EOL;
+	echo '  define(\'ORCHESTRATOR2022_USER\', \'scorch_user\');' . PHP_EOL;
+	echo '  define(\'ORCHESTRATOR2022_PASSWD\', \'scorch_passwd\');' . PHP_EOL;
+}
+
+if(!defined('ORCHESTRATOR2022_URL') || !defined('ORCHESTRATOR_URL') || !defined('AWX_URL'))
+{
+	echo PHP_EOL . 'Not all parameters exist in config. Validate your configuration with example/inc.config.php' . PHP_EOL;
+}
 
 echo PHP_EOL . 'Upgrade complete.' . PHP_EOL;
