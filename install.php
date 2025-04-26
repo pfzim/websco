@@ -202,10 +202,13 @@ $config = <<<'EOT'
 	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
 	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
 
-	define('ORCHESTRATOR_VERSION', '#scorch_ver#');
 	define('ORCHESTRATOR_URL', '#scorch_url#');
 	define('ORCHESTRATOR_USER', '#scorch_user#');
 	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
+
+	define('ORCHESTRATOR2022_URL', '#scorch_url#');
+	define('ORCHESTRATOR2022_USER', '#scorch_user#');
+	define('ORCHESTRATOR2022_PASSWD', '#scorch_passwd#');
 
 	define('AWX_URL', '#awx_url#');
 	define('AWX_USER', '#awx_user#');
@@ -642,10 +645,12 @@ function build_config($config, $params)
 			'#mail_verify_peer#',
 			'#mail_verify_peer_name#',
 			'#mail_allow_self_signed#',
-			'#scorch_ver#',
 			'#scorch_url#',
 			'#scorch_user#',
 			'#scorch_passwd#',
+			'#scorch2022_url#',
+			'#scorch2022_user#',
+			'#scorch2022_passwd#',
 			'#awx_url#',
 			'#awx_user#',
 			'#awx_passwd#',
@@ -681,10 +686,12 @@ function build_config($config, $params)
 			$mail_verify_peer?'TRUE':'FALSE',
 			$mail_verify_peer_name?'TRUE':'FALSE',
 			$mail_allow_self_signed?'TRUE':'FALSE',
-			$use_scorch2022_api?'2022':'2016',
 			sql_escape(@$params['scorch_url']),
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
+			sql_escape(@$params['scorch2022_url']),
+			sql_escape(@$params['scorch2022_user']),
+			sql_escape(@$params['scorch2022_passwd']),
 			sql_escape(@$params['awx_url']),
 			sql_escape(@$params['awx_user']),
 			sql_escape(@$params['awx_passwd']),
@@ -861,7 +868,6 @@ function build_config($config, $params)
 				{
 					if(empty($_POST['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
 
-					$use_scorch2022_api = (!empty($_POST['use_scorch2022_api']) && intval($_POST['use_scorch2022_api']));
 					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
 					{
 						$use_gssapi = TRUE;
@@ -873,27 +879,38 @@ function build_config($config, $params)
 						if(empty($_POST['scorch_passwd'])) throw new Exception('SCORCH Password value not defined!');
 					}
 
-					if($use_scorch2022_api)
+					$xml = get_http_xml($_POST['scorch_url'].'/Runbooks?$inlinecount=allpages&$top=50&$skip=0', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
+					if(!$xml)
 					{
-						$json = get_http_json($_POST['scorch_url'].'/login', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
-						if(!$json)
-						{
-							throw new Exception('Unknown error!');
-						}
-						
-						echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
+						throw new Exception('Unknown error!');
+					}
+					
+					$total = intval($xml->children('m', TRUE)->count);
+					echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
+				}
+				exit;
+				case 'check_scorch2022':
+				{
+					if(empty($_POST['scorch2022_url'])) throw new Exception('SCORCH URL value not defined!');
+
+					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
+					{
+						$use_gssapi = TRUE;
 					}
 					else
 					{
-						$xml = get_http_xml($_POST['scorch_url'].'/Runbooks?$inlinecount=allpages&$top=50&$skip=0', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
-						if(!$xml)
-						{
-							throw new Exception('Unknown error!');
-						}
-						
-						$total = intval($xml->children('m', TRUE)->count);
-						echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
+						$use_gssapi = FALSE;
+						if(empty($_POST['scorch2022_user'])) throw new Exception('SCORCH User value not defined!');
+						if(empty($_POST['scorch2022_passwd'])) throw new Exception('SCORCH Password value not defined!');
 					}
+
+					$json = get_http_json($_POST['scorch2022_url'].'/login', $_POST['scorch2022_user'], $_POST['scorch2022_passwd'], $use_gssapi);
+					if(!$json)
+					{
+						throw new Exception('Unknown error!');
+					}
+						
+					echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
 				}
 				exit;
 				case 'check_awx':
@@ -1731,12 +1748,6 @@ input:checked + .slider:after
 				</div>
 			</div>
 			<div class="form-group">
-				<label for="use_scorch2022_api" class="control-label col-sm-2">Use Orchestrator 2022 API:</label>
-				<div class="col-sm-5">
-					<label class="switch"><input id="use_scorch2022_api" name="use_scorch2022_api" class="form-control" type="checkbox" value="1"/><div class="slider round"></div></label>
-				</div>
-			</div>
-			<div class="form-group">
 				<label for="scorch_url" class="control-label col-sm-2">WebSvc URL:</label>
 				<div class="col-sm-5">
 					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
@@ -1758,6 +1769,36 @@ input:checked + .slider:after
 				<div class="col-sm-offset-2 col-sm-5">
 					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++) ?>. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
+				</div>
+			</div>
+<!-- -->
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<h3>Orchestrator 2022 settings</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="scorch2022_url" class="control-label col-sm-2">WebSvc URL:</label>
+				<div class="col-sm-5">
+					<input id="scorch2022_url" name="scorch2022_url" class="form-control" type="text" value="http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="scorch2022_user" class="control-label col-sm-2">User:</label>
+				<div class="col-sm-5">
+					<input id="scorch2022_user" name="scorch2022_user" class="form-control" type="text" value="domain\user" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="scorch_passwd" class="control-label col-sm-2">Password:</label>
+				<div class="col-sm-5">
+					<input id="scorch2022_passwd" name="scorch2022_passwd" class="form-control" type="password" value="" />
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch2022');"><?php eh($n++) ?>. Check SCORCH2022 connection</button>
+					<div id="result_check_scorch2022" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 <!-- -->

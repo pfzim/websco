@@ -1068,7 +1068,7 @@ EOT;
 		return $total;
 	}
 
-	public function sync_jobs($guid)
+	public function sync_jobs($id)
 	{
 		$skip = 0;
 		$total = 0;
@@ -1078,7 +1078,8 @@ EOT;
 
 		if(!empty($guid))
 		{
-			$job_filter = '/Runbooks(guid\''.$guid.'\')';
+			$runbook = $this->core->Runbooks->get_runbook_by_job_id($id);
+			$job_filter = '/Runbooks(guid\'' . $runbook['job_guid'] . '\')';
 		}
 
 		do

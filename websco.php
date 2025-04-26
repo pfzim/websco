@@ -276,11 +276,10 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('runbook_move', 'runbook_move', TRUE);
 		$core->Router->add_route('runbook_move_form', 'runbook_move_form', TRUE);
 
-		$core->Router->add_route('playbooks_sync', 'playbooks_sync', TRUE);
-
 		$core->Router->add_route('jobs', 'jobs');
 		$core->Router->add_route('jobs_all', 'jobs_all');
 		$core->Router->add_route('jobs_sync', 'jobs_sync', TRUE);
+		$core->Router->add_route('jobs_sync_all', 'jobs_sync_all', TRUE);
 		$core->Router->add_route('job_cancel', 'job_cancel', TRUE);
 		$core->Router->add_route('job_get', 'job_get', TRUE);
 		$core->Router->add_route('job_activity_get', 'job_activity_get', TRUE);

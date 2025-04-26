@@ -1006,7 +1006,7 @@ class Orchestrator2022
 		return $total;
 	}
 
-	public function sync_jobs($guid)
+	public function sync_jobs($id)
 	{
 		$skip = 0;
 		$total = 0;
@@ -1014,9 +1014,10 @@ class Orchestrator2022
 
 		$job_filter = '';
 
-		if(!empty($guid))
+		if($id)
 		{
-			$job_filter = '&$filter=RunbookId%20eq%20'.$guid;
+			$runbook = $this->core->Runbooks->get_runbook_by_job_id($id);
+			$job_filter = '&$filter=RunbookId%20eq%20' . $runbook['job_guid'];
 		}
 
 		do

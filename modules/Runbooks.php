@@ -33,16 +33,8 @@ class Runbooks
 		$this->core = &$core;
 	}
 
-	private function get_runbook_class($id)
+	private function get_runbook_class_by_type($flags)
 	{
-		if(!$this->core->db->select_ex($runbook, rpv("SELECT r.`flags` FROM @runbooks AS r WHERE r.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Runbook '.$id.' not found!');
-			return NULL;
-		}
-
-		$flags = intval($runbook[0][0]);
-
 		if($flags & RBF_TYPE_SCO2022)
 		{
 			return $this->core->Orchestrator2022;
@@ -62,6 +54,17 @@ class Runbooks
 		return NULL;
 	}
 
+	private function get_runbook_class($id)
+	{
+		if(!$this->core->db->select_ex($runbook, rpv("SELECT r.`flags` FROM @runbooks AS r WHERE r.`id` = # LIMIT 1", $id)))
+		{
+			$this->core->error('Runbook '.$id.' not found!');
+			return NULL;
+		}
+
+		return $this->get_runbook_class_by_type(intval($runbook[0][0]));
+	}
+
 	private function get_runbook_class_by_job_id($id)
 	{
 		if(!$this->core->db->select_ex($runbook, rpv("SELECT r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` WHERE j.`id` = # LIMIT 1", $id)))
@@ -70,23 +73,7 @@ class Runbooks
 			return NULL;
 		}
 
-		$flags = intval($runbook[0][0]);
-		if($flags & RBF_TYPE_SCO2022)
-		{
-			return $this->core->Orchestrator2022;
-		}
-
-		if($flags & RBF_TYPE_SCO)
-		{
-			return $this->core->Orchestrator;
-		}
-
-		if($flags & RBF_TYPE_ANSIBLE)
-		{
-			return $this->core->AnsibleAWX;
-		}
-
-		return NULL;
+		return $this->get_runbook_class_by_type(intval($runbook[0][0]));
 	}
 
 	/**
@@ -115,6 +102,16 @@ class Runbooks
 	{
 		$runbook = $this->get_runbook_by_job_id($id);
 		return $this->get_runbook_class_by_job_id($id)->job_cancel($runbook['job_guid']);
+	}
+
+	public function sync($flags)
+	{
+		return $this->get_runbook_class_by_type($flags)->sync();
+	}
+
+	public function sync_jobs_all($flags)
+	{
+		return $this->get_runbook_class_by_job_id($id)->sync_jobs($id);
 	}
 
 	public function sync_jobs($id)

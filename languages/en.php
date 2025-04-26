@@ -58,6 +58,8 @@
 		'DateRun'					=> 'Run date',
 		'DateModified'				=> 'Modified date',
 		'SyncPlaybooks'				=> 'Sync Ansible palybooks',
+		'SyncRunbooks2022'			=> 'Sync Orchestrator 2022 folders, runbooks and activities',
+		'SyncJobs2022'				=> 'Sync Orchestartor 2022 jobs (too slow)',
 		'SyncRunbooks'				=> 'Sync Orchestrator folders, runbooks and activities',
 		'SyncJobs'					=> 'Sync Orchestartor jobs (too slow)',
 		'UsageExample'				=> 'Usage example',
