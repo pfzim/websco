@@ -208,9 +208,9 @@ $config = <<<'EOT'
 	define('ORCHESTRATOR_USER', '#scorch_user#');
 	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
 
-	define('ORCHESTRATOR2022_URL', '#scorch_url#');
-	define('ORCHESTRATOR2022_USER', '#scorch_user#');
-	define('ORCHESTRATOR2022_PASSWD', '#scorch_passwd#');
+	define('ORCHESTRATOR2022_URL', '#scorch2022_url#');
+	define('ORCHESTRATOR2022_USER', '#scorch2022_user#');
+	define('ORCHESTRATOR2022_PASSWD', '#scorch2022_passwd#');
 
 	define('AWX_URL', '#awx_url#');
 	define('AWX_USER', '#awx_user#');
