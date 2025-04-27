@@ -2,13 +2,23 @@
 
 <h3><?php L('Tools') ?></h3>
 
-<a href="<?php ln('runbooks_sync/' . RBF_TYPE_ANSIBLE); ?>" onclick="return f_async(this);"><?php L('SyncPlaybooks') ?></a><br />
+<?php if(defined('AWX_URL')) { ?>
+	<a href="<?php ln('runbooks_sync/' . RBF_TYPE_ANSIBLE); ?>" onclick="return f_async(this);"><?php L('SyncPlaybooks') ?></a><br />
+	<br />
+<?php } ?>
+<?php if(defined('ORCHESTRATOR_URL')) { ?>
+	<a href="<?php ln('runbooks_sync/' . RBF_TYPE_SCO); ?>" onclick="return f_async(this);"><?php L('SyncRunbooks') ?></a><br />
+<?php } ?>
+<?php if(defined('ORCHESTRATOR2022_URL')) { ?>
+	<a href="<?php ln('runbooks_sync/' . RBF_TYPE_SCO2022); ?>" onclick="return f_async(this);"><?php L('SyncRunbooks2022') ?></a><br />
+<?php } ?>
 <br />
-<a href="<?php ln('runbooks_sync/' . RBF_TYPE_SCO); ?>" onclick="return f_async(this);"><?php L('SyncRunbooks') ?></a><br />
-<a href="<?php ln('runbooks_sync/' . RBF_TYPE_SCO2022); ?>" onclick="return f_async(this);"><?php L('SyncRunbooks2022') ?></a><br />
-<br />
-<a href="<?php ln('jobs_sync_all/' . RBF_TYPE_SCO); ?>" onclick="return f_confirm_async(this);"><?php L('SyncJobs') ?></a><br />
-<a href="<?php ln('jobs_sync_all/' . RBF_TYPE_SCO2022); ?>" onclick="return f_confirm_async(this);"><?php L('SyncJobs2022') ?></a><br />
+<?php if(defined('ORCHESTRATOR_URL')) { ?>
+	<a href="<?php ln('jobs_sync_all/' . RBF_TYPE_SCO); ?>" onclick="return f_confirm_async(this);"><?php L('SyncJobs') ?></a><br />
+<?php } ?>
+<?php if(defined('ORCHESTRATOR2022_URL')) { ?>
+	<a href="<?php ln('jobs_sync_all/' . RBF_TYPE_SCO2022); ?>" onclick="return f_confirm_async(this);"><?php L('SyncJobs2022') ?></a><br />
+<?php } ?>
 
 <p>
 	<?php L('CurrentUserToken') ?>: <b><?php eh($core->UserAuth->get_token()); ?></b><br />

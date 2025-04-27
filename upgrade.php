@@ -56,6 +56,11 @@ if(!isset($_POST['key']) || !defined('UPGRADE_ADMIN_KEY') || ($_POST['key'] !== 
 	</head>
 	<body>
 	<form method="POST">
+		Make sure you have made a backup of your database before starting the upgrade:
+		<pre>
+  Backup: mysqldump --quick --single-transaction --triggers --routines --events <?php echo htmlentities(DB_NAME); ?> -u<?php echo htmlentities(DB_USER); ?> -p | gzip > backup-<?php $ts = date('Y-m-d-H-i-s'); echo htmlentities($ts . '-' . DB_NAME); ?>.sql.gz
+  Restore: gunzip -c backup-<?php echo htmlentities($ts . '-' . DB_NAME); ?>.sql.gz | mysql -u <?php echo htmlentities(DB_USER); ?> -pPassword <?php echo htmlentities(DB_NAME); ?>
+		</pre>
 		Enter UPGRADE_ADMIN_KEY from inc.config.php to start upgrade:<br />
 		<input type="text" name="key" value="" /><br />
 		<?php if(isset($_POST['key'])) { ?>
