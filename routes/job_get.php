@@ -12,7 +12,7 @@ function job_get(&$core, $params, $post_data)
 
 	if(!$job)
 	{
-		$core->error('Job '.$id.' not found!');
+		$core->error('Job ID '.$id.' not found!');
 		return FALSE;
 	}
 

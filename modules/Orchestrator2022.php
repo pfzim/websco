@@ -231,7 +231,7 @@ class Orchestrator2022
 		return $json_data['Id'];
 	}
 
-	public function parse_form_and_start_runbook($form_data, &$result_json)
+	public function parse_form_and_start_runbook($post_data, &$result_json)
 	{
 		$result_json = array(
 			'code' => 0,
@@ -242,7 +242,7 @@ class Orchestrator2022
 		$params = array();
 
 		$runbook = $this->core->Runbooks->get_runbook_by_id($post_data['id']);
-		$runbook_params = $this->get_runbook_params($form_data['id']);
+		$runbook_params = $this->get_runbook_params($post_data['id']);
 
 		//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
@@ -1086,7 +1086,7 @@ class Orchestrator2022
 
 	public function get_servers()
 	{
-		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s ORDER BY s.`name`, s.`id`")))
+		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s WHERE (s.`flags` & {%RBF_TYPE_SCO2022})  ORDER BY s.`name`, s.`id`")))
 		{
 			return FALSE;
 		}

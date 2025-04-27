@@ -884,13 +884,32 @@ EOT;
 							`name` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`id` = !
+							`id` = #
 						LIMIT 1
 					",
 					$folder_pid,
 					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator' : '(undefined folder name)') : $folder['name'],
 					$folder_id
 				));
+			}
+		}
+
+		// Update folders PID
+
+		foreach($folders as &$folder)
+		{
+			//echo $folder['guid']."\r\n";
+			$folder_pid = 0;
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1", $folder['pid'])))
+			{
+				$folder_pid = $res[0][0];
+			}
+
+			$folder_id = 0;
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & {%RBF_TYPE_SCO}) AND f.`pid` <> # LIMIT 1", $folder['guid'], $folder_pid)))
+			{
+				$folder_id = $res[0][0];
+				$this->core->db->put(rpv("UPDATE @runbooks_folders SET `pid` = # WHERE `id` = # LIMIT 1", $folder_pid, $folder_id));
 			}
 		}
 
@@ -1150,7 +1169,7 @@ EOT;
 
 	public function get_servers()
 	{
-		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s ORDER BY s.`name`, s.`id`")))
+		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s WHERE (s.`flags` & {%RBF_TYPE_SCO}) ORDER BY s.`name`, s.`id`")))
 		{
 			return FALSE;
 		}
@@ -1175,7 +1194,7 @@ EOT;
 			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
-				j.`guid` = #
+				j.`id` = #
 				AND (r.`flags` & {%RBF_TYPE_SCO})
 			LIMIT 1
 		', $id)))

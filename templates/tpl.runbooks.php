@@ -29,7 +29,7 @@
 						<td>
 							<a href="<?php ln('jobs/'.$row['id']); ?>"><?php L('ViewJobs') ?></a>
 							<?php if(!empty($row['wiki_url'])) { ?> <a href="<?php eh($row['wiki_url']); ?>" target="_blank"><?php L('Instruction') ?></a> <?php } ?>
-							<?php if($core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) { ?> 
+							<?php if((intval($row['flags']) & (RBF_TYPE_CUSTOM | RBF_TYPE_ANSIBLE)) && $core->UserAuth->check_permission(0, RB_ACCESS_EXECUTE)) { ?>
 								<a href="<?php ln('runbook_move_form/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Move') ?></a>
 							<?php } ?>
 						</td>

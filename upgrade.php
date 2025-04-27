@@ -124,20 +124,21 @@ define('RBF_FIELD_TYPE_STRING',		0x20000000);
 
 $runbook_type = (defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022)) ? RBF_TYPE_SCO2022 : RBF_TYPE_SCO;
 
-db_upgrade($core, 3, 'Set flag RBF_TYPE_SCO to runbooks', rpv('UPDATE @runbooks SET `flags` = (`flags` | #) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0', $runbook_type));
-db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | #)', $runbook_type));
-db_upgrade($core, 5, 'Update parent IDs', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
-db_upgrade($core, 6, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 3, 'Add `description` column to @config', rpv('ALTER TABLE `@config` ADD COLUMN `description` VARCHAR(2048) DEFAULT NULL AFTER `value`'));
+db_upgrade($core, 4, 'Set flag RBF_TYPE_SCO to @runbooks', rpv('UPDATE @runbooks SET `flags` = (`flags` | #) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0', $runbook_type));
+db_upgrade($core, 5, 'Set flag RBF_TYPE_SCO to @runbooks_folders', rpv('UPDATE @runbooks_folders SET `flags` = (`flags` | #)', $runbook_type));
+db_upgrade($core, 6, 'Set flag RBF_TYPE_SCO to @runbooks_servers', rpv('UPDATE @runbooks_servers SET `flags` = (`flags` | #)', $runbook_type));
 db_upgrade($core, 7, 'Change PRIMARY KEY for table `@runbooks_params`', rpv('ALTER TABLE `@runbooks_params` DROP PRIMARY KEY, ADD PRIMARY KEY (`pid`, `guid`)'));
-db_upgrade($core, 8, 'Update parent IDs', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & # SET rp.`pid` = r.`id`', $runbook_type));
-db_upgrade($core, 9, 'Change `pid` column type', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
-db_upgrade($core, 10, 'Add `extra_data_json` column', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
-db_upgrade($core, 11, 'Change PRIMARY KEY for table `@runbooks_folders`', rpv('ALTER TABLE `@runbooks_folders` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
-db_upgrade($core, 12, 'Change PRIMARY KEY for table `@runbooks`', rpv('ALTER TABLE `@runbooks` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
-db_upgrade($core, 13, 'Change PRIMARY KEY for table `@runbooks_activities`', rpv('ALTER TABLE `@runbooks_activities` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
-db_upgrade($core, 14, 'Change PRIMARY KEY for table `@runbooks_jobs`', rpv('ALTER TABLE `@runbooks_jobs` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
-db_upgrade($core, 15, 'Change PRIMARY KEY for table `@runbooks_servers`', rpv('ALTER TABLE `@runbooks_servers` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
-db_upgrade($core, 16, 'Add `description` column', rpv('ALTER TABLE `@config` ADD COLUMN `description` VARCHAR(2048) DEFAULT NULL AFTER `value`'));
+db_upgrade($core, 8, 'Change PRIMARY KEY for table `@runbooks_folders`', rpv('ALTER TABLE `@runbooks_folders` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 9, 'Change PRIMARY KEY for table `@runbooks`', rpv('ALTER TABLE `@runbooks` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 10, 'Change PRIMARY KEY for table `@runbooks_activities`', rpv('ALTER TABLE `@runbooks_activities` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 11, 'Change PRIMARY KEY for table `@runbooks_jobs`', rpv('ALTER TABLE `@runbooks_jobs` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 12, 'Change PRIMARY KEY for table `@runbooks_servers`', rpv('ALTER TABLE `@runbooks_servers` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
+db_upgrade($core, 13, 'Update parent IDs in @runbooks_folders', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
+db_upgrade($core, 14, 'Change `pid` column type in @runbooks_folders', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 15, 'Update parent IDs in @runbooks_params', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & # SET rp.`pid` = r.`id`', $runbook_type));
+db_upgrade($core, 16, 'Change `pid` column type in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 17, 'Add `extra_data_json` column to @runbooks_params', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
 
 if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022) && !defined('ORCHESTRATOR2022_URL'))
 {
@@ -149,7 +150,8 @@ if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022) && !defined
 
 if(!defined('ORCHESTRATOR2022_URL') || !defined('ORCHESTRATOR_URL') || !defined('AWX_URL'))
 {
-	echo PHP_EOL . 'Not all parameters exist in config. Validate your configuration with example/inc.config.php' . PHP_EOL;
+	echo PHP_EOL . 'Not all parameters exist in config!!! Check and adjust your configuration to match example/inc.config.php.' . PHP_EOL;
+	echo 'Check permissions on top folders!' . PHP_EOL;
 }
 
 echo PHP_EOL . 'Upgrade complete.' . PHP_EOL;

@@ -6,13 +6,20 @@ function folder_delete(&$core, $params, $post_data)
 
 	assert_permission_ajax(0, RB_ACCESS_EXECUTE);
 
-	if(!$id || $core->db->select_ex($childs, rpv("SELECT COUNT(*) AS `childs_count` FROM `@runbooks_folders` AS f WHERE f.`pid` = # AND (f.`flags` & {%RBF_DELETED}) = 0", $id)))
+	if(
+		!$id
+		|| !$core->db->select_ex($childs, rpv("SELECT COUNT(*) AS `childs_count` FROM `@runbooks_folders` AS f WHERE f.`pid` = # AND (f.`flags` & {%RBF_DELETED}) = 0", $id))
+		|| intval($childs[0][0]) > 0
+	)
 	{
 		echo '{"code": 1, "message": "Folder have ' . intval($childs[0][0]) . ' childs. Remove childs folders before"}';
 		exit;
 	}
 
-	if($core->db->select_ex($childs, rpv("SELECT COUNT(*) AS `childs_count` FROM `@runbooks` AS r WHERE r.`folder_id` = # AND (r.`flags` & {%RBF_DELETED}) = 0", $id)))
+	if(
+		!$core->db->select_ex($childs, rpv("SELECT COUNT(*) AS `childs_count` FROM `@runbooks` AS r WHERE r.`folder_id` = # AND (r.`flags` & {%RBF_DELETED}) = 0", $id))
+		|| intval($childs[0][0]) > 0
+	)
 	{
 		echo '{"code": 1, "message": "Folder have ' . intval($childs[0][0]) . ' runbooks. Move runbooks to another folder before remove this folder"}';
 		exit;
