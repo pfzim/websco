@@ -107,7 +107,7 @@ class AnsibleAWX
 			}
 		}
 
-        $result = $this->awx_api_request('POST', '/api/v2/job_templates/' . $id . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
+        $result = $this->awx_api_request('POST', '/api/v2/workflow_job_templates/' . $id . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
 
         return $result['job'] ? $result['job'] : false;
 	}
@@ -122,7 +122,7 @@ class AnsibleAWX
 
 	public function job_cancel($job_id)
 	{
-		return ($this->awx_api_request('POST', '/api/v2/jobs/' . $job_id . '/cancel/', NULL, TRUE) !== FALSE);
+		return ($this->awx_api_request('POST', '/api/v2/workflow_jobs/' . $job_id . '/cancel/', NULL, TRUE) !== FALSE);
 	}
 
 	public function parse_form_and_start_runbook($post_data, &$result_json)
@@ -363,7 +363,7 @@ class AnsibleAWX
 	{
 		$params = array();
 
-		$result = $this->awx_api_request('GET', '/api/v2/job_templates/' . $id . '/survey_spec/');
+		$result = $this->awx_api_request('GET', '/api/v2/workflow_job_templates/' . $id . '/survey_spec/');
 		if($result['spec'])
 		{
             foreach ($result['spec'] as &$param) {
@@ -385,7 +385,7 @@ class AnsibleAWX
 	public function retrieve_playbooks()
 	{
 		$playbooks = array();
-        $url = '/api/v2/job_templates/';
+        $url = '/api/v2/workflow_job_templates/';
 
         do {
             $result = $this->awx_api_request('GET', $url);
@@ -552,19 +552,19 @@ class AnsibleAWX
 	{
 		$jobs_added = 0;
 
-		$url = '/api/v2/jobs/';
+		$url = '/api/v2/workflow_jobs/';
 
 		if($id)
 		{
 			$runbook = $this->core->Runbooks->get_runbook_by_id($id);
-			$url = '/api/v2/job_templates/' . $runbook['guid'] . '/jobs/';
+			$url = '/api/v2/workflow_job_templates/' . $runbook['guid'] . '/workflow_jobs/';
 		}
 
         do {
             $result = $this->awx_api_request('GET', $url);
 
             foreach ($result['results'] as &$job) {
-				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_ANSIBLE} LIMIT 1", $job['job_template'])))
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_ANSIBLE} LIMIT 1", $job['workflow_job_template'])))
 				{
 					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['id'], $rb[0][0])))
 					{
@@ -641,7 +641,7 @@ class AnsibleAWX
 
 		$job = &$job[0];
 
-		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/');
+		$result = $this->awx_api_request('GET', '/api/v2/workflow_jobs/' . $job['guid'] . '/');
 
 		$modified_date = new DateTime($result['finished']);
 		if($modified_date === FALSE)
@@ -682,11 +682,19 @@ class AnsibleAWX
 			}
 		}
 
-		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/stdout/?format=ansi', NULL, TRUE);
+		$result = $this->awx_api_request('GET', '/api/v2/workflow_jobs/' . $job['guid'] . '/workflow_nodes/');
 
-		if($result !== FALSE && !empty($result))
+		if(isset($result['results']))
 		{
-			$job_info['output'] = ansi_to_html($result);
+			$job_info['workflow_nodes'] = array();
+			foreach($result['results'] as &$workflow_node)
+			{
+				$job_info['workflow_nodes'][] = array(
+					'id' => $workflow_node['summary_fields']['job']['id'],
+					'name' => $workflow_node['summary_fields']['job']['name'],
+					'status' => $workflow_node['summary_fields']['job']['status']
+				);
+			}
 		}
 
 		return $job_info;
@@ -793,7 +801,7 @@ class AnsibleAWX
 				if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
 				{
 					// $job_params = $this->retrieve_job($job[0]['guid']);
-					$job = $this->awx_api_request('GET', '/api/v2/jobs/' . $job[0]['guid'] . '/');
+					$job = $this->awx_api_request('GET', '/api/v2/workflow_jobs/' . $job[0]['guid'] . '/');
 
 					$extra_vars = json_decode($job['extra_vars'], TRUE);
 					if($extra_vars !== FALSE)

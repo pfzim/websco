@@ -461,16 +461,17 @@ class Orchestrator2022
 			foreach($sub_json_data['value'] as $sub_properties)
 			{
 				$activity = array(
-					'id' =>  (string) $sub_properties['Id'],
+					'instance_id' =>  (string) $sub_properties['Id'],
 					'guid' => (string) $sub_properties['ActivityId'],
 					'name' => '',
 					'sequence' => (string) $sub_properties['SequenceNumber'],
 					'status' => (string) $sub_properties['Status']
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1', (string) $sub_properties['ActivityId'])))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`id`, a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1', (string) $sub_properties['ActivityId'])))
 				{
-					$activity['name'] = $name[0][0];
+					$activity['id'] = $name[0][0];
+					$activity['name'] = $name[0][1];
 				}
 
 				$instance['activities'][] = $activity;

@@ -168,9 +168,9 @@ class Runbooks
 		return $this->get_runbook_class_by_job_id($id)->get_job($id);
 	}
 
-	public function get_activity($guid)
+	public function get_activity($job_id, $activity_instance_guid)
 	{
-		return $this->get_runbook_class_by_type(RBF_TYPE_SCO2022)->get_activity($guid);
+		return $this->get_runbook_class_by_job_id($job_id)->get_activity($activity_instance_guid);
 	}
 
 	public function get_custom_job($id)

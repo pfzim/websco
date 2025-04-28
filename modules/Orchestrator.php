@@ -480,16 +480,17 @@ EOT;
 				$properties = $entry->content->children('m', TRUE)->properties->children('d', TRUE);
 
 				$activity = array(
-					'id' =>  (string) $properties->Id,
+					'instance_id' =>  (string) $properties->Id,
 					'guid' => (string) $properties->ActivityId,
 					'name' => '',
 					'sequence' => (string) $properties->SequenceNumber,
 					'status' => (string) $properties->Status
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1', (string) $properties->ActivityId)))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`id`, a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1', (string) $properties->ActivityId)))
 				{
-					$activity['name'] = $name[0][0];
+					$activity['id'] = $name[0][0];
+					$activity['name'] = $name[0][1];
 				}
 
 				$instance['activities'][] = $activity;

@@ -161,6 +161,7 @@ function exception_handler_ajax($exception)
 	define('RBF_TYPE_SCO',				0x00000008);
 	define('RBF_TYPE_SCO2022',			0x00000010);
 	define('RBF_TYPE_ANSIBLE',			0x00000020);
+	define('RBF_TYPE_ANSIBLE_WF',		0x00000040);
 	define('RBF_FIELD_TYPE_REQUIRED',	0x01000000);
 	define('RBF_FIELD_TYPE_PASSWORD',	0x02000000);
 	define('RBF_FIELD_TYPE_NUMBER',		0x04000000);

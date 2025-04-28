@@ -203,7 +203,7 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.instances[i].activities[j].id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
+						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.id + '/' + data.instances[i].activities[j].instance_id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
 					}
 					html += '<tr><td colspan="2"><b>' + LL.OutputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
@@ -218,6 +218,24 @@ function f_get_job(guid)
 					for(j = 0; j < data.input_params.length; j++)
 					{
 						html += '<tr><td>' + escapeHtml(data.input_params[j].name) +'</td><td>' + escapeHtml(data.input_params[j].value) +'</td></tr>';
+					}
+				}
+
+				if(data.workflow_nodes)
+				{
+					html += '<tr><td colspan="2"><b>' + LL.WorkflowNodes + '</b></td></tr>';
+					for(j = 0; j < data.workflow_nodes.length; j++)
+					{
+						if(data.workflow_nodes[j].status == 'successful')
+						{
+							cl = 'status-ok';
+						}
+						else
+						{
+							cl = 'status-err';
+						}
+
+						html += '<tr><td>' + escapeHtml(data.workflow_nodes[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.workflow_nodes[j].status) +'</td></tr>';
 					}
 				}
 
