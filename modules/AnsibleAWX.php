@@ -95,7 +95,7 @@ class AnsibleAWX
 		\return - created job ID
 	*/
 
-	public function start_playbook($id, $params)
+	public function start_playbook($guid, $params)
 	{
 		$parameters = array();
 
@@ -107,9 +107,26 @@ class AnsibleAWX
 			}
 		}
 
-        $result = $this->awx_api_request('POST', '/api/v2/job_templates/' . $id . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
+        $result = $this->awx_api_request('POST', '/api/v2/job_templates/' . $guid . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
 
         return $result['job'] ? $result['job'] : false;
+	}
+
+	public function start_workflow($guid, $params)
+	{
+		$parameters = array();
+
+		if(!empty($params))
+		{
+			foreach($params as &$param)
+			{
+				$parameters[$param['guid']] = $param['value'];
+			}
+		}
+
+        $result = $this->awx_api_request('POST', '/api/v2/workflow_job_templates/' . $guid . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
+
+        return $result['workflow_job'] ? $result['workflow_job'] : false;
 	}
 
 	/**
@@ -120,9 +137,19 @@ class AnsibleAWX
 		\return - TRUE | FALSE
 	*/
 
-	public function job_cancel($job_id)
+	public function job_cancel($job_id, $job_guid)
 	{
-		return ($this->awx_api_request('POST', '/api/v2/jobs/' . $job_id . '/cancel/', NULL, TRUE) !== FALSE);
+		$runbook = $this->core->Runbooks->get_runbook_by_job_id($job_id);
+		if((intval($runbook['flags']) & (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF)) == (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF))
+		{
+			$url = '/api/v2/workflow_jobs/' . $job_guid . '/cancel/';
+		}
+		else
+		{
+			$url = '/api/v2/jobs/' . $job_guid . '/cancel/';
+		}
+
+		return ($this->awx_api_request('POST', $url, NULL, TRUE) !== FALSE);
 	}
 
 	public function parse_form_and_start_runbook($post_data, &$result_json)
@@ -322,7 +349,14 @@ class AnsibleAWX
 
 		// log_db('Run: '.$playbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
 
-		$job_guid = $this->start_playbook($playbook['guid'], $params);
+		if((intval($playbook['flags']) & (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF)) == (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF))
+		{
+			$job_guid = $this->start_workflow($playbook['guid'], $params);
+		}
+		else
+		{
+			$job_guid = $this->start_playbook($playbook['guid'], $params);
+		}
 
 		if($job_guid !== FALSE)
 		{
@@ -359,11 +393,11 @@ class AnsibleAWX
 		return RBF_FIELD_TYPE_STRING;
 	}
 
-	public function retrieve_survey_params($id)
+	public function retrieve_survey_params($url)
 	{
 		$params = array();
 
-		$result = $this->awx_api_request('GET', '/api/v2/job_templates/' . $id . '/survey_spec/');
+		$result = $this->awx_api_request('GET', $url);
 		if($result['spec'])
 		{
             foreach ($result['spec'] as &$param) {
@@ -385,23 +419,29 @@ class AnsibleAWX
 	public function retrieve_playbooks()
 	{
 		$playbooks = array();
-        $url = '/api/v2/job_templates/';
+        $urls = array(
+			'job_template' => '/api/v2/job_templates/',
+			'workflow_job_template' => '/api/v2/workflow_job_templates/'
+		);
 
-        do {
-            $result = $this->awx_api_request('GET', $url);
+		foreach($urls as $type => $url)
+		{
+			do {
+				$result = $this->awx_api_request('GET', $url);
 
-            foreach ($result['results'] as $template) {
-                $playbooks[] = [
-                    'id' => (string) $template['id'],
-                    'name' => $template['name'],
-                    'description' => $template['description'] ?? '',
-                    'params' => $template['survey_enabled'] ? $this->retrieve_survey_params(intval($template['id'])) : NULL,
-                    'type' => 'job_template'
-                ];
-            }
+				foreach ($result['results'] as $template) {
+					$playbooks[] = [
+						'id' => (string) $template['id'],
+						'name' => $template['name'],
+						'description' => $template['description'] ?? '',
+						'params' => $template['survey_enabled'] ? $this->retrieve_survey_params($template['related']['survey_spec']) : NULL,
+						'type' => $type
+					];
+				}
 
-            $url = $result['next'] ? $result['next'] : null;
-        } while($url);
+				$url = $result['next'] ? $result['next'] : null;
+			} while($url);
+		}
 
         return $playbooks;
 	}
@@ -463,8 +503,9 @@ class AnsibleAWX
 
 		foreach($playbooks as &$playbook)
 		{
+			$runbook_type = $playbook['type'] == 'job_template' ? RBF_TYPE_ANSIBLE : (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF);
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id`, r.`folder_id`, f.`flags` AS `folder_flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $playbook['id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id`, r.`folder_id`, f.`flags` AS `folder_flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = {s0} AND (r.`flags` & {d1}) = {d1} LIMIT 1", $playbook['id'], $runbook_type)))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -475,7 +516,7 @@ class AnsibleAWX
 					$playbook['name'],
 					$playbook['description'],
 					$playbook['wiki_url'],
-					RBF_TYPE_ANSIBLE
+					$runbook_type
 				)))
 				{
 					$playbook_id = $this->core->db->last_id();
@@ -557,58 +598,80 @@ class AnsibleAWX
 		if($id)
 		{
 			$runbook = $this->core->Runbooks->get_runbook_by_id($id);
-			$url = '/api/v2/job_templates/' . $runbook['guid'] . '/jobs/';
+			if((intval($runbook['flags']) & (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF)) == (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF))
+			{
+				$urls = array(
+					'workflow_job_template' => '/api/v2/workflow_job_templates/' . $runbook['guid'] . '/workflow_jobs/'
+				);
+			}
+			else
+			{
+				$urls = array(
+					'job_template' => '/api/v2/job_templates/' . $runbook['guid'] . '/jobs/'
+				);
+			}
+		}
+		else
+		{
+			$urls = array(
+				'job_template' => '/api/v2/jobs/',
+				'workflow_job_template' => '/api/v2/workflow_jobs/',
+			);
 		}
 
-        do {
-            $result = $this->awx_api_request('GET', $url);
+		foreach($urls as $type => $url)
+		{
+			$runbook_type = $type == 'job_template' ? RBF_TYPE_ANSIBLE : (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF);
+			do {
+				$result = $this->awx_api_request('GET', $url);
 
-            foreach ($result['results'] as &$job) {
-				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_ANSIBLE} LIMIT 1", $job['job_template'])))
-				{
-					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['id'], $rb[0][0])))
+				foreach ($result['results'] as &$job) {
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = {s0} AND (r.`flags` & {d1}) = {d1} LIMIT 1", $job[$type], $runbook_type)))
 					{
-						$job_date = new DateTime($job['created']);
-						if($job_date === FALSE)
+						if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['id'], $rb[0][0])))
 						{
-							$job_date = '0000-00-0000 00:00:00';
-						}
-						else
-						{
-							$job_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
-							$job_date = $job_date->format('Y-m-d H:i:s');
-						}
-
-						if($this->core->db->put(rpv("
-								INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
-								VALUES (!, #, !, NULL, 0x0000)
-							",
-							$job_date,
-							$rb[0][0],
-							$job['id']
-						)))
-						{
-							// Load input params
-
-							$job_id = $this->core->db->last_id();
-							
-							$extra_vars = json_decode($job['extra_vars'], TRUE);
-							if($extra_vars !== FALSE)
+							$job_date = new DateTime($job['created']);
+							if($job_date === FALSE)
 							{
-								foreach($extra_vars as $var => $value)
-								{
-									$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $var, is_array($value) ? implode(', ', $value) : $value));
-								}
+								$job_date = '0000-00-0000 00:00:00';
+							}
+							else
+							{
+								$job_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+								$job_date = $job_date->format('Y-m-d H:i:s');
 							}
 
-							$jobs_added++;
+							if($this->core->db->put(rpv("
+									INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
+									VALUES (!, #, !, NULL, 0x0000)
+								",
+								$job_date,
+								$rb[0][0],
+								$job['id']
+							)))
+							{
+								// Load input params
+
+								$job_id = $this->core->db->last_id();
+								
+								$extra_vars = json_decode($job['extra_vars'], TRUE);
+								if($extra_vars !== FALSE)
+								{
+									foreach($extra_vars as $var => $value)
+									{
+										$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $var, is_array($value) ? implode(', ', $value) : $value));
+									}
+								}
+
+								$jobs_added++;
+							}
 						}
 					}
 				}
-            }
 
-            $url = $result['next'] ? $result['next'] : null;
-        } while($url);
+				$url = $result['next'] ? $result['next'] : null;
+			} while($url);
+		}
 
 		return $jobs_added;
 	}
@@ -640,10 +703,19 @@ class AnsibleAWX
 		}
 
 		$job = &$job[0];
+		
+		if((intval($job['flags']) & (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF)) == (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF))
+		{
+			$url = '/api/v2/workflow_jobs/' . $job['guid'] . '/';
+		}
+		else
+		{
+			$url = '/api/v2/jobs/' . $job['guid'] . '/';
+		}
 
-		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/');
+		$job_data = $this->awx_api_request('GET', $url);
 
-		$modified_date = new DateTime($result['finished']);
+		$modified_date = new DateTime($job_data['finished']);
 		if($modified_date === FALSE)
 		{
 			$modified_date = '00.00.0000 00:00:00';
@@ -663,10 +735,10 @@ class AnsibleAWX
 			'runbook_guid' => $job['runbook_guid'],
 			'folder_id' => $job['folder_id'],
 			'user' => $job['login'],
-			'status' => $result['status'],
+			'status' => $job_data['status'],
 			'modified_date' => $modified_date,
-			'sid' => $result['launched_by']['id'],
-			'sid_name' => $result['launched_by']['name'],
+			'sid' => $job_data['launched_by']['id'],
+			'sid_name' => $job_data['launched_by']['name'],
 			'instances' => array()
 		);
 
@@ -682,11 +754,32 @@ class AnsibleAWX
 			}
 		}
 
-		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/stdout/?format=ansi', NULL, TRUE);
-
-		if($result !== FALSE && !empty($result))
+		if(isset($job_data['related']['stdout']))
 		{
-			$job_info['output'] = ansi_to_html($result);
+			$result = $this->awx_api_request('GET', $job_data['related']['stdout'] . '?format=ansi', NULL, TRUE);
+
+			if($result !== FALSE && !empty($result))
+			{
+				$job_info['output'] = ansi_to_html($result);
+			}
+		}
+
+		if(isset($job_data['related']['workflow_nodes']))
+		{
+			$result = $this->awx_api_request('GET', $job_data['related']['workflow_nodes']);
+
+			if(isset($result['results']))
+			{
+				$job_info['workflow_nodes'] = array();
+				foreach($result['results'] as &$workflow_node)
+				{
+					$job_info['workflow_nodes'][] = array(
+						'id' => $workflow_node['summary_fields']['job']['id'],
+						'name' => $workflow_node['summary_fields']['job']['name'],
+						'status' => $workflow_node['summary_fields']['job']['status']
+					);
+				}
+			}
 		}
 
 		return $job_info;
@@ -793,7 +886,16 @@ class AnsibleAWX
 				if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
 				{
 					// $job_params = $this->retrieve_job($job[0]['guid']);
-					$job = $this->awx_api_request('GET', '/api/v2/jobs/' . $job[0]['guid'] . '/');
+					if((intval($playbook['flags']) & (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF)) == (RBF_TYPE_ANSIBLE | RBF_TYPE_ANSIBLE_WF))
+					{
+						$url = '/api/v2/workflow_jobs/' . $job[0]['guid'] . '/';
+					}
+					else
+					{
+						$url = '/api/v2/jobs/' . $job[0]['guid'] . '/';
+					}
+						
+					$job = $this->awx_api_request('GET', $url);
 
 					$extra_vars = json_decode($job['extra_vars'], TRUE);
 					if($extra_vars !== FALSE)

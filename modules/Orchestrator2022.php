@@ -173,17 +173,17 @@ class Orchestrator2022
 		\return - TRUE | FALSE
 	*/
 
-	public function job_cancel($guid)
+	public function job_cancel($job_id, $job_guid)
 	{
 		$request = json_encode(array(
-			'Id'			=> $guid
+			'Id'			=> $job_guid
 		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		log_file($request);
 
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs/'.$guid);
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs/'.$job_guid);
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
 
@@ -212,7 +212,7 @@ class Orchestrator2022
 
 		if(intval($result['http_code']) != 200)
 		{
-			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$guid."\n".$output."\n\n");
+			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$job_guid."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>

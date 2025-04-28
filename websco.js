@@ -230,6 +230,10 @@ function f_get_job(guid)
 						{
 							cl = 'status-ok';
 						}
+						else if(data.workflow_nodes[j].status == 'running' || data.workflow_nodes[j].status == 'waiting')
+						{
+							cl = 'status-warn';
+						}
 						else
 						{
 							cl = 'status-err';

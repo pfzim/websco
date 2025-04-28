@@ -182,7 +182,7 @@ EOT;
 		\return - TRUE | FALSE
 	*/
 
-	public function job_cancel($guid)
+	public function job_cancel($job_id, $job_guid)
 	{
 		$request = <<<'EOT'
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
@@ -191,7 +191,7 @@ EOT;
         <m:properties>
 EOT;
 
-		$request .= '<d:Id m:type="Edm.Guid">'.htmlspecialchars($guid).'</d:Id>';
+		$request .= '<d:Id m:type="Edm.Guid">'.htmlspecialchars($job_guid).'</d:Id>';
 		//$request .= '<d:RunbookId m:type="Edm.Guid">'.htmlspecialchars($runbook_guid).'</d:RunbookId>';
 
 		$request .= <<<'EOT'
@@ -205,7 +205,7 @@ EOT;
 
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs(guid\''.$guid.'\')');
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs(guid\''.$job_guid.'\')');
 		curl_setopt($ch, CURLOPT_POST, true);
 
 		if(defined('USE_GSSAPI') && USE_GSSAPI)
@@ -232,7 +232,7 @@ EOT;
 
 		if(intval($result['http_code']) != 204)
 		{
-			log_file('ERROR: Stop job '.$this->orchestrator_url.'/Jobs(guid\''.$guid.'\')'."\n".$output."\n\n");
+			log_file('ERROR: Stop job '.$this->orchestrator_url.'/Jobs(guid\''.$job_guid.'\')'."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>

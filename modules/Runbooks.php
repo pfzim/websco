@@ -98,10 +98,10 @@ class Runbooks
 		\return - TRUE | FALSE
 	*/
 
-	public function job_cancel($id)
+	public function job_cancel($job_id)
 	{
-		$runbook = $this->get_runbook_by_job_id($id);
-		return $this->get_runbook_class_by_job_id($id)->job_cancel($runbook['job_guid']);
+		$runbook = $this->get_runbook_by_job_id($job_id);
+		return $this->get_runbook_class_by_job_id($job_id)->job_cancel($job_id, $runbook['job_guid']);
 	}
 
 	public function sync($flags)
