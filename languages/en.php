@@ -62,6 +62,7 @@
 		'SyncJobs2022'				=> 'Sync jobs from Orchestrator 2022 (too slow)',
 		'SyncRunbooks'				=> 'Sync folders, runbooks and activities from Orchestrator',
 		'SyncJobs'					=> 'Sync jobs from Orchestrator (too slow)',
+		'SyncJobsAnsible'			=> 'Sync jobs from Ansible (too slow)',
 		'UsageExample'				=> 'Usage example',
 		'CurrentUserToken'			=> 'Current user token',
 		'TokenNote'					=> 'The token will be reset if you press Logout.',

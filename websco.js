@@ -224,7 +224,7 @@ function f_get_job(guid)
 				if(data.output)
 				{
 					html += '<tr><td colspan="2"><b>' + LL.Output + '</b></td></tr>';
-					html += '<tr><td colspan="2"><pre>' + escapeHtml(data.output) +'</pre></td></tr>';
+					html += '<tr><td colspan="2">' + data.output +'</td></tr>';
 				}
 
 				el.innerHTML = html;
@@ -552,7 +552,7 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			for(j = 0; j < fields[i].list.length; j++)
 			{
 				checked = '';
-				if(fields[i].selected.indexOf(fields[i].values[j]) !== -1)
+				if(fields[i].selected  && (fields[i].selected.indexOf(fields[i].values[j]) !== -1))
 				{
 					checked = ' checked="checked"';
 				}

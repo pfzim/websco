@@ -487,7 +487,7 @@ EOT;
 					'status' => (string) $properties->Status
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $properties->ActivityId)))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO} | {%RBF_DELETED})) = {%RBF_TYPE_SCO} LIMIT 1', (string) $properties->ActivityId)))
 				{
 					$activity['name'] = $name[0][0];
 				}
@@ -1095,10 +1095,10 @@ EOT;
 
 		$job_filter = '';
 
-		if(!empty($guid))
+		if($id)
 		{
-			$runbook = $this->core->Runbooks->get_runbook_by_job_id($id);
-			$job_filter = '/Runbooks(guid\'' . $runbook['job_guid'] . '\')';
+			$runbook = $this->core->Runbooks->get_runbook_by_id($id);
+			$job_filter = '/Runbooks(guid\'' . $runbook['guid'] . '\')';
 		}
 
 		do
@@ -1117,9 +1117,9 @@ EOT;
 					'date' => (string) $properties->CreationTime
 				);
 
-				if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_SCO} LIMIT 1", $job['pid'])))
 				{
-					if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
+					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['guid'], $rb['id'])))
 					{
 						$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
 						if($job_date === FALSE)

@@ -111,12 +111,12 @@ class Runbooks
 
 	public function sync_jobs_all($flags)
 	{
-		return $this->get_runbook_class_by_job_id($id)->sync_jobs($id);
+		return $this->get_runbook_class_by_type($flags)->sync_jobs($id);
 	}
 
 	public function sync_jobs($id)
 	{
-		return $this->get_runbook_class_by_job_id($id)->sync_jobs($id);
+		return $this->get_runbook_class($id)->sync_jobs($id);
 	}
 
 	public function get_runbook_by_id($id)
@@ -166,6 +166,11 @@ class Runbooks
 	public function get_job($id)
 	{
 		return $this->get_runbook_class_by_job_id($id)->get_job($id);
+	}
+
+	public function get_activity($guid)
+	{
+		return $this->get_runbook_class_by_type(RBF_TYPE_SCO2022)->get_activity($guid);
 	}
 
 	public function get_custom_job($id)

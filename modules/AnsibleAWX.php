@@ -75,7 +75,7 @@ class AnsibleAWX
 		{
 			return $output;
 		}
-		
+
 		$json = @json_decode($output, TRUE);
 		if($json === NULL)
 		{
@@ -98,7 +98,7 @@ class AnsibleAWX
 	public function start_playbook($id, $params)
 	{
 		$parameters = array();
-		
+
 		if(!empty($params))
 		{
 			foreach($params as &$param)
@@ -355,7 +355,7 @@ class AnsibleAWX
 			case 'multiplechoice': return RBF_FIELD_TYPE_LIST;
 			case 'multiselect': return RBF_FIELD_TYPE_FLAGS;
 		}
-		
+
 		return RBF_FIELD_TYPE_STRING;
 	}
 
@@ -389,7 +389,7 @@ class AnsibleAWX
 
         do {
             $result = $this->awx_api_request('GET', $url);
-            
+
             foreach ($result['results'] as $template) {
                 $playbooks[] = [
                     'id' => (string) $template['id'],
@@ -399,13 +399,13 @@ class AnsibleAWX
                     'type' => 'job_template'
                 ];
             }
-            
+
             $url = $result['next'] ? $result['next'] : null;
         } while($url);
 
         return $playbooks;
 	}
-	
+
 	public function sync()
 	{
 		log_file('Starting sync...');
@@ -460,7 +460,7 @@ class AnsibleAWX
 		}
 
 		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_ANSIBLE})"));
-		
+
 		foreach($playbooks as &$playbook)
 		{
 			$runbook_id = 0;
@@ -513,7 +513,7 @@ class AnsibleAWX
 				foreach($playbook['params'] as &$params)
 				{
 					$extra_data_json = NULL;
-					
+
 					if(!empty($params['description']))
 					{
 						$extra_data_json['description'] = &$params['description'];
@@ -548,6 +548,71 @@ class AnsibleAWX
 		return $total;
 	}
 
+	public function sync_jobs($id)
+	{
+		$jobs_added = 0;
+
+		$url = '/api/v2/jobs/';
+
+		if($id)
+		{
+			$runbook = $this->core->Runbooks->get_runbook_by_id($id);
+			$url = '/api/v2/job_templates/' . $runbook['guid'] . '/jobs/';
+		}
+
+        do {
+            $result = $this->awx_api_request('GET', $url);
+
+            foreach ($result['results'] as &$job) {
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_ANSIBLE} LIMIT 1", $job['job_template'])))
+				{
+					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['id'], $rb['id'])))
+					{
+						$job_date = new DateTime($job['created']);
+						if($job_date === FALSE)
+						{
+							$job_date = '0000-00-0000 00:00:00';
+						}
+						else
+						{
+							$job_date->setTimeZone(new DateTimeZone(date_default_timezone_get()));
+							$job_date = $job_date->format('Y-m-d H:i:s');
+						}
+
+						if($this->core->db->put(rpv("
+								INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`)
+								VALUES (!, #, !, NULL, 0x0000)
+							",
+							$job_date,
+							$rb[0][0],
+							$job['id']
+						)))
+						{
+							// Load input params
+
+							$job_id = $this->core->db->last_id();
+							
+							$extra_vars = json_decode($job['extra_vars'], TRUE);
+							if($extra_vars !== FALSE)
+							{
+								foreach($extra_vars as $var => $value)
+								{
+									$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $var, is_array($value) ? implode(', ', $value) : $value));
+								}
+							}
+
+							$jobs_added++;
+						}
+					}
+				}
+            }
+
+            $url = $result['next'] ? $result['next'] : null;
+        } while($url);
+
+		return $jobs_added;
+	}
+
 	public function get_job($id)
 	{
 		if(!$this->core->db->select_assoc_ex($job, rpv('
@@ -578,7 +643,7 @@ class AnsibleAWX
 
 		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/');
 
-		$modified_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $result['modified'], NULL);
+		$modified_date = new DateTime($result['finished']);
 		if($modified_date === FALSE)
 		{
 			$modified_date = '00.00.0000 00:00:00';
@@ -617,11 +682,11 @@ class AnsibleAWX
 			}
 		}
 
-		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/stdout/?format=txt', NULL, TRUE);
+		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $job['guid'] . '/stdout/?format=ansi', NULL, TRUE);
 
-		if($result !== FALSE)
+		if($result !== FALSE && !empty($result))
 		{
-			$job_info['output'] = $result;
+			$job_info['output'] = ansi_to_html($result);
 		}
 
 		return $job_info;
@@ -648,7 +713,7 @@ class AnsibleAWX
 		foreach($runbook_params as &$row)
 		{
 			$i++;
-			
+
 			$extra_data_json = array();
 			if(!empty($row['extra_data_json']))
 			{
@@ -725,15 +790,25 @@ class AnsibleAWX
 		{
 			if(!$this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
 			{
-				// if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
-				// {
-					// $job_params = $this->core->Runbooks->retrieve_job_first_instance_input_params($job[0]['guid']);
+				if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
+				{
+					// $job_params = $this->retrieve_job($job[0]['guid']);
+					$job = $this->awx_api_request('GET', '/api/v2/jobs/' . $job[0]['guid'] . '/');
 
-					// foreach($job_params as $param)
-					// {
-						// $this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
-					// }
-				// }
+					$extra_vars = json_decode($job['extra_vars'], TRUE);
+					if($extra_vars !== FALSE)
+					{
+						$job_params = array();
+						foreach($extra_vars as $var => $value)
+						{
+							$job_params[] = array(
+								'guid' => $var,
+								'value' => is_array($value) ? implode(', ', $value) : $value
+							);
+							$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $var, is_array($value) ? implode(', ', $value) : $value));
+						}
+					}
+				}
 			}
 		}
 
@@ -756,7 +831,7 @@ class AnsibleAWX
 			{
 				$field['list'] = $param['list'];
 				$field['values'] = $param['list'];
-				if(!$job_params) $field['selected'] = empty($param['default']) ? [] : array_map('trim', explode("\n", $param['default']));;
+				if(!$job_params) $field['selected'] = (empty($param['default'])) ? [] : array_map('trim', explode("\n", $param['default']));
 			}
 			elseif(($param['type'] == 'samaccountname'))
 			{
@@ -809,4 +884,48 @@ class AnsibleAWX
 
 		return $result_json;
 	}
+}
+
+function ansi_to_html($ansi_text) {
+	$ansi_text = htmlspecialchars($ansi_text);
+
+	// Replace ANSI colors with HTML styles
+	$patterns = [
+		// Reset styles
+		'/\033\[0m/i' => '</span>',
+
+		// Normal colors (replaced with darker shades)
+		'/\033\[0;30m/i' => '<span style="color: #aaaaaa">',     // Dark gray (instead of black)
+		'/\033\[0;31m/i' => '<span style="color: #ff6b6b">',     // Red
+		'/\033\[0;32m/i' => '<span style="color: #5cdb5c">',     // Green
+		'/\033\[0;33m/i' => '<span style="color: #f0e68c">',     // Yellow (closer to khaki)
+		'/\033\[0;34m/i' => '<span style="color: #6b8cff">',     // Blue
+		'/\033\[0;35m/i' => '<span style="color: #d98cff">',     // Magenta
+		'/\033\[0;36m/i' => '<span style="color: #7fffd4">',     // Cyan (aquamarine)
+		'/\033\[0;37m/i' => '<span style="color: #f8f8f8">',     // Light gray (almost white)
+
+		// Bright colors (bold)
+		'/\033\[1;30m/i' => '<span style="color: #777777">',     // Gray
+		'/\033\[1;31m/i' => '<span style="color: #ff8787">',     // Bright red
+		'/\033\[1;32m/i' => '<span style="color: #7be87b">',     // Bright green
+		'/\033\[1;33m/i' => '<span style="color: #ffeb7b">',     // Bright yellow
+		'/\033\[1;34m/i' => '<span style="color: #7b9cff">',     // Bright blue
+		'/\033\[1;35m/i' => '<span style="color: #f07bff">',     // Bright magenta
+		'/\033\[1;36m/i' => '<span style="color: #7bffff">',     // Bright cyan
+		'/\033\[1;37m/i' => '<span style="color: #ffffff">',      // White
+
+		// Additional styles
+		'/\033\[1m/i'  => '<span style="font-weight: bold">',    // Bold
+		'/\033\[3m/i'  => '<span style="font-style: italic">',   // Italic
+		'/\033\[4m/i'  => '<span style="text-decoration: underline">', // Underline
+	];
+
+	// Apply replacements
+	$html = preg_replace(array_keys($patterns), array_values($patterns), $ansi_text);
+
+	// Clean up remaining ANSI codes (if any)
+	$html = preg_replace('/\033\[[0-9;]*m/', '', $html);
+
+	// Dark background + monospace font
+	return '<pre style="background: #1e1e1e; color: #e0e0e0; padding: 5px; border-radius: 3px;">' . $html . '</pre>';
 }

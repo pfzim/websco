@@ -468,7 +468,7 @@ class Orchestrator2022
 					'status' => (string) $sub_properties['Status']
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $sub_properties['ActivityId'])))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1', (string) $sub_properties['ActivityId'])))
 				{
 					$activity['name'] = $name[0][0];
 				}
@@ -1016,8 +1016,8 @@ class Orchestrator2022
 
 		if($id)
 		{
-			$runbook = $this->core->Runbooks->get_runbook_by_job_id($id);
-			$job_filter = '&$filter=RunbookId%20eq%20' . $runbook['job_guid'];
+			$runbook = $this->core->Runbooks->get_runbook_by_id($id);
+			$job_filter = '&$filter=RunbookId%20eq%20' . $runbook['guid'];
 		}
 
 		do
@@ -1034,9 +1034,9 @@ class Orchestrator2022
 					'date' => (string) $properties['CreationTime']
 				);
 
-				if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_SCO2022} LIMIT 1", $job['pid'])))
 				{
-					if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
+					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['guid'], $rb['id'])))
 					{
 						$job_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $job['date'], NULL);
 						if($job_date === FALSE)

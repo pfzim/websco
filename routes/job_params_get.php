@@ -26,7 +26,19 @@ function job_params_get(&$core, $params, $post_data)
 			$result_json['params'] = $job_params;
 		}
 	}
-	else if(!$core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, rp.`name`, jp.`value` FROM @runbooks_jobs_params AS jp LEFT JOIN @runbooks_params AS rp ON rp.`guid` = jp.`guid` WHERE jp.`pid` = # ORDER BY rp.`name`', $job_id)))
+	else if(!$core->db->select_assoc_ex($job_params, rpv('
+		SELECT
+			jp.`guid`, rp.`name`, jp.`value`
+		FROM @runbooks_jobs_params AS jp
+		LEFT JOIN @runbooks_jobs AS j
+			ON j.`id` = jp.`pid`
+		LEFT JOIN @runbooks_params AS rp
+			ON rp.`pid` = j.`pid` AND rp.`guid` = jp.`guid`
+		WHERE
+			jp.`pid` = #
+		ORDER BY
+			rp.`name`
+	', $job_id)))
 	{
 		$result_json['code'] = 1;
 		$result_json['message'] = LL('NothingFound');

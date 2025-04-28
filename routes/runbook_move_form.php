@@ -77,20 +77,20 @@ function runbook_move_form(&$core, $params, $post_data)
 		}
 	}
 	
-	function build_tree($tree, $id, $this_id)
+	function build_tree($tree, $id, $this_id, $skip_current = TRUE)
 	{
 		$result = array();
 
 		foreach($tree[$id] as &$value)
 		{
-			if($value['id'] == $this_id)
+			if($skip_current && ($value['id'] == $this_id))
 			{
 				continue;
 			}
 
 			if(isset($tree[$value['id']]))
 			{
-				$value['childs'] = $value['closed'] ? array() : build_tree($tree, $value['id'], $this_id);
+				$value['childs'] = $value['closed'] ? array() : build_tree($tree, $value['id'], $this_id, $skip_current);
 			}
 			$result[] = &$value;
 		}
@@ -126,7 +126,7 @@ function runbook_move_form(&$core, $params, $post_data)
 						'name' => LL('RootLevel'),
 						'selected' => ($pid == 0),
 						'closed' => FALSE,
-						'childs' => build_tree($tree, 0, $id)
+						'childs' => build_tree($tree, 0, 0, FALSE)
 					)
 				)
 			)
