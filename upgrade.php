@@ -139,11 +139,20 @@ db_upgrade($core, 9, 'Change PRIMARY KEY for table `@runbooks`', rpv('ALTER TABL
 db_upgrade($core, 10, 'Change PRIMARY KEY for table `@runbooks_activities`', rpv('ALTER TABLE `@runbooks_activities` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
 db_upgrade($core, 11, 'Change PRIMARY KEY for table `@runbooks_jobs`', rpv('ALTER TABLE `@runbooks_jobs` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
 db_upgrade($core, 12, 'Change PRIMARY KEY for table `@runbooks_servers`', rpv('ALTER TABLE `@runbooks_servers` DROP PRIMARY KEY, ADD PRIMARY KEY (`id`)'));
-db_upgrade($core, 13, 'Update parent IDs in @runbooks_folders', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
-db_upgrade($core, 14, 'Change `pid` column type in @runbooks_folders', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
-db_upgrade($core, 15, 'Update parent IDs in @runbooks_params', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & # SET rp.`pid` = r.`id`', $runbook_type));
-db_upgrade($core, 16, 'Change `pid` column type in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
-db_upgrade($core, 17, 'Add `extra_data_json` column to @runbooks_params', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
+db_upgrade($core, 13, 'Change PRIMARY KEY for table `@config`', rpv('ALTER TABLE `@config` DROP PRIMARY KEY, ADD PRIMARY KEY (`uid`,`name`) USING BTREE'));
+db_upgrade($core, 14, 'Add index for table `@users`', rpv('ALTER TABLE `@users` ADD INDEX idx_login (login)'));
+db_upgrade($core, 15, 'Add index for table `@access`', rpv('ALTER TABLE `@access` ADD INDEX idx_sid (sid), ADD INDEX idx_dn (dn)'));
+db_upgrade($core, 16, 'Add index for table `@runbooks`', rpv('ALTER TABLE `@runbooks` ADD INDEX idx_guid (guid)'));
+db_upgrade($core, 17, 'Add index for table `@runbooks_activities`', rpv('ALTER TABLE `@runbooks_activities` ADD INDEX idx_guid (guid)'));
+db_upgrade($core, 18, 'Add index for table `@runbooks_folders`', rpv('ALTER TABLE `@runbooks_folders` ADD INDEX idx_pid (pid), ADD INDEX idx_guid (guid)'));
+db_upgrade($core, 19, 'Add index for table `@runbooks_jobs`', rpv('ALTER TABLE `@runbooks_jobs` ADD INDEX idx_pid (pid), ADD INDEX idx_guid (guid)'));
+db_upgrade($core, 20, 'Add index for table `@runbooks_params`', rpv('ALTER TABLE `@runbooks_params` ADD INDEX idx_pid (pid)'));
+db_upgrade($core, 21, 'Add index for table `@runbooks_servers`', rpv('ALTER TABLE `@runbooks_servers` ADD INDEX idx_guid (guid)'));
+db_upgrade($core, 22, 'Update parent IDs in @runbooks_folders', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
+db_upgrade($core, 23, 'Change `pid` column type in @runbooks_folders', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 24, 'Update parent IDs in @runbooks_params', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & # SET rp.`pid` = r.`id`', $runbook_type));
+db_upgrade($core, 25, 'Change `pid` column type in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 26, 'Add `extra_data_json` column to @runbooks_params', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
 
 if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022) && !defined('ORCHESTRATOR2022_URL'))
 {

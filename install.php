@@ -52,7 +52,8 @@ CREATE TABLE `#DB_NAME#`.`w_users` (
   `sid` varchar(16) DEFAULT NULL,
   `reset_token` varchar(16) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_login (login)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -63,7 +64,9 @@ CREATE TABLE `#DB_NAME#`.`w_access` (
   `dn` varchar(1024) NOT NULL DEFAULT '',
   `oid` int(10) unsigned NOT NULL DEFAULT 0,
   `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_sid (sid),
+  INDEX idx_dn (dn)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -88,7 +91,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks` (
   `description` varchar(4096) NOT NULL,
   `wiki_url` varchar(1024) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_guid (guid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -98,7 +102,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_guid (guid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -109,7 +114,9 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_pid (pid),
+  INDEX idx_guid (guid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -121,7 +128,9 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
   `guid` varchar(36) NOT NULL,
   `uid` int(10) unsigned DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_pid (pid),
+  INDEX idx_guid (guid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -141,7 +150,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
   `name` varchar(255) NOT NULL,
   `extra_data_json` varchar(4096) NOT NULL DEFAULT '',
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`guid`)
+  PRIMARY KEY (`guid`),
+  INDEX idx_pid (pid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -151,7 +161,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_guid (guid)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -161,7 +172,7 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
   `name` varchar(255) NOT NULL DEFAULT '',
   `value` varchar(8192) NOT NULL DEFAULT '',
   `description` varchar(2048) DEFAULT NULL,
-  PRIMARY KEY (`name`,`uid`) USING BTREE
+  PRIMARY KEY (`uid`,`name`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
