@@ -53,7 +53,7 @@ CREATE TABLE `#DB_NAME#`.`w_users` (
   `reset_token` varchar(16) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  INDEX idx_login (login)
+  INDEX idx_login (`login`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -65,8 +65,8 @@ CREATE TABLE `#DB_NAME#`.`w_access` (
   `oid` int(10) unsigned NOT NULL DEFAULT 0,
   `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
   PRIMARY KEY (`id`),
-  INDEX idx_sid (sid),
-  INDEX idx_dn (dn)
+  INDEX idx_sid (`sid`),
+  INDEX idx_dn (`dn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -92,7 +92,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks` (
   `wiki_url` varchar(1024) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX idx_guid (guid)
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -103,7 +103,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX idx_guid (guid)
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -115,8 +115,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX idx_pid (pid),
-  INDEX idx_guid (guid)
+  INDEX idx_pid (`pid`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -129,8 +129,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
   `uid` int(10) unsigned DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX idx_pid (pid),
-  INDEX idx_guid (guid)
+  INDEX idx_pid (`pid`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -150,8 +150,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
   `name` varchar(255) NOT NULL,
   `extra_data_json` varchar(4096) NOT NULL DEFAULT '',
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`guid`),
-  INDEX idx_pid (pid)
+  PRIMARY KEY (`pid`, `guid`),
+  INDEX idx_pid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -162,7 +162,7 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
-  INDEX idx_guid (guid)
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -177,7 +177,7 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
 EOT
 ,
 <<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 16, 'DB schema version. Do not change!');
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 26, 'DB schema version. Do not change!');
 EOT
 );
 
@@ -1823,7 +1823,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="awx_url" class="control-label col-sm-2">AWX URL:</label>
 				<div class="col-sm-5">
-					<input id="awx_url" name="awx_url" class="form-control" type="text" value="https://awx.contoso.com/" />
+					<input id="awx_url" name="awx_url" class="form-control" type="text" value="https://awx.contoso.com" />
 				</div>
 			</div>
 			<div class="form-group">
