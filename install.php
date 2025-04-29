@@ -179,6 +179,14 @@ EOT
 <<<'EOT'
 INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 26, 'DB schema version. Do not change!');
 EOT
+,
+<<<'EOT'
+INSERT INTO `#DB_NAME#`.`w_runbooks_folders` (`guid`, `pid`, `name`, `flags`) VALUES ('', 0, 'WebSCO custom scripts', 0x0004);
+EOT
+,
+<<<'EOT'
+INSERT INTO `#DB_NAME#`.`w_runbooks` (`folder_id`, `guid`, `name`, `description`, `flags`) VALUES ((SELECT f.`id` FROM `#DB_NAME#`.`w_runbooks_folders` AS f WHERE f.`name` = 'WebSCO custom scripts' AND f.`flags` = 0x0004 LIMIT 1), 'password_generator', 'Password generator', 'Online password generator', 0x0004);
+EOT
 );
 
 $config = <<<'EOT'
@@ -1757,7 +1765,7 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<h3>Orchestrator settings</h3>
+					<h3>Orchestrator 2012 settings</h3>
 				</div>
 			</div>
 			<div class="form-group">

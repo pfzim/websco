@@ -28,5 +28,5 @@ function permissions_convert(&$core, $params, $post_data)
 		}
 	}
 
-	echo '{"code": 0, "message": "Converting done! (count: '.$i.')"}';
+	echo '{"code": 0, "message": "Convertation done! (count: '.$i.')"}';
 }
