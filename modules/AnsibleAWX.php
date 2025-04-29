@@ -19,8 +19,8 @@
 */
 
 /**
-	This class is intended for accessing the Microsoft System Center
-	Orchestrator web service to get a list of ranbooks and launch them.
+	This class is intended for accessing the AWX API to get a list of runbooks
+	and launch them.
 */
 
 class AnsibleAWX
@@ -760,7 +760,7 @@ class AnsibleAWX
 
 			if($result !== FALSE && !empty($result))
 			{
-				$job_info['output'] = ansi_to_html($result);
+				$job_info['output'] = $this->ansi_to_html($result);
 			}
 		}
 
@@ -792,25 +792,31 @@ class AnsibleAWX
 			'params' => array()
 		);
 
-		$job_data = $this->awx_api_request('GET', '/api/v2/jobs/' . $guid . '/');
+		$job_data = $this->awx_api_request('GET', '/api/v2/unified_jobs/?id=' . $guid . '');
 
-		$extra_vars = json_decode($job_data['extra_vars'], TRUE);
-		if($extra_vars !== FALSE)
+		if(isset($job_data['results'][0]['extra_vars']))
 		{
-			foreach($extra_vars as $var => $value)
+			$extra_vars = json_decode($job_data['results'][0]['extra_vars'], TRUE);
+			if($extra_vars !== FALSE)
 			{
-				$activity_info['params'][] = array(
-					'name' => $var,
-					'value' => is_array($value) ? implode(', ', $value) : $value
-				);
+				foreach($extra_vars as $var => $value)
+				{
+					$activity_info['params'][] = array(
+						'name' => $var,
+						'value' => is_array($value) ? implode(', ', $value) : $value
+					);
+				}
 			}
 		}
 
-		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $guid . '/stdout/?format=ansi', NULL, TRUE);
-
-		if($result !== FALSE && !empty($result))
+		if(isset($job_data['results'][0]['related']['stdout']))
 		{
-			$activity_info['output'] = ansi_to_html($result);
+			$stdout = $this->awx_api_request('GET', $job_data['results'][0]['related']['stdout'] . '?format=ansi', NULL, TRUE);
+
+			if($stdout !== FALSE && !empty($stdout))
+			{
+				$activity_info['output'] = $this->ansi_to_html($stdout);
+			}
 		}
 
 		return $activity_info;
@@ -1017,48 +1023,48 @@ class AnsibleAWX
 
 		return $result_json;
 	}
-}
 
-function ansi_to_html($ansi_text) {
-	$ansi_text = htmlspecialchars($ansi_text);
+	static function ansi_to_html($ansi_text) {
+		$ansi_text = htmlspecialchars($ansi_text);
 
-	// Replace ANSI colors with HTML styles
-	$patterns = [
-		// Reset styles
-		'/\033\[0m/i' => '</span>',
+		// Replace ANSI colors with HTML styles
+		$patterns = [
+			// Reset styles
+			'/\033\[0m/i' => '</span>',
 
-		// Normal colors (replaced with darker shades)
-		'/\033\[0;30m/i' => '<span style="color: #aaaaaa">',     // Dark gray (instead of black)
-		'/\033\[0;31m/i' => '<span style="color: #ff6b6b">',     // Red
-		'/\033\[0;32m/i' => '<span style="color: #5cdb5c">',     // Green
-		'/\033\[0;33m/i' => '<span style="color: #f0e68c">',     // Yellow (closer to khaki)
-		'/\033\[0;34m/i' => '<span style="color: #6b8cff">',     // Blue
-		'/\033\[0;35m/i' => '<span style="color: #d98cff">',     // Magenta
-		'/\033\[0;36m/i' => '<span style="color: #7fffd4">',     // Cyan (aquamarine)
-		'/\033\[0;37m/i' => '<span style="color: #f8f8f8">',     // Light gray (almost white)
+			// Normal colors (replaced with darker shades)
+			'/\033\[0;30m/i' => '<span style="color: #aaaaaa">',     // Dark gray (instead of black)
+			'/\033\[0;31m/i' => '<span style="color: #ff6b6b">',     // Red
+			'/\033\[0;32m/i' => '<span style="color: #5cdb5c">',     // Green
+			'/\033\[0;33m/i' => '<span style="color: #f0e68c">',     // Yellow (closer to khaki)
+			'/\033\[0;34m/i' => '<span style="color: #6b8cff">',     // Blue
+			'/\033\[0;35m/i' => '<span style="color: #d98cff">',     // Magenta
+			'/\033\[0;36m/i' => '<span style="color: #7fffd4">',     // Cyan (aquamarine)
+			'/\033\[0;37m/i' => '<span style="color: #f8f8f8">',     // Light gray (almost white)
 
-		// Bright colors (bold)
-		'/\033\[1;30m/i' => '<span style="color: #777777">',     // Gray
-		'/\033\[1;31m/i' => '<span style="color: #ff8787">',     // Bright red
-		'/\033\[1;32m/i' => '<span style="color: #7be87b">',     // Bright green
-		'/\033\[1;33m/i' => '<span style="color: #ffeb7b">',     // Bright yellow
-		'/\033\[1;34m/i' => '<span style="color: #7b9cff">',     // Bright blue
-		'/\033\[1;35m/i' => '<span style="color: #f07bff">',     // Bright magenta
-		'/\033\[1;36m/i' => '<span style="color: #7bffff">',     // Bright cyan
-		'/\033\[1;37m/i' => '<span style="color: #ffffff">',      // White
+			// Bright colors (bold)
+			'/\033\[1;30m/i' => '<span style="color: #777777">',     // Gray
+			'/\033\[1;31m/i' => '<span style="color: #ff8787">',     // Bright red
+			'/\033\[1;32m/i' => '<span style="color: #7be87b">',     // Bright green
+			'/\033\[1;33m/i' => '<span style="color: #ffeb7b">',     // Bright yellow
+			'/\033\[1;34m/i' => '<span style="color: #7b9cff">',     // Bright blue
+			'/\033\[1;35m/i' => '<span style="color: #f07bff">',     // Bright magenta
+			'/\033\[1;36m/i' => '<span style="color: #7bffff">',     // Bright cyan
+			'/\033\[1;37m/i' => '<span style="color: #ffffff">',      // White
 
-		// Additional styles
-		'/\033\[1m/i'  => '<span style="font-weight: bold">',    // Bold
-		'/\033\[3m/i'  => '<span style="font-style: italic">',   // Italic
-		'/\033\[4m/i'  => '<span style="text-decoration: underline">', // Underline
-	];
+			// Additional styles
+			'/\033\[1m/i'  => '<span style="font-weight: bold">',    // Bold
+			'/\033\[3m/i'  => '<span style="font-style: italic">',   // Italic
+			'/\033\[4m/i'  => '<span style="text-decoration: underline">', // Underline
+		];
 
-	// Apply replacements
-	$html = preg_replace(array_keys($patterns), array_values($patterns), $ansi_text);
+		// Apply replacements
+		$html = preg_replace(array_keys($patterns), array_values($patterns), $ansi_text);
 
-	// Clean up remaining ANSI codes (if any)
-	$html = preg_replace('/\033\[[0-9;]*m/', '', $html);
+		// Clean up remaining ANSI codes (if any)
+		$html = preg_replace('/\033\[[0-9;]*m/', '', $html);
 
-	// Dark background + monospace font
-	return '<pre style="background: #1e1e1e; color: #e0e0e0; padding: 5px; border-radius: 3px;">' . $html . '</pre>';
+		// Dark background + monospace font
+		return '<pre style="background: #1e1e1e; color: #e0e0e0; padding: 5px; border-radius: 3px;">' . $html . '</pre>';
+	}
 }
