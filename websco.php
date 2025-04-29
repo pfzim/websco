@@ -292,6 +292,9 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('complete_group', 'complete_group', TRUE);
 		$core->Router->add_route('complete_group_sam', 'complete_group_sam', TRUE);
 
+		$core->Router->add_route('setting_get', 'setting_get', TRUE);
+		$core->Router->add_route('setting_save', 'setting_save', TRUE);
+
 		$core->Router->add_route('tools', 'tools');
 
 		$core->Router->add_route('folder_hide', 'folder_hide', TRUE);

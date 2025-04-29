@@ -47,5 +47,30 @@
 <a href="<?php ln('password_change_form'); ?>" onclick="return f_show_form(this.href);"><?php L('ChangePassword') ?></a><br />
 <?php } ?>
 
+<!--
+<h3><?php L('Settings') ?></h3>
+
+<table id="table" class="main-table">
+	<thead>
+		<tr>
+			<th width="1%">UID</th>
+			<th width="20%"><?php L('Name') ?></th>
+			<th width="40%"><?php L('Value') ?></th>
+			<th width="39%"><?php L('Description') ?></th>
+		</tr>
+	</thead>
+	<tbody id="table-data">
+		<?php foreach($config as &$row) { ?>
+			<tr>
+				<td><?php eh($row['uid']); ?></td>
+				<td><span class="command" onclick="f_show_form('<?php ln('setting_get/'.$row['uid'].'/'.$row['name']) ?>');"><?php eh($row['name']); ?></span></td>
+				<td><pre><?php eh($row['value']); ?></pre></td>
+				<td><pre><?php eh($row['description']); ?></pre></td>
+			</tr>
+		<?php } ?>
+	</tbody>
+</table>
+-->
+
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

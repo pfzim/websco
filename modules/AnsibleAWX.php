@@ -775,7 +775,7 @@ class AnsibleAWX
 				{
 					$job_info['workflow_nodes'][] = array(
 						'job_id' => $workflow_node['summary_fields']['job']['id'],
-						'name' => $workflow_node['summary_fields']['job']['name'],
+						'name' => $workflow_node['summary_fields']['unified_job_template']['name'],
 						'status' => $workflow_node['summary_fields']['job']['status']
 					);
 				}
@@ -788,8 +788,23 @@ class AnsibleAWX
 	public function get_activity($guid)
 	{
 		$activity_info = array(
-			'guid' => $guid
+			'guid' => $guid,
+			'params' => array()
 		);
+
+		$job_data = $this->awx_api_request('GET', '/api/v2/jobs/' . $guid . '/');
+
+		$extra_vars = json_decode($job_data['extra_vars'], TRUE);
+		if($extra_vars !== FALSE)
+		{
+			foreach($extra_vars as $var => $value)
+			{
+				$activity_info['params'][] = array(
+					'name' => $var,
+					'value' => is_array($value) ? implode(', ', $value) : $value
+				);
+			}
+		}
 
 		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $guid . '/stdout/?format=ansi', NULL, TRUE);
 
