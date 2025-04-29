@@ -239,7 +239,8 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td>' + escapeHtml(data.workflow_nodes[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.workflow_nodes[j].status) +'</td></tr>';
+						// html += '<tr><td>' + escapeHtml(data.workflow_nodes[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.workflow_nodes[j].status) +'</td></tr>';
+						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.id + '/' + data.workflow_nodes[j].job_id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.workflow_nodes[j].job_id) + '. ' + escapeHtml(data.workflow_nodes[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.workflow_nodes[j].status) +'</td></tr>';
 					}
 				}
 
@@ -390,9 +391,18 @@ function f_get_activity(url)
 				var el = gi('activity_table_data');
 				el.innerHTML = '';
 				html = '';
-				for(j = 0; j < data.params.length; j++)
+				if(data.params)
 				{
-					html += '<tr><td>' + escapeHtml(data.params[j].name) +'</td><td><pre>' + escapeHtml(data.params[j].value) +'</pre></td></tr>';
+					for(j = 0; j < data.params.length; j++)
+					{
+						html += '<tr><td>' + escapeHtml(data.params[j].name) +'</td><td><pre>' + escapeHtml(data.params[j].value) +'</pre></td></tr>';
+					}
+				}
+
+				if(data.output)
+				{
+					html += '<tr><td colspan="2"><b>' + LL.Output + '</b></td></tr>';
+					html += '<tr><td colspan="2">' + data.output +'</td></tr>';
 				}
 
 				el.innerHTML = html;

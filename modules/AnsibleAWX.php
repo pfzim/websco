@@ -774,7 +774,7 @@ class AnsibleAWX
 				foreach($result['results'] as &$workflow_node)
 				{
 					$job_info['workflow_nodes'][] = array(
-						'id' => $workflow_node['summary_fields']['job']['id'],
+						'job_id' => $workflow_node['summary_fields']['job']['id'],
 						'name' => $workflow_node['summary_fields']['job']['name'],
 						'status' => $workflow_node['summary_fields']['job']['status']
 					);
@@ -783,6 +783,22 @@ class AnsibleAWX
 		}
 
 		return $job_info;
+	}
+
+	public function get_activity($guid)
+	{
+		$activity_info = array(
+			'guid' => $guid
+		);
+
+		$result = $this->awx_api_request('GET', '/api/v2/jobs/' . $guid . '/stdout/?format=ansi', NULL, TRUE);
+
+		if($result !== FALSE && !empty($result))
+		{
+			$activity_info['output'] = ansi_to_html($result);
+		}
+
+		return $activity_info;
 	}
 
 	private function flags_to_type($flags)
@@ -816,7 +832,7 @@ class AnsibleAWX
 			$type = $this->flags_to_type(intval($row['flags']));
 
 			$form_field = array(
-				'type' => $type,
+				'type' => ($row['guid'] === 'who_websco') ? 'who' : $type,
 				'required' => intval($row['flags']) & RBF_FIELD_TYPE_REQUIRED,
 				'name' => $row['name'],
 				'description' => $extra_data_json['description'] ?? '',
