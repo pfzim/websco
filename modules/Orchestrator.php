@@ -866,7 +866,7 @@ EOT;
 					",
 					$folder['guid'],
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator 2016' : '(undefined folder name)') : $folder['name'],
 					RBF_TYPE_SCO
 				)))
 				{
@@ -889,7 +889,7 @@ EOT;
 						LIMIT 1
 					",
 					$folder_pid,
-					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator' : '(undefined folder name)') : $folder['name'],
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator 2016' : '(undefined folder name)') : $folder['name'],
 					$folder_id
 				));
 			}

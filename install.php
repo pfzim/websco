@@ -1736,7 +1736,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="ldap_uri" class="control-label col-sm-2">LDAP URI:</label>
 				<div class="col-sm-5">
-					<input id="ldap_uri" name="ldap_uri" class="form-control" type="text" value="ldap://dc-01.contoso.com ldap://dc-02.contoso.com:389 ldaps://dc-03.contoso.com" />
+					<input id="ldap_uri" name="ldap_uri" class="form-control" type="text" value="ldap://dc-01.contoso.com ldap://dc-02.contoso.com:389 ldaps://dc-03.contoso.com" placeholder="ldap://dc-01.contoso.com ldap://dc-02.contoso.com:389 ldaps://dc-03.contoso.com" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1771,7 +1771,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="scorch_url" class="control-label col-sm-2">WebSvc URL:</label>
 				<div class="col-sm-5">
-					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scorch-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
+					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scorch-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" placeholder="http://srv-scorch-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1801,7 +1801,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="scorch2022_url" class="control-label col-sm-2">API URL:</label>
 				<div class="col-sm-5">
-					<input id="scorch2022_url" name="scorch2022_url" class="form-control" type="text" value="https://srv-scorch-02.contoso.com:8443/api" />
+					<input id="scorch2022_url" name="scorch2022_url" class="form-control" type="text" value="https://srv-scorch-02.contoso.com:8443/api" placeholder="https://srv-scorch-02.contoso.com:8443/api" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1831,7 +1831,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="awx_url" class="control-label col-sm-2">AWX URL:</label>
 				<div class="col-sm-5">
-					<input id="awx_url" name="awx_url" class="form-control" type="text" value="https://awx.contoso.com" />
+					<input id="awx_url" name="awx_url" class="form-control" type="text" value="https://awx.contoso.com" placeholder="https://awx.contoso.com" />
 				</div>
 			</div>
 			<div class="form-group">
