@@ -149,10 +149,12 @@ db_upgrade($core, 19, 'Add index for table `@runbooks_jobs`', rpv('ALTER TABLE `
 db_upgrade($core, 20, 'Add index for table `@runbooks_params`', rpv('ALTER TABLE `@runbooks_params` ADD INDEX idx_pid (`guid`)'));
 db_upgrade($core, 21, 'Add index for table `@runbooks_servers`', rpv('ALTER TABLE `@runbooks_servers` ADD INDEX idx_guid (`guid`)'));
 db_upgrade($core, 22, 'Update parent IDs in @runbooks_folders', rpv('UPDATE `@runbooks_folders` AS f LEFT JOIN `@runbooks_folders` AS parent ON f.`pid` = parent.`guid` SET f.`pid` = IFNULL(parent.`id`, 0), f.`name` = IF(f.`name` = \'\', \'(undefined folder name)\', f.`name`)'));
-db_upgrade($core, 23, 'Change `pid` column type in @runbooks_folders', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 23, 'Change `pid` column type in @runbooks_folders', rpv('ALTER TABLE `@runbooks_folders` MODIFY COLUMN `pid` int(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 24, 'Update parent IDs in @runbooks_params', rpv('UPDATE `@runbooks_params` AS rp JOIN `@runbooks` AS r ON rp.`pid` = r.`guid` AND r.flags & # SET rp.`pid` = r.`id`', $runbook_type));
-db_upgrade($core, 25, 'Change `pid` column type in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` INT(10) UNSIGNED NOT NULL'));
+db_upgrade($core, 25, 'Change `pid` column type in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` int(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 26, 'Add `extra_data_json` column to @runbooks_params', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
+db_upgrade($core, 27, 'Extend `guid` column size in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `guid` varchar(64) NOT NULL'));
+db_upgrade($core, 28, 'Extend `guid` column size in @w_runbooks_jobs_params', rpv('ALTER TABLE `@w_runbooks_jobs_params` MODIFY COLUMN `guid` varchar(64) NOT NULL'));
 
 if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022) && !defined('ORCHESTRATOR2022_URL'))
 {

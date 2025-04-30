@@ -137,7 +137,7 @@ EOT
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
   `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
+  `guid` varchar(64) NOT NULL,
   `value` varchar(4096) NOT NULL,
   PRIMARY KEY (`pid`, `guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -146,7 +146,7 @@ EOT
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
   `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
+  `guid` varchar(64) NOT NULL,
   `name` varchar(255) NOT NULL,
   `extra_data_json` varchar(4096) NOT NULL DEFAULT '',
   `flags` int(10) unsigned NOT NULL,
@@ -1742,7 +1742,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="ldap_user" class="control-label col-sm-2">User:</label>
 				<div class="col-sm-5">
-					<input id="ldap_user" name="ldap_user" class="form-control" type="text" value="domain\user" />
+					<input id="ldap_user" name="ldap_user" class="form-control" type="text" value="domain\user" placeholder="domain\user" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1754,7 +1754,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="ldap_base" class="control-label col-sm-2">Base DN:</label>
 				<div class="col-sm-5">
-					<input id="ldap_base" name="ldap_base" class="form-control" type="text" value="DC=company,DC=local" />
+					<input id="ldap_base" name="ldap_base" class="form-control" type="text" value="DC=company,DC=local" placeholder="DC=company,DC=local" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1777,7 +1777,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="scorch_user" class="control-label col-sm-2">User:</label>
 				<div class="col-sm-5">
-					<input id="scorch_user" name="scorch_user" class="form-control" type="text" value="domain\user" />
+					<input id="scorch_user" name="scorch_user" class="form-control" type="text" value="domain\user" placeholder="domain\user" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1807,7 +1807,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="scorch2022_user" class="control-label col-sm-2">User:</label>
 				<div class="col-sm-5">
-					<input id="scorch2022_user" name="scorch2022_user" class="form-control" type="text" value="domain\user" />
+					<input id="scorch2022_user" name="scorch2022_user" class="form-control" type="text" value="domain\user" placeholder="domain\user" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1972,13 +1972,13 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="web_url" class="control-label col-sm-2">WebSCO URL (with trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="web_url" name="web_url" class="form-control" type="text" value="<?php eh($web_url) ?>" />
+					<input id="web_url" name="web_url" class="form-control" type="text" value="<?php eh($web_url) ?>" placeholder="<?php eh($web_url) ?>" />
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="pretty_links_base_path" class="control-label col-sm-2">Links base path (with leading and trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="pretty_links_base_path" name="pretty_links_base_path" class="form-control" type="text" value="<?php eh($pretty_links_base_path) ?>" />
+					<input id="pretty_links_base_path" name="pretty_links_base_path" class="form-control" type="text" value="<?php eh($pretty_links_base_path) ?>" placeholder="<?php eh($pretty_links_base_path) ?>" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -2008,7 +2008,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="log_file" class="control-label col-sm-2">Log file:</label>
 				<div class="col-sm-5">
-					<input id="log_file" name="log_file" class="form-control" type="text" value="/var/log/websco/websco.log" />
+					<input id="log_file" name="log_file" class="form-control" type="text" value="/var/log/websco/websco.log" placeholder="/var/log/websco/websco.log" />
 				</div>
 			</div>
 			<div class="form-group">

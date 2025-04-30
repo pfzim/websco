@@ -827,7 +827,7 @@ class AnsibleAWX
 	{
 		switch($flags & (RBF_FIELD_TYPE_STRING | RBF_FIELD_TYPE_NUMBER | RBF_FIELD_TYPE_LIST | RBF_FIELD_TYPE_PASSWORD | RBF_FIELD_TYPE_FLAGS))
 		{
-			case RBF_FIELD_TYPE_NUMBER: return 'number';
+			case RBF_FIELD_TYPE_NUMBER: return 'integer';
 			case RBF_FIELD_TYPE_LIST: return 'list';
 			case RBF_FIELD_TYPE_FLAGS: return 'multiselect';
 		}
