@@ -779,6 +779,7 @@ class AnsibleAWX
 						'status' => $workflow_node['summary_fields']['job']['status']
 					);
 				}
+				usort($job_info['workflow_nodes'], 'cmp_job_id');
 			}
 		}
 
@@ -1067,4 +1068,17 @@ class AnsibleAWX
 		// Dark background + monospace font
 		return '<pre style="background: #1e1e1e; color: #e0e0e0; padding: 5px; border-radius: 3px;">' . $html . '</pre>';
 	}
+}
+
+function cmp_job_id($a, $b)
+{
+	$a = intval($a['job_id']);
+	$b = intval($b['job_id']);
+
+	if($a == $b)
+	{
+		return 0;
+	}
+
+	return ($a < $b) ? -1 : 1;
 }
