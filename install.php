@@ -177,7 +177,7 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
 EOT
 ,
 <<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 26, 'DB schema version. Do not change!');
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 28, 'DB schema version. Do not change!');
 EOT
 ,
 <<<'EOT'
@@ -1837,7 +1837,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="awx_user" class="control-label col-sm-2">User:</label>
 				<div class="col-sm-5">
-					<input id="awx_user" name="awx_user" class="form-control" type="text" value="domain\user" />
+					<input id="awx_user" name="awx_user" class="form-control" type="text" value="user" placeholder="user" />
 				</div>
 			</div>
 			<div class="form-group">

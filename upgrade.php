@@ -154,7 +154,7 @@ db_upgrade($core, 24, 'Update parent IDs in @runbooks_params', rpv('UPDATE `@run
 db_upgrade($core, 25, 'Change `pid` column type in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `pid` int(10) UNSIGNED NOT NULL'));
 db_upgrade($core, 26, 'Add `extra_data_json` column to @runbooks_params', rpv('ALTER TABLE `@runbooks_params` ADD COLUMN `extra_data_json` VARCHAR(4096) NOT NULL DEFAULT \'\' AFTER `name`'));
 db_upgrade($core, 27, 'Extend `guid` column size in @runbooks_params', rpv('ALTER TABLE `@runbooks_params` MODIFY COLUMN `guid` varchar(64) NOT NULL'));
-db_upgrade($core, 28, 'Extend `guid` column size in @w_runbooks_jobs_params', rpv('ALTER TABLE `@w_runbooks_jobs_params` MODIFY COLUMN `guid` varchar(64) NOT NULL'));
+db_upgrade($core, 28, 'Extend `guid` column size in @runbooks_jobs_params', rpv('ALTER TABLE `@runbooks_jobs_params` MODIFY COLUMN `guid` varchar(64) NOT NULL'));
 
 if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022) && !defined('ORCHESTRATOR2022_URL'))
 {
