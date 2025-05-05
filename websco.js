@@ -529,7 +529,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'list' && fields[i].list)
 		{
-			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<select class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '">'
 				+ '<option value=""></option>';
 			for(j = 0; j < fields[i].list.length; j++)
@@ -559,7 +561,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		{
 			value = parseInt(fields[i].value, 10);
 
-			html = '<div class="form-title"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</div>';
+			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</div>';
 			for(j = 0; j < fields[i].list.length; j++)
 			{
 				checked = '';
@@ -580,7 +584,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		{
 			value = parseInt(fields[i].value, 10);
 
-			html = '<div class="form-title"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</div>';
+			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</div>';
 			for(j = 0; j < fields[i].list.length; j++)
 			{
 				checked = '';
@@ -600,7 +606,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'datetime')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -623,7 +631,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'time')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -648,7 +658,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'date')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -673,7 +685,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'password')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="password" value=""/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
@@ -683,7 +697,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'tree')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="hidden" value="'+ escapeHtml(fields[i].value) + '"/>'
 				+ '<div class="tree-menu" id="' + escapeHtml(form_id + fields[i].name) + '-tree" style="float: unset; width: unset;">' + f_print_tree(fields[i].tree, form_id + fields[i].name) + '</div>'
 				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
@@ -694,7 +710,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'readonly')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="text" readonly="readonly" value="'+ escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
@@ -712,7 +730,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'upload')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<span class="form-upload" id="' + escapeHtml(form_id + fields[i].name) + '-file">&nbsp;</span> <a href="#" onclick="gi(\'' + escapeHtml(form_id + fields[i].name) + '\').click(); return false;"/>' + LL.SelectFile + '</a>'
 				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="file" accept="' + escapeHtml(fields[i].accept?fields[i].accept:'') + '" style="display: none"/>'
 				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
@@ -752,8 +772,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 				placeholder = '" placeholder="' + fields[i].placeholder;
 			}
 
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '"' + (fields[i].description ? ' title="' + escapeHtml(fields[i].description) + '"' : '' ) +'>' + escapeHtml(fields[i].title) + ':</label></div>'
-				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div><input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
 			var wrapper = document.createElement('div');

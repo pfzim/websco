@@ -379,6 +379,38 @@ class AnsibleAWX
 		return $job_id;
 	}
 
+	private function parse_extra_vars($extra_vars)
+	{
+		if(empty($extra_vars)) {
+			return [];
+		}
+
+		$parsed_data = json_decode($extra_vars, TRUE);
+		if(json_last_error() !== JSON_ERROR_NONE)
+		{
+			$parsed_data = yaml_parse($extra_vars);
+			if($yamlData === false) {
+				return [];
+			}
+		}
+
+		$params = array();
+
+		foreach($parsed_data as $key => $value)
+		{
+			$params[] = [
+				'name' => $key,
+				'description' => '',
+				'variable' => $key,
+				'default' => $value,
+				'flags' => RBF_FIELD_TYPE_STRING,
+				'list' => NULL
+			];
+		}
+
+		return $params;
+	}
+
 	private function param_type_to_flag($type)
 	{
 		switch($type)
@@ -429,12 +461,33 @@ class AnsibleAWX
 			do {
 				$result = $this->awx_api_request('GET', $url);
 
-				foreach ($result['results'] as $template) {
+				foreach($result['results'] as $template)
+				{
+					$params = (defined('AWX_DONT_PARSE_EXTRA_VARS') && AWX_DONT_PARSE_EXTRA_VARS) ? NULL : $this->parse_extra_vars($template['extra_vars']);
+
+					if($template['survey_enabled'])
+					{
+						$survey_params = $this->retrieve_survey_params($template['related']['survey_spec']);
+
+						$merged = array();
+						foreach($params as $param)
+						{
+							$merged[$param['variable']] = $param;
+						}
+
+						foreach ($survey_params as $param)
+						{
+							$merged[$param['variable']] = $param;
+						}
+
+						$params = array_values($merged);
+					}
+
 					$playbooks[] = [
 						'id' => (string) $template['id'],
 						'name' => $template['name'],
 						'description' => $template['description'] ?? '',
-						'params' => $template['survey_enabled'] ? $this->retrieve_survey_params($template['related']['survey_spec']) : NULL,
+						'params' => $params,
 						'type' => $type
 					];
 				}
@@ -742,15 +795,35 @@ class AnsibleAWX
 			'instances' => array()
 		);
 
-		if($this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $id)))
+		// if($this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $id)))
+		// {
+			// $job_info['input_params'] = array();
+			// foreach($job_params as &$job_param)
+			// {
+				// $job_info['input_params'][] = array(
+					// 'name' => $job_param['guid'],
+					// 'value' => $job_param['value']
+				// );
+			// }
+		// }
+
+		if(isset($job_data['extra_vars']))
 		{
-			$job_info['input_params'] = array();
-			foreach($job_params as &$job_param)
+			$extra_vars = json_decode($job_data['extra_vars'], TRUE);
+			if($extra_vars !== FALSE)
 			{
-				$job_info['input_params'][] = array(
-					'name' => $job_param['guid'],
-					'value' => $job_param['value']
-				);
+				if(!isset($job_info['input_params']))
+				{
+					$job_info['input_params'] = array();
+				}
+
+				foreach($extra_vars as $var => $value)
+				{
+					$job_info['input_params'][] = array(
+						'name' => $var,
+						'value' => is_array($value) ? implode(', ', $value) : $value
+					);
+				}
 			}
 		}
 

@@ -39,6 +39,7 @@ $modules = array(
 	'curl',
 	'pcre',
 	//'gd',
+	'yaml',
 	'mysqli'
 );
 
