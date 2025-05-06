@@ -1392,6 +1392,11 @@ function autocomplete_add_active(items)
 	}
 
 	items[autocomplete_current_focus].classList.add('autocomplete-active');
+
+    items[autocomplete_current_focus].scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+    });
 }
 
 function autocomplete_remove_active(items)
