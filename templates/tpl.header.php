@@ -31,7 +31,7 @@
 			<?php } ?>
 			<ul style="float:right;list-style-type:none;">
 				<?php if($core->UserAuth->get_id()) { ?>
-				<li><a href="<?php ln('logoff') ?>"><?php L('Logout') ?></a></li>
+				<li><a href="<?php ln('logoff') ?>"><?php L('Logout') ?> (<?php eh($core->UserAuth->get_login()); ?>)</a></li>
 				<?php } else { ?>
 				<li><a href="<?php ln('login') ?>"><?php L('LoginBtn') ?></a></li>
 				<?php } ?>
