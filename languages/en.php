@@ -45,6 +45,7 @@
 		'Error'						=> 'Error',
 		'Runbooks'					=> 'Runbooks',
 		'Tools'						=> 'Tools',
+		'Description'				=> 'Description',
 		'Permissions'				=> 'Permissions',
 		'ViewJobs'					=> 'View jobs',
 		'Instruction'				=> 'Instruction',

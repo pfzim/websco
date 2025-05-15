@@ -45,6 +45,7 @@
 		'Error'						=> 'Ошибка',
 		'Runbooks'					=> 'Ранбуки',
 		'Tools'						=> 'Инструменты',
+		'Description'				=> 'Описание',
 		'Permissions'				=> 'Разрешения',
 		'ViewJobs'					=> 'Посмотреть задания',
 		'Instruction'				=> 'Инструкция',
