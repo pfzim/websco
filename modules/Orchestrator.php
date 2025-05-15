@@ -1123,7 +1123,7 @@ EOT;
 
 				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_SCO} LIMIT 1", $job['pid'])))
 				{
-					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['guid'], $rb['id'])))
+					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['guid'], $rb[0][0])))
 					{
 						$job_date = DateTime::createFromFormat('Y-m-d?H:i:s', preg_replace('#\..*$#', '', $job['date']), new DateTimeZone('UTC'));
 						if($job_date === FALSE)
