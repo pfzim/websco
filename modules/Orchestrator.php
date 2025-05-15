@@ -1427,6 +1427,7 @@ EOT;
 		$result_json = array(
 			'code' => 0,
 			'message' => '',
+			'guid' => $runbook['guid'],
 			'title' => $runbook['name'],
 			'description' => $runbook['description'],
 			'wiki_url' => $runbook['wiki_url'],

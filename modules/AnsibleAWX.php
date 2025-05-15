@@ -966,6 +966,7 @@ class AnsibleAWX
 		$result_json = array(
 			'code' => 0,
 			'message' => '',
+			'guid' => $playbook['guid'],
 			'title' => $playbook['name'],
 			'description' => $playbook['description'],
 			'wiki_url' => $playbook['wiki_url'],
