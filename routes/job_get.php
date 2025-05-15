@@ -6,7 +6,7 @@ function job_get(&$core, $params, $post_data)
 
 	$runbook = $core->Runbooks->get_runbook_by_job_id($id);
 
-	assert_permission_ajax($job['folder_id'], RB_ACCESS_EXECUTE);
+	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
 
 	$job = $core->Runbooks->get_job($id);
 

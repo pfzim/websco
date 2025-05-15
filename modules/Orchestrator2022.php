@@ -27,6 +27,9 @@
 class Orchestrator2022
 {
 	private $core;
+	private $orchestrator_url;
+	private $orchestrator_user;
+	private $orchestrator_passwd;
 
 	function __construct(&$core)
 	{
