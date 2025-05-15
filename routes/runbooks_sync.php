@@ -7,6 +7,8 @@ function runbooks_sync(&$core, $params, $post_data)
 
 	log_db('Sync started', '{type=' . $type . '}', 0);
 
+	set_time_limit(0);
+
 	$total = $core->Runbooks->sync($type);
 
 	echo '{"code": 0, "message": "'.json_escape('Runbooks loaded: '.$total).'"}';

@@ -8,6 +8,8 @@ function jobs_sync_all(&$core, $params, $post_data)
 
 	log_db('Sync all jobs started', $type, 0);
 
+	set_time_limit(0);
+
 	$total = $core->Runbooks->sync_jobs_all($type);
 
 	echo '{"code": 0, "message": "'.json_escape('Jobs loaded: '.$total).'"}';
