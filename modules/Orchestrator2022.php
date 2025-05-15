@@ -1134,7 +1134,7 @@ class Orchestrator2022
 		$sid_name = '';
 		if(defined('USE_LDAP') && USE_LDAP && !empty($sid))
 		{
-			if($this->core->LDAP->search($user, '(objectSid='.ldap_escape($sid, null, LDAP_ESCAPE_FILTER).')', array('samaccountname')))
+			if($this->core->LDAP->search($user, '(objectSid='.ldap_escape($sid, '', LDAP_ESCAPE_FILTER).')', array('samaccountname')))
 			{
 				$sid_name = $user[0]['sAMAccountName'][0];
 			}
