@@ -47,7 +47,7 @@
 <a href="<?php ln('password_change_form'); ?>" onclick="return f_show_form(this.href);"><?php L('ChangePassword') ?></a><br />
 <?php } ?>
 
-<!--
+<!-- -- >
 <h3><?php L('Settings') ?></h3>
 
 <table id="table" class="main-table">
@@ -70,7 +70,7 @@
 		<?php } ?>
 	</tbody>
 </table>
--->
+<!-- -->
 
 <?php include(TEMPLATES_DIR.'tpl.universal-form.php'); ?>
 <?php include(TEMPLATES_DIR.'tpl.footer.php'); ?>

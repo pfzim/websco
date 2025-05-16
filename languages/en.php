@@ -4,6 +4,8 @@
 		'Home'						=> 'Home',
 		'Logout'					=> 'Logout',
 		'Login'						=> 'Login',
+		'Theme'						=> 'Theme',
+		'Language'					=> 'Language',
 		'LoginHdr'					=> 'Login',
 		'LoginBtn'					=> 'Login',
 		'UserName'					=> 'User name',

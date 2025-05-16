@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-define('DB_VERSION', 28);
+define('DB_VERSION', 29);
 define('Z_PROTECTED', 'YES');
 
 error_reporting(E_ALL);
@@ -75,7 +75,7 @@ if(!empty($_SERVER['HTTP_CLIENT_IP'])) {
 }
 
 require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
-require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
+// require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
 require_once(ROOT_DIR.'inc.utils.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
@@ -139,6 +139,38 @@ function ln($path)
 function ls($path)
 {
 	eh(WEB_LINK_STATIC_PREFIX.$path);
+}
+
+function themes_list()
+{
+	$files = scandir(TEMPLATES_DIR);
+	$themes = [];
+
+	foreach($files as $file)
+	{
+		if(preg_match('/^style\.(.+)\.css$/', $file, $matches))
+		{
+			$themes[] = $matches[1];
+		}
+	}
+
+	return $themes;
+}
+
+function languages_list()
+{
+	$files = scandir(ROOT_DIR . 'languages' . DIRECTORY_SEPARATOR);
+	$themes = [];
+
+	foreach($files as $file)
+	{
+		if(preg_match('/^(.+)\.php$/', $file, $matches))
+		{
+			$themes[] = $matches[1];
+		}
+	}
+
+	return $themes;
 }
 
 function exception_handler($exception)
@@ -258,6 +290,15 @@ function exception_handler_ajax($exception)
 	$core->Router->set_exception_handler_regular('exception_handler');
 	$core->Router->set_exception_handler_ajax('exception_handler_ajax');
 
+	global $g_app_language;
+	$g_app_language = $core->Config->get_user('language', isset($_SESSION[DB_PREFIX.'lang']) ? $_SESSION[DB_PREFIX.'lang'] : APP_LANGUAGE);
+	if(!file_exists(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.$g_app_language.'.php'))
+	{
+		$g_app_language = APP_LANGUAGE;
+	}
+
+	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.$g_app_language.'.php');
+
 	//$core->Router->add_route('info', 'info');
 
 	if(!$core->UserAuth->get_id())
@@ -267,6 +308,8 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
+		$_SESSION[DB_PREFIX.'theme'] = $core->Config->get_user('theme', 'light');
+
 		$core->Router->add_route('runbooks', 'runbooks');							// default route
 		$core->Router->add_route('runbooks_search', 'runbooks_search');
 
@@ -294,6 +337,7 @@ function exception_handler_ajax($exception)
 
 		$core->Router->add_route('setting_get', 'setting_get', TRUE);
 		$core->Router->add_route('setting_save', 'setting_save', TRUE);
+		$core->Router->add_route('setting_user_save', 'setting_user_save', TRUE);
 
 		$core->Router->add_route('tools', 'tools');
 
@@ -333,6 +377,8 @@ function exception_handler_ajax($exception)
 
 	$core->Router->add_route('logoff', 'logoff');
 	
+	$core->Router->add_route('language_change', 'language_change', TRUE);
+
 	$core->Router->add_route('password_reset_send_form', 'password_reset_send_form', TRUE);
 	$core->Router->add_route('password_reset_send', 'password_reset_send', TRUE);
 	$core->Router->add_route('password_reset_form', 'password_reset_form');

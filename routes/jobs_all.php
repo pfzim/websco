@@ -6,7 +6,7 @@ function jobs_all(&$core, $params, $post_data)
 	$offset = 0;
 	if(isset($params[1]))
 	{
-		$offset = $params[1];
+		$offset = intval($params[1]);
 	}
 
 	$search_job = '';

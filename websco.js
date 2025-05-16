@@ -1165,6 +1165,50 @@ function f_delete_folder(url, id)
 	return false;
 }
 
+function f_theme_change(theme)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		g_link_prefix + 'setting_user_save',
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				window.location = window.location;
+			}
+		},
+		null,
+		'application/x-www-form-urlencoded',
+		json2url({key: 'theme', value: theme})
+	);
+
+	return false;
+}
+
+function f_language_change(theme)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		g_link_prefix + 'language_change',
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				window.location = window.location;
+			}
+		},
+		null,
+		'application/x-www-form-urlencoded',
+		json2url({key: 'language', value: theme})
+	);
+
+	return false;
+}
+
 /*
 function f_search(url, query)
 {

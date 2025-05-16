@@ -178,7 +178,7 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
 EOT
 ,
 <<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 28, 'DB schema version. Do not change!');
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 29, 'DB schema version. Do not change!');
 EOT
 ,
 <<<'EOT'
