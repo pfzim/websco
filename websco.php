@@ -141,22 +141,6 @@ function ls($path)
 	eh(WEB_LINK_STATIC_PREFIX.$path);
 }
 
-function themes_list()
-{
-	$files = scandir(TEMPLATES_DIR);
-	$themes = [];
-
-	foreach($files as $file)
-	{
-		if(preg_match('/^style\.(.+)\.css$/', $file, $matches))
-		{
-			$themes[] = $matches[1];
-		}
-	}
-
-	return $themes;
-}
-
 function languages_list()
 {
 	$files = scandir(ROOT_DIR . 'languages' . DIRECTORY_SEPARATOR);
@@ -291,7 +275,7 @@ function exception_handler_ajax($exception)
 	$core->Router->set_exception_handler_ajax('exception_handler_ajax');
 
 	global $g_app_language;
-	$g_app_language = $core->Config->get_user('language', isset($_SESSION[DB_PREFIX.'lang']) ? $_SESSION[DB_PREFIX.'lang'] : APP_LANGUAGE);
+	$g_app_language = $core->Config->get_user('language', isset($_COOKIE['lang']) ? $_COOKIE['lang'] : APP_LANGUAGE);
 	if(!file_exists(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.$g_app_language.'.php'))
 	{
 		$g_app_language = APP_LANGUAGE;
@@ -308,8 +292,6 @@ function exception_handler_ajax($exception)
 	}
 	else
 	{
-		$_SESSION[DB_PREFIX.'theme'] = $core->Config->get_user('theme', 'light');
-
 		$core->Router->add_route('runbooks', 'runbooks');							// default route
 		$core->Router->add_route('runbooks_search', 'runbooks_search');
 

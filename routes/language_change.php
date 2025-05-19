@@ -1,9 +1,4 @@
 <?php
-/**
- *  @file setting_user_save.php
- *  @brief При сохранении параметра оканчивающегося на _json производится
- *  попытка распарсить значение, чтобы исключить опечатки в формате.
- */
 
 function language_change(&$core, $params, $post_data)
 {
@@ -15,7 +10,7 @@ function language_change(&$core, $params, $post_data)
 
 	$language = @$post_data['value'];
 
-	$_SESSION[DB_PREFIX.'lang'] = $language;
+	setcookie('lang', $language, time() + 31536000);
 	if($core->UserAuth->get_id())
 	{
 		$core->Config->set_user('language', $language);

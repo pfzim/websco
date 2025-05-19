@@ -1,3 +1,116 @@
+:root {
+    --color-bg: #EBEBEB;
+    --color-modal-bg: white;
+    --color-text: black;
+    --color-border: darkgrey;
+    --color-table-border: #DDDDDD;
+    --color-white: white;
+    --color-light-bg: #FAFAFA;
+    --color-light-border: #CCC;
+    --color-border-2: #d4d4d4;
+    --color-border-3: #eee;
+    --color-bg-2: white;
+    --color-bg-3: #f5f5f5;
+    --color-light-text: #000;
+    --color-light-text-2: #333;
+    --color-hover-bg: #555;
+    --color-hover-bg-light: #e9e9e9;
+    --color-hover-bg-dark: #111;
+    --color-hover-text: white;
+    --color-active-bg: #4CAF50;
+    --color-link: blue;
+    --color-success: #3a3;
+    --color-success-hover: #494;
+    --color-progress-bar: #B4F5B4;
+    --color-row-hover: #E0E0E0;
+    --color-header-bg: #EFF3F8;
+    --color-menu-bg: #333;
+    --color-tooltip-bg: #ffffe6;
+    --color-error-bg: #f2dede;
+    --color-error-text: #a94442;
+    --color-warning-bg: #fcf8e3;
+    --color-warning-text: #c09853;
+    --color-info-bg: #d9edf7;
+    --color-info-text: #3a87ad;
+    --color-button-accept: #d6f5d6;
+    --color-button-decline: #ffe6e6;
+    --color-button-other: #f5eaea;
+    --color-button-default: #d3f2bf;
+    --color-button-accept-hover: #b8e6b8;
+    --color-button-decline-hover: #ffcccc;
+    --color-button-other-hover: #e8d5d5;
+    --color-button-default-hover: #b8e0a0;
+    --color-description-bg: #F5F5F5;
+    --color-description-text: #aaa;
+    --color-calendar-bg: #ddd;
+    --color-calendar-hover: #ccc;
+    --color-weekend: red;
+    --color-disabled: gray;
+	--color-input-bg: white;
+	--color-error-border: #ebccd1;
+}
+
+:root[data-theme-color="dark"] {
+    --color-bg: #1a1a1a;
+    --color-modal-bg: #2a2a2a;
+    --color-text: #e0e0e0;
+    --color-border: #444;
+    --color-table-border: #444;
+    --color-white: #e0e0e0;
+    --color-light-bg: #2a2a2a;
+    --color-light-border: #444;
+    --color-border-2: #444;
+    --color-border-3: #444;
+    --color-bg-2: #1a1a1a;
+    --color-bg-3: #2a2a2a;
+    --color-light-text: #e0e0e0;
+    --color-light-text-2: #e0e0e0;
+    --color-hover-bg: #555;
+    --color-hover-bg-light: #333;
+    --color-hover-bg-dark: #555;
+    --color-hover-text: #e0e0e0;
+    --color-active-bg: #4CAF50;
+    --color-link: #5d9cec;
+    --color-success: #3a5a3a;
+    --color-success-hover: #494;
+    --color-progress-bar: #3a6b3a;
+    --color-row-hover: #333;
+    --color-header-bg: #333;
+    --color-menu-bg: #333;
+    --color-tooltip-bg: #333;
+    --color-error-bg: #5a2a2a;
+    --color-error-text: #FF6B6B;
+    --color-warning-bg: #5a4a2a;
+    --color-warning-text: #FFD700;
+    --color-info-bg: #2a3a5a;
+    --color-info-text: #7FBFFF;
+    /* --color-button-accept: #2E7D32; */
+    /* --color-button-decline: #C62828; */
+
+    --color-button-accept: #4CAF50;
+    --color-button-decline: #F44336;
+    --color-button-accept-hover: #66BB6A;
+    --color-button-decline-hover: #EF5350;
+
+    /* --color-button-accept: #003500; */
+    /* --color-button-decline: #3A0000; */
+    /* --color-button-accept-hover: #005000; */
+    /* --color-button-decline-hover: #5a0000; */
+
+    --color-button-other: #424242;
+    --color-button-default: #3a5a3a;
+    --color-button-other-hover: #5a5a5a;
+    --color-button-default-hover: #4a7a4a;
+    --color-description-bg: #2a2a2a;
+    --color-description-text: #999;
+    --color-calendar-bg: #2a2a2a;
+    --color-calendar-hover: #333;
+    --color-weekend: #FF6B6B;
+    --color-disabled: #777;
+    --color-input-bg: #333;
+	--color-error-border: #ebccd1;
+}
+
 pre {
     margin: 0px 0px;
 }
@@ -231,7 +344,6 @@ body {
     border: 0px solid #2a2;
     color: var(--color-white);
     font-weight: bold;
-    text-transform: uppercase;
     font-size: 14px;
     outline: none;
     cursor: pointer;
@@ -499,6 +611,9 @@ body {
     margin-bottom: 5px;
     width: 130px;
 }
+.form-button:hover {
+    background-color: var(--color-button-default-hover);
+}
 .button-accept {
     background-color: var(--color-button-accept);
     color: var(--color-text);
@@ -507,6 +622,9 @@ body {
     padding: 5px;
     margin-bottom: 5px;
     width: 130px;
+}
+.button-accept:hover {
+    background-color: var(--color-button-accept-hover);
 }
 .button-decline {
     background-color: var(--color-button-decline);
@@ -517,6 +635,9 @@ body {
     margin-bottom: 5px;
     width: 130px;
 }
+.button-decline:hover {
+    background-color: var(--color-button-decline-hover);
+}
 .button-other {
     background-color: var(--color-button-other);
     color: var(--color-text);
@@ -525,6 +646,9 @@ body {
     padding: 5px;
     margin-bottom: 5px;
     width: 130px;
+}
+.button-other:hover {
+    background-color: var(--color-button-other-hover);
 }
 .form-error {
     padding: 5px;
