@@ -235,6 +235,7 @@ $config = <<<'EOT'
 	define('AWX_URL', '#awx_url#');
 	define('AWX_USER', '#awx_user#');
 	define('AWX_PASSWD', '#awx_passwd#');
+	define('AWX_DONT_PARSE_EXTRA_VARS', FALSE);
 
 	define('USE_MEMCACHED', #use_memcached#);
 
