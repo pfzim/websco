@@ -8,10 +8,10 @@ Web Interface for Running Orchestrator Runbooks & AWX Playbooks with Access Cont
 A unified automation web portal that enables HelpDesk teams and other users to easily execute Microsoft Orchestrator runbooks and AWX/Ansible playbooks through an intuitive interface with dropdown menus, checkboxes, and input forms.
 
 Key Features:  
-✅ Granular Access Control – Permissions are assigned by folder (like in Orchestrator), allowing task delegation to different teams (HelpDesk, DevOps, admins).  
-✅ User-Friendly UI – Predefined input fields (server selection, user lists, options) instead of manual command entry.  
-✅ Multi-Platform Automation – Supports both Orchestrator Runbooks and AWX Playbooks from a single dashboard.  
-✅ Structured Organization – Playbooks and runbooks are organized in folders for easy navigation.  
+ ✅ Granular Access Control – Permissions are assigned by folder (like in Orchestrator), allowing task delegation to different teams (HelpDesk, DevOps, admins).  
+ ✅ User-Friendly UI – Predefined input fields (server selection, user lists, options) instead of manual command entry.  
+ ✅ Multi-Platform Automation – Supports both Orchestrator Runbooks and AWX Playbooks from a single dashboard.  
+ ✅ Structured Organization – Playbooks and runbooks are organized in folders for easy navigation.  
 
 ## System requirements
 - Apache or Nginx
