@@ -1,6 +1,6 @@
 <?php
 /*
-    Runbooks2022 class - This class is intended for accessing the Microsoft 
+    Runbooks2022 class - This class is intended for accessing the Microsoft
 	System Center Orchestrator 2022 web service to get a list of runbooks and
 	launch them.
     Copyright (C) 2024 Dmitry V. Zimin
@@ -24,17 +24,20 @@
 	Orchestrator web service to get a list of ranbooks and launch them.
 */
 
-class Runbooks2022
+class Orchestrator2022
 {
 	private $core;
+	private $orchestrator_url;
+	private $orchestrator_user;
+	private $orchestrator_passwd;
 
 	function __construct(&$core)
 	{
 		$this->core = &$core;
 
-		$this->orchestrator_url = ORCHESTRATOR_URL;
-		$this->orchestrator_user = ORCHESTRATOR_USER;
-		$this->orchestrator_passwd = ORCHESTRATOR_PASSWD;
+		$this->orchestrator_url = ORCHESTRATOR2022_URL;
+		$this->orchestrator_user = ORCHESTRATOR2022_USER;
+		$this->orchestrator_passwd = ORCHESTRATOR2022_PASSWD;
 	}
 
 	public function get_http_json($url)
@@ -95,7 +98,7 @@ class Runbooks2022
 	public function start_runbook($guid, $params, $servers = NULL)
 	{
 		$parameters = array();
-		
+
 		if(!empty($params))
 		{
 			foreach($params as &$param)
@@ -173,17 +176,17 @@ class Runbooks2022
 		\return - TRUE | FALSE
 	*/
 
-	public function job_cancel($guid)
+	public function job_cancel($job_id, $job_guid)
 	{
 		$request = json_encode(array(
-			'Id'			=> $guid
+			'Id'			=> $job_guid
 		), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 		log_file($request);
 
 		$ch = curl_init();
 
-		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs/'.$guid);
+		curl_setopt($ch, CURLOPT_URL, $this->orchestrator_url.'/Jobs/'.$job_guid);
 		curl_setopt($ch, CURLOPT_POST, true);
 		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
 
@@ -212,7 +215,7 @@ class Runbooks2022
 
 		if(intval($result['http_code']) != 200)
 		{
-			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$guid."\n".$output."\n\n");
+			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$job_guid."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
@@ -229,6 +232,187 @@ class Runbooks2022
 		}
 
 		return $json_data['Id'];
+	}
+
+	public function parse_form_and_start_runbook($post_data, &$result_json)
+	{
+		$result_json = array(
+			'code' => 0,
+			'message' => '',
+			'errors' => array()
+		);
+
+		$params = array();
+
+		$runbook = $this->core->Runbooks->get_runbook_by_id($post_data['id']);
+		$runbook_params = $this->get_runbook_params($post_data['id']);
+
+		//log_file(json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+		foreach($runbook_params as &$param)
+		{
+			$value = '';
+			//$params[$param['guid']] = $value;
+
+			if($param['type'] == 'who')
+			{
+				$params[] = array(
+					'guid' => $param['guid'],
+					'name' => $param['name_original'],
+					'value' => $this->core->UserAuth->get_login()
+				);
+				continue;
+			}
+			elseif($param['type'] == 'flags')
+			{
+				$flags = 0;
+				if(isset($post_data['param'][$param['guid']]))
+				{
+					foreach($post_data['param'][$param['guid']] as $bit => $bit_value)
+					{
+						if(intval($bit_value))
+						{
+							$flags |= 0x01 << intval($bit);
+						}
+					}
+				}
+
+				if($param['required'] && (count($value) == 0))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].'][0]', 'msg' => LL('FlagMustBeSelected'));
+				}
+				else
+				{
+					$params[] = array(
+						'guid' => $param['guid'],
+						'name' => $param['name_original'],
+						'value' => strval($flags)
+					);
+				}
+
+				//log_file('Value: '.strval($flags));
+				continue;
+			}
+			elseif($param['type'] == 'upload')
+			{
+				if(isset($_FILES['param_'.$param['guid']]['tmp_name']) && file_exists($_FILES['param_'.$param['guid']]['tmp_name']))
+				{
+					if(filesize($_FILES['param_'.$param['guid']]['tmp_name']) > $param['max_size'])
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('FileTooLarge').' (max '.$param['max_size'].' bytes)');
+						continue;
+					}
+
+					$value = base64_encode(file_get_contents($_FILES['param_'.$param['guid']]['tmp_name']));
+				}
+				elseif($param['required'])
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param_'.$param['guid'], 'msg' => LL('ThisFieldRequired'));
+					continue;
+				}
+			}
+			elseif(isset($post_data['param'][$param['guid']]))
+			{
+				$value = trim($post_data['param'][$param['guid']]);
+			}
+
+			if($param['required'] && empty($value))
+			{
+				$result_json['code'] = 1;
+				$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ThisFieldRequired'));
+				continue;
+			}
+			elseif($param['type'] == 'date')
+			{
+				if(!empty($value))
+				{
+					list($nd, $nm, $ny) = explode('.', $value, 3);
+
+					if(!datecheck($nd, $nm, $ny))
+					{
+						$result_json['code'] = 1;
+						$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('IncorrectDate').' DD.MM.YYYY');
+						continue;
+					}
+				}
+			}
+			elseif($param['type'] == 'list')
+			{
+				if(!in_array($value, $param['list']))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('ValueNotFromList').' ('.implode(', ', $param['list']).')');
+					continue;
+				}
+			}
+			elseif($param['type'] == 'integer')
+			{
+				if(!empty($value) && !preg_match('/^\d+$/i', $value))
+				{
+					$result_json['code'] = 1;
+					$result_json['errors'][] = array('name' => 'param['.$param['guid'].']', 'msg' => LL('OnlyNumbers'));
+					continue;
+				}
+			}
+
+			$params[] = array(
+				'guid' => $param['guid'],
+				'name' => $param['name_original'],
+				'value' => $value
+			);
+		}
+
+		if($result_json['code'])
+		{
+			$result_json['message'] = LL('NotAllFilled');
+			return FALSE;
+		}
+
+		// $servers_list = '';
+		// if(!empty($post_data['servers']))
+		// {
+			// $delimeter = '';
+			// foreach($post_data['servers'] as $value)
+			// {
+				// $servers_list .= $delimeter.$value;
+				// $delimeter = ',';
+			// }
+		// }
+
+		$servers_list = NULL;
+		if(!empty($post_data['servers']))
+		{
+			$servers_list = $post_data['servers'];
+		}
+
+		//echo '{"code": 0, "guid": "0062978a-518a-4ba9-9361-4eb88ea3e0b0", "message": "Debug placeholder save_uform. Remove this line later'.$runbook['guid'].json_encode($runbook_params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE).'"}'; exit;
+
+		log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+
+		$job_guid = $this->start_runbook($runbook['guid'], $params, $servers_list);
+
+		if($job_guid !== FALSE)
+		{
+			if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $this->core->UserAuth->get_id())))
+			{
+				$job_id = $this->core->db->last_id();
+
+				foreach($params as &$param)
+				{
+					$value = $param['value'];
+					if(strlen($value) > 4096)
+					{
+						$value = substr($value, 0, 4093).'...';
+					}
+					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
+				}
+			}
+		}
+
+		return $job_id;
 	}
 
 	/**
@@ -280,16 +464,17 @@ class Runbooks2022
 			foreach($sub_json_data['value'] as $sub_properties)
 			{
 				$activity = array(
-					'id' =>  (string) $sub_properties['Id'],
+					'instance_id' =>  (string) $sub_properties['Id'],
 					'guid' => (string) $sub_properties['ActivityId'],
 					'name' => '',
 					'sequence' => (string) $sub_properties['SequenceNumber'],
 					'status' => (string) $sub_properties['Status']
 				);
 
-				if($this->core->db->select_ex($name, rpv('SELECT a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & {%RBF_DELETED}) = 0 LIMIT 1', (string) $sub_properties['ActivityId'])))
+				if($this->core->db->select_ex($name, rpv('SELECT a.`id`, a.`name` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND (a.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1', (string) $sub_properties['ActivityId'])))
 				{
-					$activity['name'] = $name[0][0];
+					$activity['id'] = $name[0][0];
+					$activity['name'] = $name[0][1];
 				}
 
 				$instance['activities'][] = $activity;
@@ -499,7 +684,7 @@ class Runbooks2022
 		{
 			$description = (string) $properties['Description'];
 			$wiki_url = '';
-			
+
 			if(preg_match('#\[wiki\](.*?)\[/wiki\]#i', $description, $matches))
 			{
 				$wiki_url = trim($matches[1]);
@@ -553,10 +738,10 @@ class Runbooks2022
 		log_file('Retrieve runbooks list...');
 		$runbooks = $this->retrieve_runbooks();
 
-		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0"));
-		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED})"));
-		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED})"));
+		$this->core->db->put(rpv("UPDATE @runbooks SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_folders SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_activities SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
+		$this->core->db->put(rpv("UPDATE @runbooks_servers SET `flags` = (`flags` | {%RBF_DELETED}) WHERE (`flags` & {%RBF_TYPE_SCO2022})"));
 
 		$total = 0;
 
@@ -566,7 +751,7 @@ class Runbooks2022
 		{
 			//echo $folder['guid']."\r\n";
 			$server_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_servers AS f WHERE f.`guid` = ! LIMIT 1", $server['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT s.`guid` FROM @runbooks_servers AS s WHERE s.`guid` = ! AND (s.`flags` & {%RBF_TYPE_SCO2022}) LIMIT 1", $server['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_servers (`guid`, `name`, `flags`)
@@ -574,7 +759,7 @@ class Runbooks2022
 					",
 					$server['guid'],
 					$server['name'],
-					0x0000
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$server_id = $this->core->db->last_id();
@@ -607,17 +792,23 @@ class Runbooks2022
 		foreach($folders as &$folder)
 		{
 			//echo $folder['guid']."\r\n";
+			$folder_pid = 0;
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1", $folder['pid'])))
+			{
+				$folder_pid = $res[0][0];
+			}
+
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`guid` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $folder['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & {%RBF_TYPE_SCO2022}) LIMIT 1", $folder['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
-						VALUES (!, !, !, #)
+						VALUES (!, #, !, #)
 					",
 					$folder['guid'],
-					$folder['pid'],
-					$folder['name'],
-					0x0000
+					$folder_pid,
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator 2022' : '(undefined folder name)') : $folder['name'],
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$folder_id = $this->core->db->last_id();
@@ -625,23 +816,23 @@ class Runbooks2022
 			}
 			else
 			{
+				$folder_id = $res[0][0];
+
 				$this->core->db->put(rpv("
 						UPDATE
 							@runbooks_folders
 						SET
-							`pid` = !,
+							`pid` = #,
 							`name` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`guid` = !
+							`id` = #
 						LIMIT 1
 					",
-					$folder['pid'],
-					$folder['name'],
-					$res[0][0]
+					$folder_pid,
+					empty($folder['name']) ? (($folder['guid'] === '00000000-0000-0000-0000-000000000000') ? 'Orchestrator 2022' : '(undefined folder name)') : $folder['name'],
+					$folder_id
 				));
-
-				$folder_id = $res[0][0];
 			}
 		}
 
@@ -652,7 +843,7 @@ class Runbooks2022
 		foreach($activities as &$activity)
 		{
 			$activity_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT a.`id`, a.`guid` FROM @runbooks_activities AS a WHERE a.`guid` = ! LIMIT 1", $activity['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT a.`id`, a.`guid` FROM @runbooks_activities AS a WHERE a.`guid` = ! AND a.`flags` & {%RBF_TYPE_SCO2022} LIMIT 1", $activity['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_activities (`guid`, `name`, `flags`)
@@ -660,7 +851,7 @@ class Runbooks2022
 					",
 					$activity['guid'],
 					$activity['name'],
-					0x0000
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$activity_id = $this->core->db->last_id();
@@ -693,16 +884,16 @@ class Runbooks2022
 		foreach($runbooks as &$runbook)
 		{
 			$folder_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! LIMIT 1", $runbook['folder_id'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1", $runbook['folder_id'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks_folders (`guid`, `pid`, `name`, `flags`)
-						VALUES (!, !, !, #)
+						VALUES (!, #, !, #)
 					",
 					$runbook['folder_id'],
-					'00000000-0000-0000-0000-000000000000',
+					0,
 					$runbook['path'],
-					0x0000
+					RBF_TYPE_SCO2022
 				)))
 				{
 					$folder_id = $this->core->db->last_id();
@@ -714,7 +905,7 @@ class Runbooks2022
 			}
 
 			$runbook_id = 0;
-			if(!$this->core->db->select_ex($res, rpv("SELECT r.`guid` FROM @runbooks AS r WHERE (`flags` & {%RBF_TYPE_CUSTOM}) = 0 AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
+			if(!$this->core->db->select_ex($res, rpv("SELECT r.`id` FROM @runbooks AS r WHERE (r.`flags` & {%RBF_TYPE_SCO2022}) AND r.`guid` = ! LIMIT 1", $runbook['guid'])))
 			{
 				if($this->core->db->put(rpv("
 						INSERT INTO @runbooks (`guid`, `folder_id`, `name`, `description`, `wiki_url`, `flags`)
@@ -725,14 +916,16 @@ class Runbooks2022
 					$runbook['name'],
 					$runbook['description'],
 					$runbook['wiki_url'],
-					0x0000
+					RBF_TYPE_SCO2022
 				)))
 				{
-					$runbook_id = $runbook['guid'];
+					$runbook_id = $this->core->db->last_id();
 				}
 			}
 			else
 			{
+				$runbook_id = $res[0][0];
+
 				$this->core->db->put(rpv("
 						UPDATE
 							@runbooks
@@ -743,28 +936,26 @@ class Runbooks2022
 							`wiki_url` = !,
 							`flags` = (`flags` & ~{%RBF_DELETED})
 						WHERE
-							`guid` = !
+							`id` = #
 						LIMIT 1
 					",
 					$folder_id,
 					$runbook['name'],
 					$runbook['description'],
 					$runbook['wiki_url'],
-					$res[0][0]
+					$runbook_id
 				));
-
-				$runbook_id = $res[0][0];
 			}
 
 			if($runbook_id)
 			{
-				$this->core->db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = !", $runbook_id));
+				$this->core->db->put(rpv("DELETE FROM @runbooks_params WHERE `pid` = #", $runbook_id));
 
 				foreach($runbook['params'] as &$params)
 				{
 					$this->core->db->put(rpv("
 							INSERT INTO @runbooks_params (`pid`, `guid`, `name`, `flags`)
-							VALUES (!, !, !, #)
+							VALUES (#, !, !, #)
 						",
 						$runbook_id,
 						$params['guid'],
@@ -819,7 +1010,7 @@ class Runbooks2022
 		return $total;
 	}
 
-	public function sync_jobs($guid)
+	public function sync_jobs($id)
 	{
 		$skip = 0;
 		$total = 0;
@@ -827,9 +1018,10 @@ class Runbooks2022
 
 		$job_filter = '';
 
-		if(!empty($guid))
+		if($id)
 		{
-			$job_filter = '&$filter=RunbookId%20eq%20'.$guid;
+			$runbook = $this->core->Runbooks->get_runbook_by_id($id);
+			$job_filter = '&$filter=RunbookId%20eq%20' . $runbook['guid'];
 		}
 
 		do
@@ -846,9 +1038,9 @@ class Runbooks2022
 					'date' => (string) $properties['CreationTime']
 				);
 
-				if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! LIMIT 1", $job['guid'])))
+				if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! AND r.`flags` & {%RBF_TYPE_SCO2022} LIMIT 1", $job['pid'])))
 				{
-					if($this->core->db->select_ex($rb, rpv("SELECT r.`id` FROM @runbooks AS r WHERE r.`guid` = ! LIMIT 1", $job['pid'])))
+					if(!$this->core->db->select_ex($res, rpv("SELECT j.`id` FROM @runbooks_jobs AS j WHERE j.`guid` = ! AND j.`pid` = # LIMIT 1", $job['guid'], $rb[0][0])))
 					{
 						$job_date = DateTime::createFromFormat(DateTime::RFC3339_EXTENDED, $job['date'], NULL);
 						if($job_date === FALSE)
@@ -896,53 +1088,9 @@ class Runbooks2022
 		return $jobs_added;
 	}
 
-	public function get_runbook_by_id($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Runbook '.$id.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_runbook($guid)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks AS r LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE r.`guid` = ! LIMIT 1", $guid)))
-		{
-			$this->core->error('Runbook '.$guid.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_runbook_by_job_guid($guid)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`guid` = ! LIMIT 1", $guid)))
-		{
-			$this->core->error('Job '.$guid.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
-	public function get_runbook_by_job_id($id)
-	{
-		if(!$this->core->db->select_assoc_ex($runbook, rpv("SELECT r.`id`, r.`guid`, r.`folder_id`, f.`guid` AS `folder_guid`, r.`name`, r.`description`, r.`wiki_url`, r.`flags` FROM @runbooks_jobs AS j LEFT JOIN @runbooks AS r ON r.`id` = j.`pid` LEFT JOIN @runbooks_folders AS f ON f.`id` = r.`folder_id` WHERE j.`id` = # LIMIT 1", $id)))
-		{
-			$this->core->error('Job '.$id.' not found!');
-			return FALSE;
-		}
-
-		return $runbook[0];
-	}
-
 	public function get_servers()
 	{
-		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s ORDER BY s.`name`, s.`id`")))
+		if(!$this->core->db->select_assoc_ex($servers, rpv("SELECT s.`id`, s.`name` FROM @runbooks_servers AS s WHERE (s.`flags` & {%RBF_TYPE_SCO2022})  ORDER BY s.`name`, s.`id`")))
 		{
 			return FALSE;
 		}
@@ -950,7 +1098,7 @@ class Runbooks2022
 		return $servers;
 	}
 
-	public function get_job($guid)
+	public function get_job($id)
 	{
 		if(!$this->core->db->select_assoc_ex($job, rpv('
 			SELECT
@@ -967,18 +1115,18 @@ class Runbooks2022
 			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
 			LEFT JOIN @users AS u ON u.`id` = j.`uid`
 			WHERE
-				j.`guid` = !
-				AND (r.`flags` & {%RBF_TYPE_CUSTOM}) = 0
+				j.`id` = #
+				AND (r.`flags` & {%RBF_TYPE_SCO2022})
 			LIMIT 1
-		', $guid)))
+		', $id)))
 		{
-			$this->core->error('Job '.$guid.' not found! Try to sync jobs.');
+			$this->core->error('Job '.$id.' not found!');
 			return FALSE;
 		}
 
 		$job = &$job[0];
 
-		$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$filter=Id%20eq%20'.$guid);
+		$json_data = $this->get_http_json($this->orchestrator_url.'/Jobs?$filter=Id%20eq%20'.$job['guid']);
 
 		$properties = $json_data['value'][0];
 
@@ -986,7 +1134,7 @@ class Runbooks2022
 		$sid_name = '';
 		if(defined('USE_LDAP') && USE_LDAP && !empty($sid))
 		{
-			if($this->core->LDAP->search($user, '(objectSid='.ldap_escape($sid, null, LDAP_ESCAPE_FILTER).')', array('samaccountname')))
+			if($this->core->LDAP->search($user, '(objectSid='.ldap_escape($sid, '', LDAP_ESCAPE_FILTER).')', array('samaccountname')))
 			{
 				$sid_name = $user[0]['sAMAccountName'][0];
 			}
@@ -1019,64 +1167,12 @@ class Runbooks2022
 			'instances' => array()
 		);
 
-		$instances = $this->retrieve_job_instances($guid);
+		$instances = $this->retrieve_job_instances($job['guid']);
 
 		if($instances !== FALSE)
 		{
 			$job_info['instances'] = &$instances;
 		}
-
-		return $job_info;
-	}
-
-	public function get_custom_job($id)
-	{
-		if(!$this->core->db->select_assoc_ex($job, rpv('
-			SELECT
-				j.`id`,
-				j.`guid`,
-				DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
-				r.`name`,
-				r.`id` AS `runbook_id`,
-				r.`guid` AS `runbook_guid`,
-				r.`folder_id`,
-				r.`flags`,
-				u.`login`
-			FROM @runbooks_jobs AS j
-			LEFT JOIN @runbooks AS r ON r.`id` = j.`pid`
-			LEFT JOIN @users AS u ON u.`id` = j.`uid`
-			WHERE
-				j.`id` = #
-				AND (r.`flags` & {%RBF_TYPE_CUSTOM})
-			LIMIT 1
-		', $id)))
-		{
-			$this->core->error('Job '.$id.' not found!');
-			return FALSE;
-		}
-
-		$job = &$job[0];
-
-		!$this->core->db->select_assoc_ex($job_params, rpv('
-			SELECT
-				jp.`guid`,
-				jp.`value`
-			FROM @runbooks_jobs_params AS jp
-			WHERE jp.`pid` = #
-		', $job['id']));
-
-		$job_info = array(
-			'id' => $job['id'],
-			'guid' => $job['guid'],
-			'name' => $job['name'],
-			'run_date' => $job['run_date'],
-			'runbook_id' => $job['runbook_id'],
-			'runbook_guid' => $job['runbook_guid'],
-			'status' => 'Completed',
-			'folder_id' => $job['folder_id'],
-			'user' => $job['login'],
-			'params' => &$job_params
-		);
 
 		return $job_info;
 	}
@@ -1115,9 +1211,9 @@ class Runbooks2022
 		return $activity_info;
 	}
 
-	public function get_runbook_params($guid)
+	public function get_runbook_params($id)
 	{
-		$this->core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = ! ORDER BY p.`name`", $guid));
+		$this->core->db->select_assoc_ex($runbook_params, rpv("SELECT p.`guid`, p.`name` FROM @runbooks_params AS p WHERE p.`pid` = # ORDER BY p.`name`", $id));
 
 		$form_fields = array();
 
@@ -1241,43 +1337,133 @@ class Runbooks2022
 		return $form_fields;
 	}
 
-	public function load_tree_childs($guid, $check_permissions)
+	public function get_runbook_form($id, $job_id)
 	{
-		$childs = NULL;
+		$runbook = $this->core->Runbooks->get_runbook_by_id($id);
 
-		if($this->core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid`, f.`name`, f.`flags` FROM @runbooks_folders AS f WHERE f.`pid` = {s0} AND (f.`flags` & {%RBF_DELETED}) = 0 ORDER BY f.`name`', $guid)))
+		$result_json = array(
+			'code' => 0,
+			'message' => '',
+			'guid' => $runbook['guid'],
+			'title' => $runbook['name'],
+			'description' => $runbook['description'],
+			'wiki_url' => $runbook['wiki_url'],
+			'action' => 'runbook_start',
+			'fields' => array(
+				/*
+				array(
+					'type' => 'hidden',
+					'name' => 'action',
+					'value' => 'start_runbook'
+				),
+				*/
+				array(
+					'type' => 'hidden',
+					'name' => 'id',
+					'value' => $runbook['id']
+				)
+			)
+		);
+
+		$params = $this->get_runbook_params($runbook['id']);
+
+		$job_params = NULL;
+
+		if(!empty($job_id))
 		{
-			$childs = array();
-
-			foreach($folders as $folder)
+			if(!$this->core->db->select_assoc_ex($job_params, rpv('SELECT jp.`guid`, jp.`value` FROM @runbooks_jobs_params AS jp WHERE jp.`pid` = #', $job_id)))
 			{
-				if(!$check_permissions || $this->core->UserAuth->check_permission($folder['id'], RB_ACCESS_LIST))     // || ($folder['id'] == 0) - if top level always allow list
+				if($this->core->db->select_assoc_ex($job, rpv('SELECT j.`guid` FROM @runbooks_jobs AS j WHERE j.`id` = #', $job_id)))
 				{
-					$childs[] = array(
-						'name' => $folder['name'],
-						'id' => $folder['id'],
-						'guid' => $folder['guid'],
-						'flags' => $folder['flags'],
-						'childs' => $this->load_tree_childs($folder['guid'], $check_permissions)
-					);
+					$job_params = $this->retrieve_job_first_instance_input_params($job[0]['guid']);
+
+					foreach($job_params as $param)
+					{
+						$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $param['value']));
+					}
 				}
 			}
 		}
 
-		return $childs;
-	}
+		foreach($params as &$param)
+		{
+			 $field = array(
+				'type' => $param['type'],
+				'name' => 'param['.$param['guid'].']',
+				'title' => $param['name'],
+				'value' => ''
+			);
 
-	public function get_folders_tree($check_permissions)
-	{
-		return array(
-			array(
-				'name' => 'Root folder',
-				'guid' => '00000000-0000-0000-0000-000000000000',
-				'id' => 0,
-				'flags' => 0,
-				'childs' => $this->load_tree_childs('00000000-0000-0000-0000-000000000000', $check_permissions)
+			if(($param['type'] == 'list') || ($param['type'] == 'flags'))
+			{
+				$field['list'] = $param['list'];
+			}
+			elseif(($param['type'] == 'samaccountname'))
+			{
+				$field['autocomplete'] = 'complete_account';
+			}
+			elseif(($param['type'] == 'computer'))
+			{
+				$field['autocomplete'] = 'complete_computer';
+			}
+			elseif(($param['type'] == 'group'))
+			{
+				$field['autocomplete'] = 'complete_group_sam';
+			}
+			elseif(($param['type'] == 'mail'))
+			{
+				$field['autocomplete'] = 'complete_mail';
+			}
+			elseif(($param['type'] == 'upload'))
+			{
+				$field['name'] = 'param_'.$param['guid'];
+				$field['max_size'] = $param['max_size'];
+				$field['accept'] = $param['accept'];
+			}
+			elseif(($param['type'] == 'who'))
+			{
+				continue;
+			}
+
+			if($job_params)
+			{
+				foreach($job_params as &$row)
+				{
+					if($row['guid'] == $param['guid'])
+					{
+						$field['value'] = $row['value'];
+						break;
+					}
+				}
+			}
+
+			$result_json['fields'][] = $field;
+		}
+
+		$servers = $this->get_servers();
+
+		$servers_list = array();
+		foreach($servers as $server)
+		{
+			$servers_list[] = $server['name'];
+		}
+
+		$result_json['fields'][] = array(
+			'type' => 'spoiler',
+			'title' => LL('AdvancedSettings'),
+			'fields' => array(
+				array(
+					'type' => 'flags',
+					'name' => 'servers',
+					'title' => LL('SelectRunbookServers'),
+					'value' => '',
+					'list' => $servers_list,
+					'values' => $servers_list
+				)
 			)
 		);
+
+		return $result_json;
 	}
 }
 

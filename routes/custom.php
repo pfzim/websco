@@ -4,9 +4,9 @@ function custom(&$core, $params, $post_data)
 {
 	$runbook = $core->Runbooks->get_runbook_by_id(intval(@$params[1]));
 	
-	if(($runbook['flags'] & RBF_TYPE_CUSTOM) == 0)
+	if((intval($runbook['flags']) & RBF_TYPE_CUSTOM) == 0)
 	{
-		$core->error('ERROR: Runbook with ID '.$filepath.' is not a custom type!');
+		$core->error('ERROR: Runbook with ID '.intval(@$params[1]).' is not a custom type!');
 		return NULL;
 	}
 

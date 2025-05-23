@@ -12,7 +12,7 @@ function complete_computer(&$core, $params, $post_data)
 
 	if(defined('USE_LDAP') && USE_LDAP && !empty($search) && strlen($search) >= 3)
 	{
-		if($core->LDAP->search($result, '(&(objectClass=computer)(sAMAccountName='.ldap_escape($search, null, LDAP_ESCAPE_FILTER).'*))', array('cn')))
+		if($core->LDAP->search($result, '(&(objectClass=computer)(sAMAccountName='.ldap_escape($search, '', LDAP_ESCAPE_FILTER).'*))', array('cn')))
 		{
 			foreach($result as $row)
 			{

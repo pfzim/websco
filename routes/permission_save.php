@@ -101,13 +101,13 @@ function permission_save(&$core, $params, $post_data)
 
 	if($v_apply_to_childs)
 	{
-		function permissions_apply_to_childs($parent_guid, $v_dn, $v_sid, $v_allow, $replace)
+		function permissions_apply_to_childs($parent_id, $v_dn, $v_sid, $v_allow, $replace)
 		{
 			global $core;
 			$childs = 0;
 
-			log_file('Apply to childs of ID: '.$parent_guid);
-			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & {%RBF_DELETED}) = 0 AND f.`pid` = !', $parent_guid)))
+			log_file('Apply to childs of ID: '.$parent_id);
+			if($core->db->select_assoc_ex($folders, rpv('SELECT f.`id`, f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & {%RBF_DELETED}) = 0 AND f.`pid` = !', $parent_id)))
 			{
 				foreach($folders as &$folder)
 				{
@@ -141,27 +141,14 @@ function permission_save(&$core, $params, $post_data)
 						//log_file('  INSERT');
 					}
 
-					$childs += permissions_apply_to_childs($folder['guid'], $v_dn, $v_sid, $v_allow, $replace) + 1;
+					$childs += permissions_apply_to_childs($folder['id'], $v_dn, $v_sid, $v_allow, $replace) + 1;
 				}
 			}
 
 			return $childs;
 		}
 
-		$folder_guid = NULL;
-		if($v_pid == 0)
-		{
-			$folder_guid = '00000000-0000-0000-0000-000000000000';
-		}
-		elseif($core->db->select_assoc_ex($folders, rpv('SELECT f.`guid` FROM `@runbooks_folders` AS f WHERE (f.`flags` & 0x0001) = 0 AND f.`id` = #', $v_pid)))
-		{
-			$folder_guid = $folders[0]['guid'];
-		}
-
-		if($folder_guid)
-		{
-			$result_json['childs'] = permissions_apply_to_childs($folder_guid, $v_dn, $v_sid, $v_allow, $v_replace_childs);
-		}
+		$result_json['childs'] = permissions_apply_to_childs($v_pid, $v_dn, $v_sid, $v_allow, $v_replace_childs);
 	}
 
 	if(defined('USE_MEMCACHED') && USE_MEMCACHED)

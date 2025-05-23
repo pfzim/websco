@@ -23,7 +23,7 @@
 							<?php if(intval($row['flags']) & RBF_TYPE_CUSTOM) { ?>
 								<td><a href="<?php ln('custom/'.$row['id']); ?>" ><?php eh($row['name']); ?></a></td>
 							<?php } else { ?>
-								<td><a href="<?php ln('runbook_get/'.$row['guid']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
+								<td><a href="<?php ln('runbook_get/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php eh($row['name']); ?></a></td>
 							<?php } ?>
 							<td><a href="<?php ln('runbooks/'.$row['folder_id']); ?>"><?php eh($row['folder_name']); ?></a></td>
 							<td>

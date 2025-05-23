@@ -1,14 +1,24 @@
-# WebSCO - alternative web interface for System Center Orchestrator
+# WebSCO - alternative web interface for System Center Orchestrator and AWX (Ansible)
 
 [:ru:](#description-ru) [:us:](#description)  
 
 [![Watch the video](/docs/screenshots/main.png)](https://github.com/user-attachments/assets/b2dc551a-db4f-4de6-9e3a-b30fe4bec4a1)
 
+Web Interface for running Orchestrator Runbooks and AWX Playbooks with Access Control.
+
+A unified automation web portal that enables HelpDesk teams and other users to easily execute Microsoft Orchestrator runbooks and AWX (Ansible) playbooks through an intuitive interface with dropdown menus, checkboxes, and input forms.
+
+Key Features:  
+- Granular Access Control – Permissions are assigned by folder (like in Orchestrator), allowing task delegation to different teams (HelpDesk, DevOps, admins).  
+- User-Friendly UI – Predefined input fields (server selection, user lists, options) instead of manual command entry.  
+- Multi-Platform Automation – Supports both Orchestrator Runbooks and AWX Playbooks from a single dashboard.  
+- Structured Organization – Playbooks and runbooks are organized in folders for easy navigation.  
+
 ## System requirements
 - Apache or Nginx
 - MariaDB (MySQL)
 - PHP
-- Microsoft System Center Orchestrator
+- Microsoft System Center Orchestrator and/or Ansible AWX
 - Active Directory (optional)
 - memcached (optional)
 - Kerberos (optional)
@@ -18,10 +28,10 @@
 
 ```
 sudo apt-get install mariadb-server
-#sudo apt-get install apache2 libapache2-mod-php
-sudo apt-get install php php-mysql php-ldap php-curl php-xml
+sudo apt-get install php php-mysql php-ldap php-curl php-xml php-yaml
 sudo apt-get install memcached php-memcached
 sudo apt-get install nginx php-fpm
+#sudo apt-get install apache2 libapache2-mod-php
 ```
 
 Only when using Kerberos:
@@ -49,11 +59,9 @@ Next, you need to run the script http://localhost/websco/install.php through the
 
 ### Runbook classic form
 ![Runbook input form example](/docs/screenshots/runbook_classic_en.png "Runbook input form example")
-![Runbook input form example](/docs/screenshots/runbook_classic.png "Runbook input form example")
 
 ### Same form in WebSCO
 ![Runbook input form example](/docs/screenshots/runbook1_en.png "Runbook input form example")
-![Runbook input form example](/docs/screenshots/runbook1.png "Runbook input form example")
 
 ### Result
 ![Result example](/docs/screenshots/result1.png "Result example")
@@ -117,7 +125,7 @@ to list the parameters separated by commas. For example:
 
 1. Select the type of access (admin, guest)*/l
 
-This field will turn into a drop-down list with two values ​​admin and guest and
+This field will turn into a drop-down list with two values `admin` and `guest` and
 will be required.
 
 2. Select the protocol (HTTP, HTTPS)/rf
@@ -148,6 +156,12 @@ Local Administrators and Users with access to Root Level with Execute rights
 see hidden folders.
 
 ## Description (RU)
+
+### Так окно запуска выглядит в стандатной консоли Оркестратора
+![Runbook input form example](/docs/screenshots/runbook_classic.png "Runbook input form example")
+
+### А вот так выглядит в тот же ранбук в WebSCO
+![Runbook input form example](/docs/screenshots/runbook1.png "Runbook input form example")
 
 Плюсы по сравнению со стандартной консолью:
  - Форма для запуска ранбуков поддерживает выпадающие списки, чек-боксы, поля для ввода дат и цифр
@@ -200,7 +214,7 @@ AD. При настройке нужно указывать DN групп. Не�
 
 1. Выберите тип доступа (admin, guest)*/l
 
-Такое поле превратится в выпадающий список с двумя значениями admin и guest
+Такое поле превратится в выпадающий список с двумя значениями `admin` и `guest`
 и будет обязательным для заполнения.
 
 2. Выберите протокол (HTTP, HTTPS)/rf
@@ -232,13 +246,24 @@ AD. При настройке нужно указывать DN групп. Не�
 
 ## Technical information
 
+The `AWX_DONT_PARSE_EXTRA_VARS` parameter disables parsing of variables from the extra_vars parameter.
+Only the variable from the Survey will be loaded. If a variable with the same name is present
+in both `extra_vars` and the Survey, the variable from the Survey will be loaded into the launch form.
+The variable with the name `who_run` will not be displayed in the launch form and the name of the user
+who performed the launch will be passed to it at launch. Similar to the `/w` switch in Orchestrator.
+
+
 Bit `flags` in table `runbooks`
 
-| Bits   | Name              | Description                               |
-|--------|-------------------|-------------------------------------------|
-| 0x0001 | RBF_DELETED       | Deleted                                   |
-| 0x0002 | RBF_HIDED         | Hide from list                            |
-| 0x0004 | RBF_TYPE_CUSTOM   | Custom script                             |
+| Bits   | Name                | Description                               |
+|--------|---------------------|-------------------------------------------|
+| 0x0001 | RBF_DELETED         | Deleted                                   |
+| 0x0002 | RBF_HIDED           | Hide from list                            |
+| 0x0004 | RBF_TYPE_CUSTOM     | Custom script                             |
+| 0x0008 | RBF_TYPE_SCO        | Orchestrator 2016 or earlier runbook      |
+| 0x0010 | RBF_TYPE_SCO2022    | Orchestrator 2022 runbook                 |
+| 0x0020 | RBF_TYPE_ANSIBLE    | Ansible playbook                          |
+| 0x0040 | RBF_TYPE_ANSIBLE_WF | Ansible workflow                          |
 
 Clearing Kerberos authorization tickets after adding a WebSCO service account to an AD group:
 ```

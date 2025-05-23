@@ -39,6 +39,7 @@ $modules = array(
 	'curl',
 	'pcre',
 	//'gd',
+	'yaml',
 	'mysqli'
 );
 
@@ -52,7 +53,8 @@ CREATE TABLE `#DB_NAME#`.`w_users` (
   `sid` varchar(16) DEFAULT NULL,
   `reset_token` varchar(16) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL DEFAULT 0,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_login (`login`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -63,7 +65,9 @@ CREATE TABLE `#DB_NAME#`.`w_access` (
   `dn` varchar(1024) NOT NULL DEFAULT '',
   `oid` int(10) unsigned NOT NULL DEFAULT 0,
   `allow_bits` binary(32) NOT NULL DEFAULT '\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  INDEX idx_sid (`sid`),
+  INDEX idx_dn (`dn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -88,7 +92,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks` (
   `description` varchar(4096) NOT NULL,
   `wiki_url` varchar(1024) DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -98,18 +103,21 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_activities` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`)
+  PRIMARY KEY (`id`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_folders` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `pid` varchar(36) NOT NULL,
+  `pid`  int(10) unsigned NOT NULL,
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`),
+  INDEX idx_pid (`pid`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -121,26 +129,30 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs` (
   `guid` varchar(36) NOT NULL,
   `uid` int(10) unsigned DEFAULT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`),
+  INDEX idx_pid (`pid`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_jobs_params` (
   `pid` int(10) unsigned NOT NULL,
-  `guid` varchar(36) NOT NULL,
+  `guid` varchar(64) NOT NULL,
   `value` varchar(4096) NOT NULL,
-  PRIMARY KEY (`pid`,`guid`)
+  PRIMARY KEY (`pid`, `guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
 CREATE TABLE `#DB_NAME#`.`w_runbooks_params` (
-  `pid` varchar(36) NOT NULL,
-  `guid` varchar(36) NOT NULL,
+  `pid` int(10) unsigned NOT NULL,
+  `guid` varchar(64) NOT NULL,
   `name` varchar(255) NOT NULL,
+  `extra_data_json` varchar(4096) NOT NULL DEFAULT '',
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`guid`)
+  PRIMARY KEY (`pid`, `guid`),
+  INDEX idx_pid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -150,7 +162,8 @@ CREATE TABLE `#DB_NAME#`.`w_runbooks_servers` (
   `guid` varchar(36) NOT NULL,
   `name` varchar(255) NOT NULL,
   `flags` int(10) unsigned NOT NULL,
-  PRIMARY KEY (`id`,`guid`) USING BTREE
+  PRIMARY KEY (`id`),
+  INDEX idx_guid (`guid`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
@@ -159,12 +172,21 @@ CREATE TABLE `#DB_NAME#`.`w_config` (
   `uid` int(10) unsigned NOT NULL,
   `name` varchar(255) NOT NULL DEFAULT '',
   `value` varchar(8192) NOT NULL DEFAULT '',
-  PRIMARY KEY (`name`,`uid`) USING BTREE
+  `description` varchar(2048) DEFAULT NULL,
+  PRIMARY KEY (`uid`,`name`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 EOT
 ,
 <<<'EOT'
-INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`) VALUES(0, 'db_version', 2);
+INSERT INTO `#DB_NAME#`.`w_config` (`uid`, `name`, `value`, `description`) VALUES(0, 'db_version', 29, 'DB schema version. Do not change!');
+EOT
+,
+<<<'EOT'
+INSERT INTO `#DB_NAME#`.`w_runbooks_folders` (`guid`, `pid`, `name`, `flags`) VALUES ('', 0, 'WebSCO custom scripts', 0x0004);
+EOT
+,
+<<<'EOT'
+INSERT INTO `#DB_NAME#`.`w_runbooks` (`folder_id`, `guid`, `name`, `description`, `flags`) VALUES ((SELECT f.`id` FROM `#DB_NAME#`.`w_runbooks_folders` AS f WHERE f.`name` = 'WebSCO custom scripts' AND f.`flags` = 0x0004 LIMIT 1), 'password_generator', 'Password generator', 'Online password generator', 0x0004);
 EOT
 );
 
@@ -202,10 +224,18 @@ $config = <<<'EOT'
 	define('MAIL_VERIFY_PEER_NAME', #mail_verify_peer_name#);
 	define('MAIL_ALLOW_SELF_SIGNED', #mail_allow_self_signed#);
 
-	define('ORCHESTRATOR_VERSION', '#scorch_ver#');
 	define('ORCHESTRATOR_URL', '#scorch_url#');
 	define('ORCHESTRATOR_USER', '#scorch_user#');
 	define('ORCHESTRATOR_PASSWD', '#scorch_passwd#');
+
+	define('ORCHESTRATOR2022_URL', '#scorch2022_url#');
+	define('ORCHESTRATOR2022_USER', '#scorch2022_user#');
+	define('ORCHESTRATOR2022_PASSWD', '#scorch2022_passwd#');
+
+	define('AWX_URL', '#awx_url#');
+	define('AWX_USER', '#awx_user#');
+	define('AWX_PASSWD', '#awx_passwd#');
+	define('AWX_DONT_PARSE_EXTRA_VARS', FALSE);
 
 	define('USE_MEMCACHED', #use_memcached#);
 
@@ -219,7 +249,7 @@ $config = <<<'EOT'
 EOT;
 
 use PHPMailer\PHPMailer\PHPMailer;
-use PHPMailer\PHPMailer\Exception;
+// use PHPMailer\PHPMailer\Exception;
 
 require_once ROOT_DIR.'libs/PHPMailer/src/Exception.php';
 require_once ROOT_DIR.'libs/PHPMailer/src/PHPMailer.php';
@@ -535,6 +565,43 @@ function get_http_json($url, $user, $passwd, $use_gssapi)
 	return $json;
 }
 
+function get_http_awx_json($url, $user, $passwd)
+{
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_POST, false);
+
+	curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+	curl_setopt($ch, CURLOPT_USERPWD, $user.':'.$passwd);
+
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+
+
+	$output = curl_exec($ch);
+	$result = curl_getinfo($ch);
+
+	//echo $output;
+	//log_file($url."\n".$output."\n\n\n");
+
+	curl_close($ch);
+
+	if(intval($result['http_code']) != 200)
+	{
+		$this->core->error('Unexpected HTTP '.$result['http_code'].' response code!');
+		return FALSE;
+	}
+
+	$json = @json_decode($output, TRUE);
+	if($json === NULL)
+	{
+		$this->core->error('JSON parse error!');
+		return FALSE;
+	}
+
+	return $json;
+}
+
 function build_config($config, $params)
 {
 	if(empty($params['db_host'])) throw new Exception('Host value not defined!');
@@ -601,10 +668,15 @@ function build_config($config, $params)
 			'#mail_verify_peer#',
 			'#mail_verify_peer_name#',
 			'#mail_allow_self_signed#',
-			'#scorch_ver#',
 			'#scorch_url#',
 			'#scorch_user#',
 			'#scorch_passwd#',
+			'#scorch2022_url#',
+			'#scorch2022_user#',
+			'#scorch2022_passwd#',
+			'#awx_url#',
+			'#awx_user#',
+			'#awx_passwd#',
 			'#log_file#',
 			'#web_url#',
 			'#pretty_links_base_path#',
@@ -637,10 +709,15 @@ function build_config($config, $params)
 			$mail_verify_peer?'TRUE':'FALSE',
 			$mail_verify_peer_name?'TRUE':'FALSE',
 			$mail_allow_self_signed?'TRUE':'FALSE',
-			$use_scorch2022_api?'2022':'2016',
 			sql_escape(@$params['scorch_url']),
 			sql_escape(@$params['scorch_user']),
 			sql_escape(@$params['scorch_passwd']),
+			sql_escape(@$params['scorch2022_url']),
+			sql_escape(@$params['scorch2022_user']),
+			sql_escape(@$params['scorch2022_passwd']),
+			sql_escape(@$params['awx_url']),
+			sql_escape(@$params['awx_user']),
+			sql_escape(@$params['awx_passwd']),
 			sql_escape(@$params['log_file']),
 			sql_escape(@$params['web_url']),
 			sql_escape(@$params['pretty_links_base_path']),
@@ -814,7 +891,6 @@ function build_config($config, $params)
 				{
 					if(empty($_POST['scorch_url'])) throw new Exception('SCORCH URL value not defined!');
 
-					$use_scorch2022_api = (!empty($_POST['use_scorch2022_api']) && intval($_POST['use_scorch2022_api']));
 					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
 					{
 						$use_gssapi = TRUE;
@@ -826,27 +902,53 @@ function build_config($config, $params)
 						if(empty($_POST['scorch_passwd'])) throw new Exception('SCORCH Password value not defined!');
 					}
 
-					if($use_scorch2022_api)
+					$xml = get_http_xml($_POST['scorch_url'].'/Runbooks?$inlinecount=allpages&$top=50&$skip=0', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
+					if(!$xml)
 					{
-						$json = get_http_json($_POST['scorch_url'].'/login', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
-						if(!$json)
-						{
-							throw new Exception('Unknown error!');
-						}
-						
-						echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
+						throw new Exception('Unknown error!');
+					}
+					
+					$total = intval($xml->children('m', TRUE)->count);
+					echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
+				}
+				exit;
+				case 'check_scorch2022':
+				{
+					if(empty($_POST['scorch2022_url'])) throw new Exception('SCORCH URL value not defined!');
+
+					if(!empty($_POST['use_gssapi']) && intval($_POST['use_gssapi']))
+					{
+						$use_gssapi = TRUE;
 					}
 					else
 					{
-						$xml = get_http_xml($_POST['scorch_url'].'/Runbooks?$inlinecount=allpages&$top=50&$skip=0', $_POST['scorch_user'], $_POST['scorch_passwd'], $use_gssapi);
-						if(!$xml)
-						{
-							throw new Exception('Unknown error!');
-						}
-						
-						$total = intval($xml->children('m', TRUE)->count);
-						echo '{"code": 0, "message": "OK (Runbooks available for this user: '.$total.')"}';
+						$use_gssapi = FALSE;
+						if(empty($_POST['scorch2022_user'])) throw new Exception('SCORCH User value not defined!');
+						if(empty($_POST['scorch2022_passwd'])) throw new Exception('SCORCH Password value not defined!');
 					}
+
+					$json = get_http_json($_POST['scorch2022_url'].'/login', $_POST['scorch2022_user'], $_POST['scorch2022_passwd'], $use_gssapi);
+					if(!$json)
+					{
+						throw new Exception('Unknown error!');
+					}
+						
+					echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
+				}
+				exit;
+				case 'check_awx':
+				{
+					if(empty($_POST['awx_url'])) throw new Exception('AWX URL value not defined!');
+					if(empty($_POST['awx_user'])) throw new Exception('AWX User value not defined!');
+					if(empty($_POST['awx_passwd'])) throw new Exception('AWX Password value not defined!');
+
+					$json = get_http_awx_json($_POST['awx_url'].'/api/v2/config/', $_POST['awx_user'], $_POST['awx_passwd']);
+					if(!$json)
+					{
+						throw new Exception('Unknown error!');
+					}
+
+					echo '{"code": 0, "message": "OK (Version: '.$json['version'].')"}';
 				}
 				exit;
 				//*
@@ -1636,13 +1738,13 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="ldap_uri" class="control-label col-sm-2">LDAP URI:</label>
 				<div class="col-sm-5">
-					<input id="ldap_uri" name="ldap_uri" class="form-control" type="text" value="ldap://dc-01.contoso.com ldap://dc-02.contoso.com:389 ldaps://dc-03.contoso.com" />
+					<input id="ldap_uri" name="ldap_uri" class="form-control" type="text" value="ldap://dc-01.contoso.com ldap://dc-02.contoso.com:389 ldaps://dc-03.contoso.com" placeholder="ldap://dc-01.contoso.com ldap://dc-02.contoso.com:389 ldaps://dc-03.contoso.com" />
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="ldap_user" class="control-label col-sm-2">User:</label>
 				<div class="col-sm-5">
-					<input id="ldap_user" name="ldap_user" class="form-control" type="text" value="domain\user" />
+					<input id="ldap_user" name="ldap_user" class="form-control" type="text" value="domain\user" placeholder="domain\user" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1654,7 +1756,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="ldap_base" class="control-label col-sm-2">Base DN:</label>
 				<div class="col-sm-5">
-					<input id="ldap_base" name="ldap_base" class="form-control" type="text" value="DC=company,DC=local" />
+					<input id="ldap_base" name="ldap_base" class="form-control" type="text" value="DC=company,DC=local" placeholder="DC=company,DC=local" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1665,25 +1767,19 @@ input:checked + .slider:after
 			</div>
 			<div class="form-group">
 				<div class="col-sm-offset-2 col-sm-5">
-					<h3>Orchestrator settings</h3>
-				</div>
-			</div>
-			<div class="form-group">
-				<label for="use_scorch2022_api" class="control-label col-sm-2">Use Orchestrator 2022 API:</label>
-				<div class="col-sm-5">
-					<label class="switch"><input id="use_scorch2022_api" name="use_scorch2022_api" class="form-control" type="checkbox" value="1"/><div class="slider round"></div></label>
+					<h3>Orchestrator 2012 settings</h3>
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="scorch_url" class="control-label col-sm-2">WebSvc URL:</label>
 				<div class="col-sm-5">
-					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scor-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
+					<input id="scorch_url" name="scorch_url" class="form-control" type="text" value="http://srv-scorch-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" placeholder="http://srv-scorch-01.contoso.com:81/Orchestrator2012/Orchestrator.svc" />
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="scorch_user" class="control-label col-sm-2">User:</label>
 				<div class="col-sm-5">
-					<input id="scorch_user" name="scorch_user" class="form-control" type="text" value="domain\user" />
+					<input id="scorch_user" name="scorch_user" class="form-control" type="text" value="domain\user" placeholder="domain\user" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1696,6 +1792,66 @@ input:checked + .slider:after
 				<div class="col-sm-offset-2 col-sm-5">
 					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch');"><?php eh($n++) ?>. Check SCORCH connection</button>
 					<div id="result_check_scorch" class="alert alert-danger" style="display: none"></div>
+				</div>
+			</div>
+<!-- -->
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<h3>Orchestrator 2022 settings</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="scorch2022_url" class="control-label col-sm-2">API URL:</label>
+				<div class="col-sm-5">
+					<input id="scorch2022_url" name="scorch2022_url" class="form-control" type="text" value="https://srv-scorch-02.contoso.com:8443/api" placeholder="https://srv-scorch-02.contoso.com:8443/api" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="scorch2022_user" class="control-label col-sm-2">User:</label>
+				<div class="col-sm-5">
+					<input id="scorch2022_user" name="scorch2022_user" class="form-control" type="text" value="domain\user" placeholder="domain\user" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="scorch_passwd" class="control-label col-sm-2">Password:</label>
+				<div class="col-sm-5">
+					<input id="scorch2022_passwd" name="scorch2022_passwd" class="form-control" type="password" value="" />
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_scorch2022');"><?php eh($n++) ?>. Check SCORCH2022 connection</button>
+					<div id="result_check_scorch2022" class="alert alert-danger" style="display: none"></div>
+				</div>
+			</div>
+<!-- -->
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<h3>Ansible AWX settings</h3>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="awx_url" class="control-label col-sm-2">AWX URL:</label>
+				<div class="col-sm-5">
+					<input id="awx_url" name="awx_url" class="form-control" type="text" value="https://awx.contoso.com" placeholder="https://awx.contoso.com" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="awx_user" class="control-label col-sm-2">User:</label>
+				<div class="col-sm-5">
+					<input id="awx_user" name="awx_user" class="form-control" type="text" value="user" placeholder="user" />
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="awx_passwd" class="control-label col-sm-2">Password:</label>
+				<div class="col-sm-5">
+					<input id="awx_passwd" name="awx_passwd" class="form-control" type="password" value="" />
+				</div>
+			</div>
+			<div class="form-group">
+				<div class="col-sm-offset-2 col-sm-5">
+					<button type="button" class="btn btn-primary" onclick="f_send_form('check_awx');"><?php eh($n++) ?>. Check AWX connection</button>
+					<div id="result_check_awx" class="alert alert-danger" style="display: none"></div>
 				</div>
 			</div>
 <!-- -->
@@ -1818,13 +1974,13 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="web_url" class="control-label col-sm-2">WebSCO URL (with trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="web_url" name="web_url" class="form-control" type="text" value="<?php eh($web_url) ?>" />
+					<input id="web_url" name="web_url" class="form-control" type="text" value="<?php eh($web_url) ?>" placeholder="<?php eh($web_url) ?>" />
 				</div>
 			</div>
 			<div class="form-group">
 				<label for="pretty_links_base_path" class="control-label col-sm-2">Links base path (with leading and trailing slash):</label>
 				<div class="col-sm-5">
-					<input id="pretty_links_base_path" name="pretty_links_base_path" class="form-control" type="text" value="<?php eh($pretty_links_base_path) ?>" />
+					<input id="pretty_links_base_path" name="pretty_links_base_path" class="form-control" type="text" value="<?php eh($pretty_links_base_path) ?>" placeholder="<?php eh($pretty_links_base_path) ?>" />
 				</div>
 			</div>
 			<div class="form-group">
@@ -1854,7 +2010,7 @@ input:checked + .slider:after
 			<div class="form-group">
 				<label for="log_file" class="control-label col-sm-2">Log file:</label>
 				<div class="col-sm-5">
-					<input id="log_file" name="log_file" class="form-control" type="text" value="/var/log/websco/websco.log" />
+					<input id="log_file" name="log_file" class="form-control" type="text" value="/var/log/websco/websco.log" placeholder="/var/log/websco/websco.log" />
 				</div>
 			</div>
 			<div class="form-group">

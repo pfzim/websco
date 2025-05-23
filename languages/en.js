@@ -5,7 +5,9 @@ const LL = {
 	InstanceID:				'Instance ID',
 	InputParameters:		'Input parameters',
 	Activities:				'Activities',
+	WorkflowNodes:			'Workflow nodes',
 	ConfirmDelete:			'Are you confirming the delete operation?',
 	ConfirmOperation:		'Do you confirm the operation?',
-	OutputParameters:		'Output parameters'
+	OutputParameters:		'Output parameters',
+	Output:					'Output'
 };

@@ -17,7 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-define('DB_VERSION', 2);
+define('DB_VERSION', 29);
 define('Z_PROTECTED', 'YES');
 
 error_reporting(E_ALL);
@@ -75,7 +75,7 @@ if(!empty($_SERVER['HTTP_CLIENT_IP'])) {
 }
 
 require_once(ROOT_DIR.'modules'.DIRECTORY_SEPARATOR.'Core.php');
-require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
+// require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.APP_LANGUAGE.'.php');
 require_once(ROOT_DIR.'inc.utils.php');
 
 function assert_permission_ajax($section_id, $allow_bit)
@@ -141,6 +141,22 @@ function ls($path)
 	eh(WEB_LINK_STATIC_PREFIX.$path);
 }
 
+function languages_list()
+{
+	$files = scandir(ROOT_DIR . 'languages' . DIRECTORY_SEPARATOR);
+	$themes = [];
+
+	foreach($files as $file)
+	{
+		if(preg_match('/^(.+)\.php$/', $file, $matches))
+		{
+			$themes[] = $matches[1];
+		}
+	}
+
+	return $themes;
+}
+
 function exception_handler($exception)
 {
 	$error_msg = 'Exception: File: '.$exception->getFile().'['.$exception->getLine().']: '.$exception->getMessage().' Trace: '.$exception->getTraceAsString();
@@ -155,18 +171,23 @@ function exception_handler_ajax($exception)
 	log_file($error_msg);
 }
 
-	define('RBF_DELETED', 0x0001);
-	define('RBF_HIDED', 0x0002);
-	define('RBF_TYPE_CUSTOM', 0x0004);
+	define('RBF_DELETED',				0x00000001);
+	define('RBF_HIDED',					0x00000002);
+	define('RBF_TYPE_CUSTOM',			0x00000004);
+	define('RBF_TYPE_SCO',				0x00000008);
+	define('RBF_TYPE_SCO2022',			0x00000010);
+	define('RBF_TYPE_ANSIBLE',			0x00000020);
+	define('RBF_TYPE_ANSIBLE_WF',		0x00000040);
+	define('RBF_FIELD_TYPE_REQUIRED',	0x01000000);
+	define('RBF_FIELD_TYPE_PASSWORD',	0x02000000);
+	define('RBF_FIELD_TYPE_NUMBER',		0x04000000);
+	define('RBF_FIELD_TYPE_LIST',		0x08000000);
+	define('RBF_FIELD_TYPE_FLAGS',		0x10000000);
+	define('RBF_FIELD_TYPE_STRING',		0x20000000);
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');
 
-	if(defined('ORCHESTRATOR_VERSION') && (ORCHESTRATOR_VERSION == 2022))
-	{
-		$core->load_ex('Runbooks', 'Runbooks2022');
-	}
-	
 	if(intval($core->Config->get_global('db_version', 0)) != DB_VERSION)
 	{
 		header('Location: '.WEB_LINK_STATIC_PREFIX.'upgrade.php');
@@ -253,6 +274,15 @@ function exception_handler_ajax($exception)
 	$core->Router->set_exception_handler_regular('exception_handler');
 	$core->Router->set_exception_handler_ajax('exception_handler_ajax');
 
+	global $g_app_language;
+	$g_app_language = $core->Config->get_user('language', isset($_COOKIE['lang']) ? $_COOKIE['lang'] : APP_LANGUAGE);
+	if(!file_exists(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.$g_app_language.'.php'))
+	{
+		$g_app_language = APP_LANGUAGE;
+	}
+
+	require_once(ROOT_DIR.'languages'.DIRECTORY_SEPARATOR.$g_app_language.'.php');
+
 	//$core->Router->add_route('info', 'info');
 
 	if(!$core->UserAuth->get_id())
@@ -264,13 +294,18 @@ function exception_handler_ajax($exception)
 	{
 		$core->Router->add_route('runbooks', 'runbooks');							// default route
 		$core->Router->add_route('runbooks_search', 'runbooks_search');
+
 		$core->Router->add_route('runbooks_sync', 'runbooks_sync', TRUE);
 		$core->Router->add_route('runbook_get', 'runbook_get', TRUE);
 		$core->Router->add_route('runbook_start', 'runbook_start', TRUE);
 
+		$core->Router->add_route('runbook_move', 'runbook_move', TRUE);
+		$core->Router->add_route('runbook_move_form', 'runbook_move_form', TRUE);
+
 		$core->Router->add_route('jobs', 'jobs');
 		$core->Router->add_route('jobs_all', 'jobs_all');
 		$core->Router->add_route('jobs_sync', 'jobs_sync', TRUE);
+		$core->Router->add_route('jobs_sync_all', 'jobs_sync_all', TRUE);
 		$core->Router->add_route('job_cancel', 'job_cancel', TRUE);
 		$core->Router->add_route('job_get', 'job_get', TRUE);
 		$core->Router->add_route('job_activity_get', 'job_activity_get', TRUE);
@@ -282,10 +317,17 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('complete_group', 'complete_group', TRUE);
 		$core->Router->add_route('complete_group_sam', 'complete_group_sam', TRUE);
 
+		$core->Router->add_route('setting_get', 'setting_get', TRUE);
+		$core->Router->add_route('setting_save', 'setting_save', TRUE);
+		$core->Router->add_route('setting_user_save', 'setting_user_save', TRUE);
+
 		$core->Router->add_route('tools', 'tools');
 
 		$core->Router->add_route('folder_hide', 'folder_hide', TRUE);
 		$core->Router->add_route('folder_show', 'folder_show', TRUE);
+		$core->Router->add_route('folder_get', 'folder_get', TRUE);
+		$core->Router->add_route('folder_save', 'folder_save', TRUE);
+		$core->Router->add_route('folder_delete', 'folder_delete', TRUE);
 
 		$core->Router->add_route('permissions', 'permissions');
 		$core->Router->add_route('permissions_get', 'permissions_get', TRUE);
@@ -312,11 +354,13 @@ function exception_handler_ajax($exception)
 		$core->Router->add_route('memcached_flush', 'memcached_flush', TRUE);
 
 		$core->Router->add_route('custom', 'custom');
-		$core->Router->add_route('job_custom_get', 'job_custom_get');
+		$core->Router->add_route('job_custom_get', 'job_custom_get', TRUE);
 	}
 
 	$core->Router->add_route('logoff', 'logoff');
 	
+	$core->Router->add_route('language_change', 'language_change', TRUE);
+
 	$core->Router->add_route('password_reset_send_form', 'password_reset_send_form', TRUE);
 	$core->Router->add_route('password_reset_send', 'password_reset_send', TRUE);
 	$core->Router->add_route('password_reset_form', 'password_reset_form');

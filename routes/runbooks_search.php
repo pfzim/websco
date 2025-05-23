@@ -67,7 +67,7 @@ function runbooks_search(&$core, $params, $post_data)
 		$offset
 	));
 
-	//log_db('Search: '.$search, '', 0);
+	log_db('Search: '.$search, '', 0);
 
 	include(TEMPLATES_DIR.'tpl.runbooks-search.php');
 }

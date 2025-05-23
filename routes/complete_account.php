@@ -12,7 +12,7 @@ function complete_account(&$core, $params, $post_data)
 	
 	if(defined('USE_LDAP') && USE_LDAP && !empty($search) && strlen($search) >= 3)
 	{
-		if($core->LDAP->search($result, '(&(objectCategory=person)(objectClass=user)(sAMAccountName='.ldap_escape($search, null, LDAP_ESCAPE_FILTER).'*))', array('samaccountname')))
+		if($core->LDAP->search($result, '(&(objectCategory=person)(objectClass=user)(sAMAccountName='.ldap_escape($search, '', LDAP_ESCAPE_FILTER).'*))', array('samaccountname')))
 		{
 			foreach($result as $row)
 			{

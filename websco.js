@@ -140,12 +140,12 @@ function f_get_job(guid)
 				el = gi('job_status');
 				el.innerText = data.status;
 				btn_cancel = gi('job_cancel');
-				if(data.status == 'Completed')
+				if(data.status == 'Completed' || data.status == 'successful')
 				{
 					el.className = 'status-ok';
 					btn_cancel.style.display = 'none';
 				}
-				else if(data.status == 'Canceled')
+				else if(data.status == 'Canceled' || data.status == 'failed' || data.status == 'canceled' || data.status == 'error')
 				{
 					el.className = 'status-warn';
 					btn_cancel.style.display = 'none';
@@ -154,7 +154,7 @@ function f_get_job(guid)
 				{
 					el.className = 'status-warn';
 					btn_cancel.style.display = 'inline';
-					gi('job').setAttribute("data-id", data.guid);
+					gi('job').setAttribute("data-id", data.id);
 				}
 
 				el = gi('job_user');
@@ -163,7 +163,7 @@ function f_get_job(guid)
 				el.setAttribute('onclick', 'f_get_job(\'' + escapeHtml(guid) + '\');');
 				el.style.display = 'inline-block';
 				el = gi('job_restart');
-				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_guid) + '\', ' + data.id + ');');
+				el.setAttribute('onclick', 'f_restart_job(\'' + escapeHtml(data.runbook_id) + '\', ' + data.id + ');');
 				el.style.display = 'inline-block';
 				gi('job').style.display = 'block';
 				el = gi('job_table_data');
@@ -203,13 +203,51 @@ function f_get_job(guid)
 							cl = 'status-err';
 						}
 
-						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.instances[i].activities[j].id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
+						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.id + '/' + data.instances[i].activities[j].instance_id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.instances[i].activities[j].sequence) + '. ' + escapeHtml(data.instances[i].activities[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.instances[i].activities[j].status) +'</td></tr>';
 					}
 					html += '<tr><td colspan="2"><b>' + LL.OutputParameters + '</b></td></tr>';
 					for(j = 0; j < data.instances[i].params_out.length; j++)
 					{
 						html += '<tr><td>' + escapeHtml(data.instances[i].params_out[j].name) +'</td><td><pre>' + escapeHtml(data.instances[i].params_out[j].value) +'</pre></td></tr>';
 					}
+				}
+
+				if(data.input_params && (data.input_params.length > 0))
+				{
+					html += '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
+					for(j = 0; j < data.input_params.length; j++)
+					{
+						html += '<tr><td>' + escapeHtml(data.input_params[j].name) +'</td><td>' + escapeHtml(data.input_params[j].value) +'</td></tr>';
+					}
+				}
+
+				if(data.workflow_nodes)
+				{
+					html += '<tr><td colspan="2"><b>' + LL.WorkflowNodes + '</b></td></tr>';
+					for(j = 0; j < data.workflow_nodes.length; j++)
+					{
+						if(data.workflow_nodes[j].status == 'successful')
+						{
+							cl = 'status-ok';
+						}
+						else if(data.workflow_nodes[j].status == 'running' || data.workflow_nodes[j].status == 'waiting')
+						{
+							cl = 'status-warn';
+						}
+						else
+						{
+							cl = 'status-err';
+						}
+
+						// html += '<tr><td>' + escapeHtml(data.workflow_nodes[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.workflow_nodes[j].status) +'</td></tr>';
+						html += '<tr><td><a href="' + g_link_prefix + 'job_activity_get/' + data.id + '/' + data.workflow_nodes[j].job_id + '" onclick="return f_get_activity(this.href);">' + escapeHtml(data.workflow_nodes[j].job_id) + '. ' + escapeHtml(data.workflow_nodes[j].name) +'</a></td><td class="' + cl + '">' + escapeHtml(data.workflow_nodes[j].status) +'</td></tr>';
+					}
+				}
+
+				if(data.output)
+				{
+					html += '<tr><td colspan="2"><b>' + LL.Output + '</b></td></tr>';
+					html += '<tr><td colspan="2">' + data.output +'</td></tr>';
 				}
 
 				el.innerHTML = html;
@@ -353,9 +391,18 @@ function f_get_activity(url)
 				var el = gi('activity_table_data');
 				el.innerHTML = '';
 				html = '';
-				for(j = 0; j < data.params.length; j++)
+				if(data.params)
 				{
-					html += '<tr><td>' + escapeHtml(data.params[j].name) +'</td><td><pre>' + escapeHtml(data.params[j].value) +'</pre></td></tr>';
+					for(j = 0; j < data.params.length; j++)
+					{
+						html += '<tr><td>' + escapeHtml(data.params[j].name) +'</td><td><pre>' + escapeHtml(data.params[j].value) +'</pre></td></tr>';
+					}
+				}
+
+				if(data.output)
+				{
+					html += '<tr><td colspan="2"><b>' + LL.Output + '</b></td></tr>';
+					html += '<tr><td colspan="2">' + data.output +'</td></tr>';
 				}
 
 				el.innerHTML = html;
@@ -365,6 +412,39 @@ function f_get_activity(url)
 	);
 
 	return false;
+}
+
+function f_set_input_value(el, id, value)
+{
+	gi(id).value = value;
+	const elements = gi(id + '-tree').getElementsByClassName('active');
+    for(let i = 0, j = elements.length; i < j; i++)
+	{
+		elements[i].classList.remove('active');
+    }
+	el.className = 'active';
+	return false;
+}
+
+function f_print_tree(tree, edit_id)
+{
+	let html = '';
+	if(tree)
+	{
+		html +='<ul>';
+
+		for(let i = 0, j = tree.length; i < j; i++)
+		{
+			html += '<li><a class="' + (tree[i].selected ? 'active' : '') + '" href="#" onclick="return f_set_input_value(this, \'' + escapeHtml(edit_id) + '\', \'' + escapeHtml(tree[i].id) + '\');">' + escapeHtml(tree[i].name) + '</a>';
+			html += f_print_tree(tree[i].childs, edit_id);
+
+			html += '</li>';
+		}
+
+		html += '</ul>';
+	}
+
+	return html;
 }
 
 // make fake empty form
@@ -449,7 +529,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'list' && fields[i].list)
 		{
-			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">'+ escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<select class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '">'
 				+ '<option value=""></option>';
 			for(j = 0; j < fields[i].list.length; j++)
@@ -479,7 +561,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		{
 			value = parseInt(fields[i].value, 10);
 
-			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':</div>';
+			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</div>';
 			for(j = 0; j < fields[i].list.length; j++)
 			{
 				checked = '';
@@ -496,10 +580,35 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			wrapper.innerHTML = html;
 			el.appendChild(wrapper);
 		}
+		else if(fields[i].type == 'multiselect' && fields[i].list)
+		{
+			value = parseInt(fields[i].value, 10);
+
+			html = '<div class="form-title">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</div>';
+			for(j = 0; j < fields[i].list.length; j++)
+			{
+				checked = '';
+				if(fields[i].selected  && (fields[i].selected.indexOf(fields[i].values[j]) !== -1))
+				{
+					checked = ' checked="checked"';
+				}
+
+				html += '<span><input id="' + escapeHtml(form_id + fields[i].name) + '[' + j +']" name="' + escapeHtml(fields[i].name) + '[' + j +']" type="checkbox" value="' + escapeHtml(fields[i].values[j]) + '"' + checked + '/><label for="'+ escapeHtml(form_id + fields[i].name) + '[' + j + ']">' + escapeHtml(fields[i].list[j]) + '</label></span>'
+			}
+			html += '<div id="' + escapeHtml(form_id + fields[i].name) + '[0]-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
 		else if(fields[i].type == 'datetime')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -522,7 +631,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'time')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -547,7 +658,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		else if(fields[i].type == 'date')
 		{
 			var wrapper = document.createElement('div');
-			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			wrapper.innerHTML = '<div class="form-title"><label for="' + escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="'+ escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="' + escapeHtml(fields[i].value) + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 			el.appendChild(wrapper);
@@ -572,7 +685,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 		}
 		else if(fields[i].type == 'password')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="password" value=""/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
@@ -580,9 +695,44 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 			wrapper.innerHTML = html;
 			el.appendChild(wrapper);
 		}
+		else if(fields[i].type == 'tree')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
+				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="hidden" value="'+ escapeHtml(fields[i].value) + '"/>'
+				+ '<div class="tree-menu" id="' + escapeHtml(form_id + fields[i].name) + '-tree" style="float: unset; width: unset;">' + f_print_tree(fields[i].tree, form_id + fields[i].name) + '</div>'
+				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'readonly')
+		{
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
+				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="text" readonly="readonly" value="'+ escapeHtml(fields[i].value) + '"/>'
+				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
+		else if(fields[i].type == 'description')
+		{
+			html = '<div class="form-description">'+ escapeHtml(fields[i].value) + '</div>';
+
+			var wrapper = document.createElement('div');
+			wrapper.innerHTML = html;
+			el.appendChild(wrapper);
+		}
 		else if(fields[i].type == 'upload')
 		{
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div>'
 				+ '<span class="form-upload" id="' + escapeHtml(form_id + fields[i].name) + '-file">&nbsp;</span> <a href="#" onclick="gi(\'' + escapeHtml(form_id + fields[i].name) + '\').click(); return false;"/>' + LL.SelectFile + '</a>'
 				+ '<input id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="file" accept="' + escapeHtml(fields[i].accept?fields[i].accept:'') + '" style="display: none"/>'
 				+ '<div id="' + escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
@@ -622,8 +772,9 @@ function f_append_fields(el, fields, form_id, spoiler_id)
 				placeholder = '" placeholder="' + fields[i].placeholder;
 			}
 
-			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':</label></div>'
-				+ '<input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
+			html = '<div class="form-title"><label for="'+ escapeHtml(form_id + fields[i].name) + '">' + escapeHtml(fields[i].title) + ':'
+				+ (fields[i].description ? '<span class="tooltip-icon" data-tooltip="' + escapeHtml(fields[i].description) + '"></span>' : '' )
+				+ '</label></div><input class="form-field" id="' + escapeHtml(form_id + fields[i].name) + '" name="'+ escapeHtml(fields[i].name) + '" type="edit" value="'+ escapeHtml(fields[i].value) + placeholder + '"/>'
 				+ '<div id="'+ escapeHtml(form_id + fields[i].name) + '-error" class="form-error"></div>';
 
 			var wrapper = document.createElement('div');
@@ -791,7 +942,7 @@ function on_saved(action, data)
 {
 	if(action == 'runbook_start')
 	{
-		f_get_job(data.guid);
+		f_get_job(data.id);
 	}
 	else if(action == 'permission_save')
 	{
@@ -799,6 +950,14 @@ function on_saved(action, data)
 		window.location = window.location;
 	}
 	else if(action == 'user_save')
+	{
+		window.location = window.location;
+	}
+	else if(action == 'runbook_move')
+	{
+		window.location = window.location;
+	}
+	else if(action == 'folder_save')
 	{
 		window.location = window.location;
 	}
@@ -854,7 +1013,7 @@ function on_action_success(el, action, data)
 	}
 	else if(action == 'job_cancel')
 	{
-		f_get_job(data.guid);
+		f_get_job(data.id);
 	}
 	else if(action == 'user_activate')
 	{
@@ -976,6 +1135,60 @@ function f_show_hide(url, id)
 		null,
 		'application/x-www-form-urlencoded',
 		json2url({id: id})
+	);
+
+	return false;
+}
+
+function f_delete_folder(url, id)
+{
+	if(window.confirm(LL.ConfirmOperation))
+	{
+		gi('loading').style.display = 'block';
+		f_http(
+			url,
+			function(data, el)
+			{
+				gi('loading').style.display = 'none';
+				f_notify(data.message, data.code?"error":"success");
+				if(!data.code)
+				{
+					window.location = window.location;
+				}
+			},
+			null,
+			'application/x-www-form-urlencoded',
+			json2url({id: id})
+		);
+	}
+
+	return false;
+}
+
+function f_theme_change(theme)
+{
+	document.documentElement.setAttribute('data-theme-color', theme);
+	localStorage.setItem('theme-color', theme);
+	return false;
+}
+
+function f_language_change(theme)
+{
+	gi('loading').style.display = 'block';
+	f_http(
+		g_link_prefix + 'language_change',
+		function(data, el)
+		{
+			gi('loading').style.display = 'none';
+			f_notify(data.message, data.code?"error":"success");
+			if(!data.code)
+			{
+				window.location = window.location;
+			}
+		},
+		null,
+		'application/x-www-form-urlencoded',
+		json2url({key: 'language', value: theme})
 	);
 
 	return false;
@@ -1208,6 +1421,11 @@ function autocomplete_add_active(items)
 	}
 
 	items[autocomplete_current_focus].classList.add('autocomplete-active');
+
+    items[autocomplete_current_focus].scrollIntoView({
+        block: 'nearest',
+        behavior: 'smooth'
+    });
 }
 
 function autocomplete_remove_active(items)

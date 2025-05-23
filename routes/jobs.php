@@ -8,9 +8,9 @@ function jobs(&$core, $params, $post_data)
 	$offset = 0;
 	if(isset($params[2]))
 	{
-		$offset = $params[2];
+		$offset = intval($params[2]);
 	}
-	
+
 	$search_job = '';
 	$where = '';
 	if(!empty($params[3]))

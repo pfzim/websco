@@ -33,13 +33,13 @@
 						<td><?php eh($row['runbook_name']); ?></td>
 						<td>
 							<?php if((intval($row['runbook_flags']) & RBF_TYPE_CUSTOM) == 0) { ?>
-								<a href="<?php ln('job_get/'.$row['guid']); ?>" onclick="return f_get_job('<?php eh($row['guid']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid']); ?></a>
+								<a href="<?php ln('job_get/'.$row['id']); ?>" onclick="return f_get_job('<?php eh($row['id']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid']); ?></a>
 							<?php } else { ?>
 								<a href="<?php ln('job_custom_get/'.$row['id']); ?>" onclick="return f_get_custom_job('<?php eh($row['id']); ?>');" onmouseenter="si(event, <?php eh($row['id']); ?>)" onmouseleave="document.getElementById('popup').style.display='none'" onmousemove="mi(event);"><?php eh($row['guid'].'_'.$row['id']); ?></a>
 							<?php } ?>
 						</td>
 						<td><?php eh($row['login']); ?></td>
-						<td><?php if((intval($row['flags']) & RBF_TYPE_CUSTOM) == 0) { ?><a href="<?php ln('runbook_get/'.$row['runbook_guid'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a><?php } ?></td>
+						<td><?php if((intval($row['flags']) & RBF_TYPE_CUSTOM) == 0) { ?><a href="<?php ln('runbook_get/'.$row['runbook_id'].'/'.$row['id']); ?>" onclick="return f_show_form(this.href);"><?php L('Restart') ?></a><?php } ?></td>
 					</tr>
 				<?php } ?>
 			</tbody>

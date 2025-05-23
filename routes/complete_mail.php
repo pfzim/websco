@@ -12,7 +12,7 @@ function complete_mail(&$core, $params, $post_data)
 	
 	if(defined('USE_LDAP') && USE_LDAP && !empty($search) && strlen($search) >= 3)
 	{
-		if($core->LDAP->search($result, '(&(objectCategory=person)(objectClass=user)(mail='.ldap_escape($search, null, LDAP_ESCAPE_FILTER).'*))', array('mail')))
+		if($core->LDAP->search($result, '(&(objectCategory=person)(objectClass=user)(mail='.ldap_escape($search, '', LDAP_ESCAPE_FILTER).'*))', array('mail')))
 		{
 			foreach($result as $row)
 			{

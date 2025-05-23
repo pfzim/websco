@@ -2,22 +2,17 @@
 
 function jobs_sync(&$core, $params, $post_data)
 {
-	$guid = @$params[1];
+	$id = @$params[1];
 
-	$runbook_guid = '';
-	if(!empty($guid))
-	{
-		$runbook_guid = $guid;
-	}
+	$runbook = $core->Runbooks->get_runbook_by_id($id);
 
-	if(empty($runbook_guid))
-	{
-		assert_permission_ajax(0, RB_ACCESS_EXECUTE);	// non-priveleged users cannot sync all jobs at once
-	}
+	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
 
-	log_db('Sync jobs started', $runbook_guid, 0);
-	
-	$total = $core->Runbooks->sync_jobs($runbook_guid);
+	log_db('Sync jobs started', $id, 0);
+
+	set_time_limit(0);
+
+	$total = $core->Runbooks->sync_jobs($id);
 
 	echo '{"code": 0, "message": "'.json_escape('Jobs loaded: '.$total).'"}';
 }

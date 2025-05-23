@@ -6,7 +6,7 @@ function jobs_all(&$core, $params, $post_data)
 	$offset = 0;
 	if(isset($params[1]))
 	{
-		$offset = $params[1];
+		$offset = intval($params[1]);
 	}
 
 	$search_job = '';
@@ -68,6 +68,7 @@ function jobs_all(&$core, $params, $post_data)
 			DATE_FORMAT(j.`date`, \'%d.%m.%Y %H:%i:%s\') AS `run_date`,
 			j.`guid`,
 			r.`name` AS runbook_name,
+			r.`id` AS runbook_id,
 			r.`guid` AS runbook_guid,
 			r.`flags` AS runbook_flags,
 			u.`login`
