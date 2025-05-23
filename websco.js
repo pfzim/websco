@@ -212,7 +212,7 @@ function f_get_job(guid)
 					}
 				}
 
-				if(data.input_params)
+				if(data.input_params && (data.input_params.length > 0))
 				{
 					html += '<tr><td colspan="2"><b>' + LL.InputParameters + '</b></td></tr>';
 					for(j = 0; j < data.input_params.length; j++)

@@ -28,7 +28,7 @@ function job_params_get(&$core, $params, $post_data)
 	}
 	else if(!$core->db->select_assoc_ex($job_params, rpv('
 		SELECT
-			jp.`guid`, rp.`name`, jp.`value`
+			jp.`guid`, IFNULL(rp.`name`, jp.`guid`) AS `name`, jp.`value`
 		FROM @runbooks_jobs_params AS jp
 		LEFT JOIN @runbooks_jobs AS j
 			ON j.`id` = jp.`pid`
