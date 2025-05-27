@@ -9,7 +9,7 @@
 
     <div style="text-align: center;">
         <h1>Random Password Generator</h1>
-        <div id="passwords" style="margin: 20px 0; font-family: Courier New; font-size: 14pt; font-weight: bold; color: #333;"></div>
+        <div id="passwords" style="margin: 20px 0; font-family: Courier New; font-size: 14pt; font-weight: bold; color: #333; display: flex; flex-direction: column; align-items: center;"></div>
         <button onclick="generatePasswords()" style="padding: 10px 20px; font-size: 1em; border: none; border-radius: 5px; background-color: #007bff; color: #fff; cursor: pointer;">Generate passwords</button>
     </div>
 
@@ -40,11 +40,37 @@
         }
 
         function generatePasswords() {
-            const passwords = [];
+            const passwordsContainer = document.getElementById('passwords');
+            passwordsContainer.innerHTML = '';
+
             for (let i = 0; i < 10; i++) {
-                passwords.push(generatePassword());
+                const password = generatePassword();
+                const passwordElement = document.createElement('div');
+                passwordElement.setAttribute('style', 'display: flex; align-items: center; margin: 5px 0;');
+                
+                const passwordText = document.createElement('span');
+                passwordText.setAttribute('style', 'font-family: monospace; padding: 5px 10px; background: #f0f0f0; border-radius: 4px; margin-right: 10px;');
+                passwordText.textContent = password;
+                
+                const copyButton = document.createElement('button');
+                copyButton.setAttribute('style', 'padding: 5px 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;');
+                copyButton.textContent = 'Copy';
+                
+                copyButton.addEventListener('click', function() {
+                    navigator.clipboard.writeText(password).then(() => {
+                        copyButton.textContent = 'Copied!';
+                        copyButton.style.background = '#2196F3';
+                        setTimeout(() => {
+                            copyButton.textContent = 'Copy';
+                            copyButton.style.background = '#4CAF50';
+                        }, 2000);
+                    });
+                });
+                
+                passwordElement.appendChild(passwordText);
+                passwordElement.appendChild(copyButton);
+                passwordsContainer.appendChild(passwordElement);
             }
-            document.getElementById("passwords").innerHTML = passwords.join("<br>");
         }
 
 	generatePasswords();

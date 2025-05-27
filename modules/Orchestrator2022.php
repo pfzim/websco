@@ -231,7 +231,7 @@ class Orchestrator2022
 			return FALSE;
 		}
 
-		return $json_data['Id'];
+		return isset($json_data['Id']) ? $json_data['Id'] : FALSE;
 	}
 
 	public function parse_form_and_start_runbook($post_data, &$result_json)
@@ -394,21 +394,27 @@ class Orchestrator2022
 
 		$job_guid = $this->start_runbook($runbook['guid'], $params, $servers_list);
 
-		if($job_guid !== FALSE)
+		if($job_guid === FALSE)
 		{
-			if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $this->core->UserAuth->get_id())))
-			{
-				$job_id = $this->core->db->last_id();
+			$result_json['code'] = 1;
+			$result_json['message'] = 'API ERROR: Failed to start runbook!';
+			return FALSE;
+		}
 
-				foreach($params as &$param)
+		$job_id = FALSE;
+
+		if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $runbook['id'], $job_guid, $this->core->UserAuth->get_id())))
+		{
+			$job_id = $this->core->db->last_id();
+
+			foreach($params as &$param)
+			{
+				$value = $param['value'];
+				if(strlen($value) > 4096)
 				{
-					$value = $param['value'];
-					if(strlen($value) > 4096)
-					{
-						$value = substr($value, 0, 4093).'...';
-					}
-					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
+					$value = substr($value, 0, 4093).'...';
 				}
+				$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], $value));
 			}
 		}
 
