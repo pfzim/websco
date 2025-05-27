@@ -109,7 +109,7 @@ class AnsibleAWX
 
         $result = $this->awx_api_request('POST', '/api/v2/job_templates/' . $guid . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
 
-        return $result['job'] ? $result['job'] : false;
+        return $result['job'] ? $result['job'] : FALSE;
 	}
 
 	public function start_workflow($guid, $params)
@@ -126,7 +126,7 @@ class AnsibleAWX
 
         $result = $this->awx_api_request('POST', '/api/v2/workflow_job_templates/' . $guid . '/launch/', ['extra_vars' => !empty($parameters) ? json_encode($parameters, JSON_NUMERIC_CHECK) : '{}']);
 
-        return $result['workflow_job'] ? $result['workflow_job'] : false;
+        return $result['workflow_job'] ? $result['workflow_job'] : FALSE;
 	}
 
 	/**
@@ -358,21 +358,27 @@ class AnsibleAWX
 			$job_guid = $this->start_playbook($playbook['guid'], $params);
 		}
 
-		if($job_guid !== FALSE)
+		if($job_guid === FALSE)
 		{
-			if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $playbook['id'], $job_guid, $this->core->UserAuth->get_id())))
-			{
-				$job_id = $this->core->db->last_id();
+			$result_json['code'] = 1;
+			$result_json['message'] = 'API ERROR: Failed to start playbook!';
+			return FALSE;
+		}
 
-				foreach($params as &$param)
+		$job_id = FALSE;
+
+		if($this->core->db->put(rpv('INSERT INTO @runbooks_jobs (`date`, `pid`, `guid`, `uid`, `flags`) VALUES (NOW(), #, !, #, 0)', $playbook['id'], $job_guid, $this->core->UserAuth->get_id())))
+		{
+			$job_id = $this->core->db->last_id();
+
+			foreach($params as &$param)
+			{
+				$value = $param['value'];
+				if(strlen((string) $value) > 4096)
 				{
-					$value = $param['value'];
-					if(strlen((string) $value) > 4096)
-					{
-						$value = substr((string) $value, 0, 4093).'...';
-					}
-					$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode(', ', $value) : $value));
+					$value = substr((string) $value, 0, 4093).'...';
 				}
+				$this->core->db->put(rpv('INSERT INTO @runbooks_jobs_params (`pid`, `guid`, `value`) VALUES (#, !, !)', $job_id, $param['guid'], is_array($value) ? implode(', ', $value) : $value));
 			}
 		}
 
