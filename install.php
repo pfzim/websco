@@ -235,7 +235,9 @@ $config = <<<'EOT'
 	define('AWX_URL', '#awx_url#');
 	define('AWX_USER', '#awx_user#');
 	define('AWX_PASSWD', '#awx_passwd#');
-	define('AWX_DONT_PARSE_EXTRA_VARS', FALSE);
+
+	// define('AWX_DONT_PARSE_EXTRA_VARS', FALSE); -- When TRUE, then load only survey variables.
+	// define('AWX_FORCE_ADD_WHO_RUN', FALSE); -- When TRUE, then force add variable `who_websco`.
 
 	define('USE_MEMCACHED', #use_memcached#);
 

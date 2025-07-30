@@ -184,6 +184,7 @@ function exception_handler_ajax($exception)
 	define('RBF_FIELD_TYPE_LIST',		0x08000000);
 	define('RBF_FIELD_TYPE_FLAGS',		0x10000000);
 	define('RBF_FIELD_TYPE_STRING',		0x20000000);
+	define('RBF_FIELD_TYPE_READONLY',	0x40000000);
 
 	$core = new Core(TRUE);
 	$core->load_ex('db', 'MySQLDB');

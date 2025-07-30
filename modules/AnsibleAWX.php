@@ -55,13 +55,15 @@ class AnsibleAWX
         if($data !== NULL)
 		{
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+
+			// log_file($path . "\n" . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "\n\n");
         }
 
 		$output = curl_exec($ch);
 		$result = curl_getinfo($ch);
 
 		//echo $output;
-		//log_file($url."\n".$output."\n\n\n");
+		//log_file($url."\n".$output."\n\n");
 
 		curl_close($ch);
 
@@ -161,6 +163,7 @@ class AnsibleAWX
 		);
 
 		$params = array();
+		$who_run_exist = FALSE;
 
 		$playbook = $this->core->Runbooks->get_runbook_by_id($post_data['id']);
 		$playbook_params = $this->get_playbook_params($post_data['id']);
@@ -174,6 +177,7 @@ class AnsibleAWX
 
 			if($param['type'] == 'who')
 			{
+				$who_run_exist = TRUE;
 				$params[] = array(
 					'guid' => $param['guid'],
 					'name' => $param['name'],
@@ -324,6 +328,15 @@ class AnsibleAWX
 			return FALSE;
 		}
 
+		if(!$who_run_exist && defined('AWX_FORCE_ADD_WHO_RUN') && AWX_FORCE_ADD_WHO_RUN)
+		{
+			$params[] = array(
+				'guid' => 'who_websco',
+				'name' => 'Who run WebSCO',
+				'value' => $this->core->UserAuth->get_login()
+			);
+		}
+
 		// $servers_list = '';
 		// if(!empty($post_data['servers']))
 		// {
@@ -385,7 +398,7 @@ class AnsibleAWX
 		return $job_id;
 	}
 
-	private function parse_extra_vars($extra_vars)
+	private function parse_extra_vars($extra_vars, $is_writable)
 	{
 		if(empty($extra_vars)) {
 			return [];
@@ -409,7 +422,7 @@ class AnsibleAWX
 				'description' => '',
 				'variable' => $key,
 				'default' => $value,
-				'flags' => RBF_FIELD_TYPE_STRING,
+				'flags' => $is_writable ? RBF_FIELD_TYPE_STRING : RBF_FIELD_TYPE_READONLY,
 				'list' => NULL
 			];
 		}
@@ -469,7 +482,7 @@ class AnsibleAWX
 
 				foreach($result['results'] as $template)
 				{
-					$params = (defined('AWX_DONT_PARSE_EXTRA_VARS') && AWX_DONT_PARSE_EXTRA_VARS) ? NULL : $this->parse_extra_vars($template['extra_vars']);
+					$params = (defined('AWX_DONT_PARSE_EXTRA_VARS') && AWX_DONT_PARSE_EXTRA_VARS) ? NULL : $this->parse_extra_vars($template['extra_vars'], $template['ask_variables_on_launch']);
 
 					if($template['survey_enabled'])
 					{
@@ -904,11 +917,12 @@ class AnsibleAWX
 
 	private function flags_to_type($flags)
 	{
-		switch($flags & (RBF_FIELD_TYPE_STRING | RBF_FIELD_TYPE_NUMBER | RBF_FIELD_TYPE_LIST | RBF_FIELD_TYPE_PASSWORD | RBF_FIELD_TYPE_FLAGS))
+		switch($flags & (RBF_FIELD_TYPE_STRING | RBF_FIELD_TYPE_NUMBER | RBF_FIELD_TYPE_LIST | RBF_FIELD_TYPE_PASSWORD | RBF_FIELD_TYPE_FLAGS | RBF_FIELD_TYPE_READONLY))
 		{
 			case RBF_FIELD_TYPE_NUMBER: return 'integer';
 			case RBF_FIELD_TYPE_LIST: return 'list';
 			case RBF_FIELD_TYPE_FLAGS: return 'multiselect';
+			case RBF_FIELD_TYPE_READONLY: return 'readonly';
 		}
 		return 'string';
 	}

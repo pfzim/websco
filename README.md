@@ -114,7 +114,7 @@ end after / slash:
  - m - field with autocomplete for entering e-mail (query LDAP) (mail)
  - g - field with autocomplete for entering group SamAccountName (query LDAP) (group)
  - f - checkboxes switches (flags)
- - w - hidden field with login who start runbook in WebSCO (who run)
+ - w - hidden field with login who start runbook in WebSCO (who run) (in AWX use `who_websco` variable)
  - u - field for select file, the file will be transferred as a base64 string (upload)
  - r - the flag means that the parameter is required
 
