@@ -842,6 +842,25 @@ class Orchestrator2022
 			}
 		}
 
+		// Update folders PID
+
+		foreach($folders as &$folder)
+		{
+			//echo $folder['guid']."\r\n";
+			$folder_pid = 0;
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & ({%RBF_TYPE_SCO2022} | {%RBF_DELETED})) = {%RBF_TYPE_SCO2022} LIMIT 1", $folder['pid'])))
+			{
+				$folder_pid = $res[0][0];
+			}
+
+			$folder_id = 0;
+			if($this->core->db->select_ex($res, rpv("SELECT f.`id` FROM @runbooks_folders AS f WHERE f.`guid` = ! AND (f.`flags` & {%RBF_TYPE_SCO2022}) AND f.`pid` <> # LIMIT 1", $folder['guid'], $folder_pid)))
+			{
+				$folder_id = $res[0][0];
+				$this->core->db->put(rpv("UPDATE @runbooks_folders SET `pid` = # WHERE `id` = # LIMIT 1", $folder_pid, $folder_id));
+			}
+		}
+
 		unset($folders);
 
 		//$activities = $this->retrieve_activities();
