@@ -149,7 +149,7 @@ class Orchestrator2022
 
 		if(intval($result['http_code']) != 201)
 		{
-			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
+			log_file('ERROR: POST '.$this->orchestrator_url.'/Jobs'."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
@@ -215,7 +215,7 @@ class Orchestrator2022
 
 		if(intval($result['http_code']) != 200)
 		{
-			log_file('ERROR: GET '.$this->orchestrator_url.'/Jobs/'.$job_guid."\n".$output."\n\n");
+			log_file('ERROR: PATCH '.$this->orchestrator_url.'/Jobs/'.$job_guid."\n".$output."\n\n");
 			/*
 				<error xmlns="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
 				  <code></code>
@@ -1416,6 +1416,7 @@ class Orchestrator2022
 				'type' => $param['type'],
 				'name' => 'param['.$param['guid'].']',
 				'title' => $param['name'],
+				'title_original' => $param['name_original'],
 				'value' => ''
 			);
 
