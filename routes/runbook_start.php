@@ -6,7 +6,7 @@ function runbook_start(&$core, $params, $post_data)
 
 	assert_permission_ajax($runbook['folder_id'], RB_ACCESS_EXECUTE);
 
-	log_db('Run: '.$runbook['name'], json_encode($params, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
+	log_db('Run: '.$runbook['name'], json_encode($post_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE), 0);
 
 	$job_id = $core->Runbooks->start_runbook($post_data, $result_json);
 
